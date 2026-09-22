@@ -124,7 +124,7 @@ class Appointment(models.Model):
     #: backfill, not here — an index on a column of nulls buys nothing.
     tenant = models.ForeignKey(
         'tenants.Tenant', on_delete=models.SET_NULL, null=True, blank=True,
-        db_index=True,
+        db_index=True, related_name='appointments',
     )
 
     status = models.CharField(

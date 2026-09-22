@@ -29,7 +29,7 @@ class GalleryImage(models.Model):
     #: is still the only answer to whose row this is.
     tenant = models.ForeignKey(
         'tenants.Tenant', on_delete=models.SET_NULL, null=True, blank=True,
-        db_index=True,
+        db_index=True, related_name='gallery_images',
     )
     #: Never blank: a gallery row with no picture is not a picture.
     image = ImageRefField(blank=False)

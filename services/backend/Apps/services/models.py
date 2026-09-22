@@ -93,7 +93,7 @@ class Service(models.Model):
     #: is still the only answer to whose row this is.
     tenant = models.ForeignKey(
         'tenants.Tenant', on_delete=models.SET_NULL, null=True, blank=True,
-        db_index=True,
+        db_index=True, related_name='services',
     )
     category = models.ForeignKey(
         ServiceCategory, on_delete=models.SET_NULL, null=True, blank=True,
