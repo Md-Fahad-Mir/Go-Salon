@@ -117,13 +117,20 @@ class Appointment(models.Model):
         'users.SalonEmployee', on_delete=models.SET_NULL, null=True, blank=True,
         related_name='appointments',
     )
-    #: Which tenant this belongs to. Nullable and entirely unpopulated for
-    #: now: the backfill is a later step, and until it has run the
-    #: salon/barber pair is still the only answer to whose row this is. The
-    #: composite indexes that will lead with this column come after the
-    #: backfill, not here — an index on a column of nulls buys nothing.
+    #: The business this row belongs to. Backfilled from the salon/barber
+    #: columns above and now required: every row has an owner, so every row
+    #: has a tenant.
+    #:
+    #: CASCADE rather than SET_NULL, which a non-null column cannot use.
+    #: A tenant is only ever deleted along with the salon or barber profile
+    #: it belongs to (`Tenant.salon` and `Tenant.barber_profile` are both
+    #: CASCADE), and that same deletion already takes these rows through
+    #: their own owner column — so for every row this project deletes today
+    #: the outcome is unchanged. PROTECT would not do: it raises even when
+    #: the referencing rows are part of the same deletion, which would break
+    #: deleting a salon at all.
     tenant = models.ForeignKey(
-        'tenants.Tenant', on_delete=models.SET_NULL, null=True, blank=True,
+        'tenants.Tenant', on_delete=models.CASCADE,
         db_index=True, related_name='appointments',
     )
 
@@ -183,8 +190,16 @@ class Appointment(models.Model):
     class Meta:
         ordering = ('-starts_at',)
         indexes = [
-            models.Index(fields=('salon', 'date')),
-            models.Index(fields=('barber', 'date')),
+            # Tenant-leading, because every business-side read is scoped to one
+            # tenant first and narrowed by day, instant or state after it.
+            models.Index(fields=('tenant', 'date')),
+            models.Index(fields=('tenant', 'starts_at')),
+            models.Index(fields=('tenant', 'status', 'date')),
+            # Deliberately *not* tenant-leading. A customer's own diary spans
+            # every salon they have joined — `access.scoped` answers it with
+            # `filter(customer=user)` and no business filter at all — so a
+            # tenant prefix here would put a column in front of the query that
+            # the query never supplies.
             models.Index(fields=('customer', '-starts_at')),
         ]
         constraints = [
