@@ -1,0 +1,256 @@
+/* ==========================================================================
+   Eureka Admin — Design tokens
+
+   Two moods around one gold accent:
+     Day    warm sand ground, off-white cards, espresso ink
+     Night  warm charcoal — the darks carry the gold's hue so the accent
+            belongs to the surface rather than sitting on top of it
+
+   Every colour in the app resolves through one of these variables, so a single
+   class swap on <html> repaints the entire UI.
+
+   Contrast: every text pair below is >= 4.5:1 (WCAG AA), and every non-text
+   indicator >= 3:1. Vivid `--status-*` values are for fills, dots and chart
+   marks; the matching `--status-*-ink` values are the legible text shades.
+   ========================================================================== */
+
+/* Plain `:root` on purpose. Writing `:root, :root.light-theme` here raises the
+   block to (0,2,0) whenever the light-theme class is present, which outranks
+   the `:root` media queries at the bottom of this file — day mode would then
+   keep the mobile metrics at every width, and switching to night would snap
+   them all to desktop at once. The `.light-theme` class stays on <html> as the
+   no-flash marker; it does not need to carry the values. */
+:root {
+  color-scheme: light;
+
+  /* --- Surfaces ---------------------------------------------------------
+     L*  92.6 ground -> 95.3 muted -> 98.0 card: an even, readable ladder. */
+  --bg-primary: #efe9e0;
+  --bg-secondary: #fbf9f5;
+  --bg-elevated: #fffdfa;
+  --bg-muted: #f5f1ea;
+  --bg-inverse: #2a2521;
+  --text-inverse: #f7f3ec;
+
+  /* Day keeps the sidebar white so it reads as paper next to the sand ground;
+     night drops it to near-black. Because the panel flips, every token that
+     lands on it flips too — including the focus ring, further down. */
+  --primary-sidebar: #ffffff;
+  --sidebar-border: var(--border-color);
+  --sidebar-accent: #8a5f22;
+  --sidebar-mark: #c08a4a;
+  --sidebar-text: #574f45;
+  --sidebar-text-strong: #2a2521;
+  --sidebar-text-dim: #6f675c;
+  --sidebar-hover: rgba(192, 138, 74, 0.1);
+  --sidebar-active: rgba(192, 138, 74, 0.16);
+  --sidebar-badge: #d32f2f;
+
+  /* --- Type ------------------------------------------------------------- */
+  /* Three levels, each >= 4.5:1 on every surface it lands on. Tertiary is
+     real content here (record ids, timestamps, column headers), not decoration,
+     so it carries the same floor as body text. */
+  --text-primary: #2a2521;
+  --text-secondary: #574f45;
+  --text-tertiary: #6f675c;
+
+  /* --- Lines ------------------------------------------------------------ */
+  --border-color: #ddd4c4;
+  --border-light: #ebe4d8;
+  --border-strong: #cabda8;
+
+  /* --- Accent -----------------------------------------------------------
+     `--accent` fills (buttons, meters, toggles); `--accent-ink` is the gold
+     that has to survive as text on a light ground. */
+  --accent: #c08a4a;
+  --accent-hover: #a97538;
+  --accent-ink: #8a5f22;
+  --accent-on: #241d12;
+  --accent-bg: rgba(192, 138, 74, 0.16);
+
+  /* Solid destructive button: white has to sit on this, so it stays deep in
+     both moods rather than following the light `-ink` shade. */
+  --danger-solid: #c62828;
+
+  /* --- Controls --------------------------------------------------------- */
+  --input-bg: #ffffff;
+  --input-border: #ded5c7;
+  --input-focus: var(--accent);
+  --hover-bg: #f2ece2;
+  --active-bg: #e8e0d3;
+  --ring: rgba(192, 138, 74, 0.3);
+  --focus-ring: #6b4a16;
+
+  /* --- Status ----------------------------------------------------------- */
+  --status-success: #4caf50;
+  --status-warning: #ff9800;
+  --status-danger: #f44336;
+  --status-info: #2196f3;
+  --status-neutral: #6f675c;
+
+  --status-success-ink: #276b2b;
+  --status-warning-ink: #96500a;
+  --status-danger-ink: #c62828;
+  --status-info-ink: #1565c0;
+  --status-neutral-ink: #5c554d;
+
+  --status-success-bg: rgba(76, 175, 80, 0.14);
+  --status-warning-bg: rgba(255, 152, 0, 0.16);
+  --status-danger-bg: rgba(244, 67, 54, 0.13);
+  --status-info-bg: rgba(33, 150, 243, 0.13);
+  --status-neutral-bg: rgba(111, 103, 92, 0.14);
+
+  /* --- Data-viz ---------------------------------------------------------
+     Payment hues are validated for colour-vision deficiency against this
+     mood's card surface; Card sits on cyan because blue collides with
+     Rocket's purple under deuteranopia. */
+  --chart-bar: #ded4c2;
+  --chart-bar-hi: #b8873f;
+  --chart-line: #2a2521;
+  --chart-grid: #e7dfd2;
+  --chart-axis: #6f675c;
+  --pay-bkash: #e2136e;
+  --pay-nagad: #e85d18;
+  --pay-rocket: #8a2be2;
+  --pay-card: #0e94b0;
+
+  /* --- Depth ------------------------------------------------------------
+     Shadows are brown-black rather than neutral, so they warm the surface
+     they fall on instead of greying it. */
+  --shadow-sm: 0 2px 8px rgba(58, 44, 26, 0.08);
+  --shadow-md: 0 4px 16px rgba(58, 44, 26, 0.11);
+  --shadow-lg: 0 8px 24px rgba(58, 44, 26, 0.14);
+  --overlay: rgba(36, 29, 20, 0.5);
+
+  /* --- Motion ----------------------------------------------------------- */
+  --transition-speed: 0.3s;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* --- Radii ------------------------------------------------------------ */
+  --radius-sm: 0.375rem;
+  --radius: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 999px;
+
+  /* --- Metrics (overridden per breakpoint below) ------------------------ */
+  --sidebar-width: 15rem;
+  --header-height: 3.5rem;
+  --content-padding: 0.75rem;
+  --avatar-size: 2rem;
+  --chart-height: 15.625rem;
+}
+
+.dark-theme {
+  color-scheme: dark;
+
+  /* L*  6.1 ground -> 10.1 muted -> 14.7 card -> 20.3 elevated. */
+  --bg-primary: #16130f;
+  --bg-secondary: #2b241c;
+  --bg-elevated: #373026;
+  --bg-muted: #201b15;
+  --bg-inverse: #ece7e0;
+  --text-inverse: #16130f;
+
+  --primary-sidebar: #0f0d0b;
+  --sidebar-border: transparent;
+  --sidebar-accent: #d4a574;
+  --sidebar-mark: #d4a574;
+  --sidebar-text: #8d857b;
+  --sidebar-text-strong: #ece7e0;
+  --sidebar-hover: rgba(212, 165, 116, 0.12);
+  --sidebar-active: rgba(212, 165, 116, 0.18);
+  --sidebar-badge: #d32f2f;
+
+  --text-primary: #ece7e0;
+  --text-secondary: #bdb3a8;
+  --text-tertiary: #a39990;
+  --sidebar-text-dim: #857c72;
+
+  --border-color: #443b30;
+  --border-light: #4e4437;
+  --border-strong: #564a3c;
+
+  --accent: #d4a574;
+  --accent-hover: #e3b98c;
+  --accent-ink: #e0b183;
+  --accent-on: #241d12;
+  --accent-bg: rgba(212, 165, 116, 0.18);
+  --danger-solid: #c62828;
+
+  --input-bg: #373026;
+  --input-border: #4e4337;
+  --input-focus: var(--accent);
+  --hover-bg: #373026;
+  --active-bg: #443b30;
+  --ring: rgba(212, 165, 116, 0.4);
+  --focus-ring: #e6bd8c;
+
+  --status-success: #66bb6a;
+  --status-warning: #ffb74d;
+  --status-danger: #ef5350;
+  --status-info: #42a5f5;
+  --status-neutral: #a39990;
+
+  --status-success-ink: #7ecf83;
+  --status-warning-ink: #ffc470;
+  --status-danger-ink: #ff8a85;
+  --status-info-ink: #6db8f7;
+  --status-neutral-ink: #b7ada2;
+
+  --status-success-bg: rgba(102, 187, 106, 0.18);
+  --status-warning-bg: rgba(255, 183, 77, 0.18);
+  --status-danger-bg: rgba(239, 83, 80, 0.18);
+  --status-info-bg: rgba(66, 165, 245, 0.18);
+  --status-neutral-bg: rgba(163, 153, 144, 0.18);
+
+  --chart-bar: #443b30;
+  --chart-bar-hi: #d4a574;
+  --chart-line: #ece7e0;
+  --chart-grid: #332c24;
+  --chart-axis: #a39990;
+  --pay-bkash: #e83f7d;
+  --pay-nagad: #d4762b;
+  --pay-rocket: #b061f5;
+  --pay-card: #189cb8;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
+  --overlay: rgba(10, 8, 6, 0.72);
+}
+
+/* Only the night sidebar needs a lifted focus colour; the white day sidebar
+   uses the page ring, which already clears 8:1 on white. */
+.dark-theme .sidebar {
+  --focus-ring: #e6bd8c;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive metrics — mobile-first, matched to constants/breakpoints.ts
+   -------------------------------------------------------------------------- */
+
+@media (min-width: 30rem) { /* 480px — large phones */
+  :root { --header-height: 3.75rem; --content-padding: 1rem; }
+}
+
+@media (min-width: 48rem) { /* 768px — tablet */
+  :root {
+    --header-height: 4rem;
+    --content-padding: 1.25rem;
+    --avatar-size: 2.5rem;
+    --chart-height: 18.75rem;
+  }
+}
+
+@media (min-width: 64rem) { /* 1024px — desktop */
+  :root {
+    --header-height: 4.375rem;
+    --content-padding: 1.5rem;
+    --avatar-size: 2.75rem;
+    --chart-height: 25rem;
+  }
+}
+
+@media (min-width: 80rem) { /* 1280px — desktop XL */
+  :root { --content-padding: 2rem; --chart-height: 28.125rem; }
+}

@@ -1,0 +1,1571 @@
+/* ==========================================================================
+   profile screens
+   .bkl-  bookings list + booking detail
+   .pf-   profile, settings, saved, reviews, help
+   ========================================================================== */
+
+/* --- Bookings list --------------------------------------------------------- */
+
+.bkl-card { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.bkl-when {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+
+.bkl-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.bkl-pro { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.125rem; }
+.bkl-pro a { color: var(--text-primary); font-weight: 600; }
+.bkl-pro a:hover { color: var(--accent-ink); }
+
+.bkl-divider { border-top: 1px solid var(--border-light); }
+
+.bkl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bkl-details {
+  margin-inline-start: auto;
+  min-height: var(--touch-target);
+  font-size: 0.875rem;
+}
+
+.bkl-cancel-note { font-size: 0.8125rem; color: var(--text-tertiary); }
+
+.bkl-callout { padding: 0.625rem 0.75rem; font-size: 0.8125rem; }
+
+/* --- Booking detail -------------------------------------------------------- */
+
+.bkl-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 0 0.25rem;
+  text-align: center;
+}
+.bkl-hero h2 { font-size: 1.5rem; }
+.bkl-hero .caption { max-width: 20rem; }
+
+.bkl-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+}
+.bkl-section-title svg { color: var(--accent-ink); }
+
+.bkl-service-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  font-size: 0.9375rem;
+}
+.bkl-service-row span:first-child { color: var(--text-primary); min-width: 0; }
+.bkl-service-row small { display: block; font-size: 0.8125rem; color: var(--text-tertiary); }
+
+.bkl-ref {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--border-light);
+}
+.bkl-ref .mono { color: var(--text-secondary); }
+
+.bkl-address { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.45; }
+
+.bkl-receipt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  background-color: var(--bg-muted);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius);
+}
+
+.bkl-policy { display: flex; flex-direction: column; gap: 0.75rem; }
+.bkl-policy li { display: flex; gap: 0.75rem; font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.5; }
+
+/* --- Profile --------------------------------------------------------------- */
+
+.pf-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.75rem 0 0.25rem;
+  text-align: center;
+}
+.pf-header .avatar { margin-bottom: 0.5rem; }
+.pf-header h2 { font-size: 1.375rem; }
+.pf-header .badge { margin-top: 0.375rem; }
+
+/* The profile's single edit control, centred under the identity block.
+   `align-self` rather than a margin: ScreenBody is a flex column, so a block
+   button would otherwise stretch the full width and read as a primary action
+   competing with Log out. */
+.pf-edit {
+  align-self: center;
+  margin-top: -0.25rem;
+}
+
+.pf-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.pf-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  min-height: 4.25rem;
+  padding: 0.75rem 0.375rem;
+  border-inline-end: 1px solid var(--border-light);
+  transition: background-color var(--speed) var(--ease);
+}
+.pf-stat:last-child { border-inline-end: none; }
+/* `.pf-stat` is rendered by the customer's ProfilePage and by nothing else —
+   no provider screen has this markup — so the hover is guarded here at source
+   rather than fought later. Unguarded, it sticks after a tap on a touch
+   screen, which is the one thing a "chosen" colour must never do. */
+@media (hover: hover) and (pointer: fine) {
+  .pf-stat:hover { background-color: var(--hover-bg); }
+}
+.pf-stat strong { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.pf-stat span { font-size: 0.75rem; font-weight: 600; color: var(--text-tertiary); }
+
+/* ListRow renders inline spans; stack title over sub inside profile lists. */
+.pf-list .list-row-title,
+.pf-list .list-row-sub { display: block; }
+
+.pf-version { text-align: center; font-size: 0.75rem; color: var(--text-dim); padding-bottom: 0.5rem; }
+
+/* --- Edit profile ---------------------------------------------------------- */
+
+.pf-avatar-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  padding-top: 0.5rem;
+}
+.pf-avatar-picker .row { justify-content: center; }
+
+.pf-field-label { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+
+/* --- Saved ----------------------------------------------------------------- */
+
+.pf-saved { position: relative; container-type: inline-size; }
+.pf-saved-heart {
+  position: absolute;
+  top: 0.5rem;
+  top: calc(62.5cqw - 3.25rem);
+  inset-inline-end: 0.5rem;
+  z-index: 1;
+}
+.pf-saved-heart[aria-pressed='true'] { color: var(--coral-ink); }
+
+/* --- Settings -------------------------------------------------------------- */
+
+.pf-toggle-row { padding-block: 0.25rem; }
+.pf-toggle-row > .switch { flex: 1; min-width: 0; }
+
+.pf-pay-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: var(--text-tertiary);
+}
+.pf-pay-dot[data-method='bkash'] { background-color: var(--pay-bkash); }
+.pf-pay-dot[data-method='nagad'] { background-color: var(--pay-nagad); }
+.pf-pay-dot[data-method='rocket'] { background-color: var(--pay-rocket); }
+.pf-pay-dot[data-method='card'] { background-color: var(--pay-card); }
+
+.pf-pay-row .list-row-end { gap: 0.25rem; }
+.pf-pay-row .icon-btn { margin-inline-end: -0.5rem; }
+
+/* --- Help ------------------------------------------------------------------ */
+
+.pf-faq {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.pf-faq summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 3.25rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.pf-faq summary::-webkit-details-marker { display: none; }
+.pf-faq summary:hover { background-color: var(--hover-bg); }
+.pf-faq summary svg {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition: transform var(--speed) var(--ease-out);
+}
+.pf-faq[open] summary svg { transform: rotate(180deg); }
+.pf-faq[open] summary { border-bottom: 1px solid var(--border-light); }
+.pf-faq-body {
+  padding: 0.75rem 1rem 1rem;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+.pf-faq-body p + p { margin-top: 0.5rem; }
+
+/* --- Not found ------------------------------------------------------------- */
+
+.pf-lost { min-height: 100dvh; }
+
+/* --- Appearance picker ----------------------------------------------------- */
+
+.pf-theme {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.pf-theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 4.5rem;
+  padding: 0.625rem 0.375rem;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius);
+  background-color: var(--bg-muted);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    color var(--speed) var(--ease);
+}
+
+.pf-theme-option:hover { border-color: var(--border-strong); color: var(--text-primary); }
+
+.pf-theme-option[aria-checked='true'] {
+  border-color: var(--accent);
+  background-color: var(--accent-bg);
+  color: var(--accent-ink);
+}
+
+/* ==========================================================================
+   The customer's account — "Atelier"
+
+   Everything below is scoped to `:root[data-app='customer']`, the attribute
+   AppFrame stamps on <html> for a signed-in customer and for nobody else.
+   Not one rule above this line is edited, so the provider screens that share
+   `.pf-avatar-picker`, `.pf-version`, `.pf-theme` and the registration
+   screen that shares `.pf-field-label` render exactly as they did.
+
+   The problem this solves: structurally every account page was
+   `section.section` + `h3.label` + a `ListCard` of rows, three to seven times
+   over, in identical boxes. Nothing on the screen said "this is you" rather
+   than "this is a place you can go". So:
+
+     - The identity block and the activity counts become one membership card,
+       the only object on the profile with real weight.
+     - Its two lists step down to hairline-separated rows on the ground.
+     - The uppercase eyebrow becomes a micro-caps chapter head with a gold
+       hairline running out to the gutter.
+
+   Specificity is stated deliberately throughout. customer.css declares
+   `:root.light-theme[data-app='customer'] .card` at (0,4,0) and is imported
+   *after* this file, so any rule here that has to beat it carries a doubled
+   class — `(0,5,0)` — rather than relying on order it would lose.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Rhythm — air, on the scale
+
+   Five near-identical gaps read as a form. One large gap between chapters and
+   one small one inside them reads as a page.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .pf-screen {
+  gap: var(--space-8);
+  padding-bottom: var(--space-10);
+}
+
+:root[data-app='customer'] .pf-screen .section {
+  gap: var(--space-3);
+}
+
+/* --------------------------------------------------------------------------
+   The chapter head
+
+   `.label` is the app's shared eyebrow, so the treatment is hung off
+   `.pf-screen` rather than off `.label` — that reaches the headings emitted by
+   LanguageSection and AppearanceSection, which are shared with the provider
+   app and cannot be edited, without reaching those sections anywhere else.
+
+   The trailing rule is a pseudo-element, so the heading's text node is
+   untouched and nothing new is announced.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .pf-screen .section > .label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  color: var(--text-tertiary);
+}
+
+:root[data-app='customer'] .pf-screen .section > .label::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background-image: var(--rule-gradient);
+}
+
+/* --------------------------------------------------------------------------
+   Lists on the account screens
+
+   Still boxes here — a settings page is a list of groups and should look like
+   one. What changes is the corner, the air inside a row and the gold on the
+   row's icon.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .pf-screen .list-card {
+  border-radius: var(--radius-xl);
+}
+
+:root[data-app='customer'] .pf-screen .list-row {
+  gap: var(--space-4);
+  min-height: 3.75rem;
+  padding: var(--space-3) var(--space-4);
+}
+
+:root[data-app='customer'] .pf-screen .list-row-icon {
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 50%;
+  background-color: var(--bg-elevated);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-hair);
+  color: var(--accent-ink);
+}
+
+:root[data-app='customer'] .pf-screen .list-row-title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+:root[data-app='customer'] .pf-screen .list-row-sub {
+  margin-top: var(--space-1);
+  font-size: var(--fs-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-tertiary);
+}
+
+:root[data-app='customer'] .pf-screen .list-row-end {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A danger row keeps its own ink; the gold wash would soften exactly the one
+   thing that should not be softened. */
+:root[data-app='customer'] .pf-screen .list-row-danger .list-row-icon {
+  background-image: none;
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-ink);
+}
+
+/* --------------------------------------------------------------------------
+   The membership card
+
+   Identity, the single edit control and the three counts, at one declared
+   height with a lit top edge — the only object on the profile with weight.
+   The gold is a material here: a soft gradient body, a diagonal specular pass
+   on a pseudo-element, and a hairline that fades out before the counts.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .pf-identity {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-2xl);
+  background-color: var(--bg-secondary);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+
+/* Absolutely positioned, so it is not a flex item and never enters the
+   column's layout. The card itself keeps `overflow: visible`: `:focus-visible`
+   draws a 2px outline at a 2px offset plus a 5px halo, and a clipped focus
+   ring on the first or last count is a real regression for a keyboard. The
+   corners are held by `border-radius: inherit` here and by the counts' own
+   end radii below instead. */
+:root[data-app='customer'] .pf-identity::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image: var(--sheen);
+}
+
+:root[data-app='customer'] .pf-identity > * {
+  position: relative;
+  z-index: 1;
+}
+
+:root[data-app='customer'] .pf-identity .pf-header {
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-5) var(--space-5);
+}
+
+:root[data-app='customer'] .pf-identity .pf-header .avatar {
+  margin-bottom: var(--space-4);
+  box-shadow:
+    0 0 0 2px var(--bg-secondary),
+    0 0 0 3px var(--accent-line),
+    var(--glow-accent);
+}
+
+/* A person's own name is the loudest thing on their own screen. */
+:root[data-app='customer'] .pf-identity .pf-header h2 {
+  font-size: var(--fs-2xl);
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+
+:root[data-app='customer'] .pf-identity .pf-header .caption {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* The credits chip reads as a small lit token: an elevated ground under the
+   soft gold rather than gold laid over gold, which on the card's own wash
+   would have gone muddy in both moods. */
+:root[data-app='customer'] .pf-identity .pf-header .badge {
+  margin-top: var(--space-3);
+  padding-block: 0.3125rem;
+  padding-inline: var(--space-3);
+  font-size: var(--fs-xs);
+  background-color: var(--bg-elevated);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-hair), var(--elev-card);
+}
+
+:root[data-app='customer'] .pf-identity .pf-edit {
+  margin-top: 0;
+  margin-bottom: var(--space-6);
+}
+
+/* The counts sit under a hairline rather than in a second box. */
+:root[data-app='customer'] .pf-identity .pf-stats {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+:root[data-app='customer'] .pf-identity .pf-stat {
+  gap: var(--space-1);
+  min-height: 5.25rem;
+  padding: var(--space-4) var(--space-2);
+  border-inline-end-color: var(--border-light);
+}
+
+:root[data-app='customer'] .pf-identity .pf-stat strong {
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: var(--accent-ink);
+}
+
+/* The display serif carries the numerals — but only where they are Latin.
+   `formatNumber` writes Bengali numerals under `bn`, which no Latin serif
+   has, so that mood keeps the UI face and the whole figure stays on one. */
+:root[data-app='customer']:not([data-lang='bn']) .pf-identity .pf-stat strong {
+  font-family: var(--font-display);
+}
+
+:root[data-app='customer'] .pf-identity .pf-stat span {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* The two outer counts carry the card's own bottom corner, so a hover or a
+   press lands inside the card's silhouette without the card clipping. */
+:root[data-app='customer'] .pf-identity .pf-stat:first-child {
+  border-end-start-radius: var(--radius-2xl);
+}
+
+:root[data-app='customer'] .pf-identity .pf-stat:last-child {
+  border-end-end-radius: var(--radius-2xl);
+}
+
+/* Hover first, press second: both land at (0,4,0), so on a machine with a
+   pointer the press must be declared last or the hover colour would hold
+   through the click and the tile would never answer. */
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='customer'] .pf-identity .pf-stat:hover {
+    background-color: var(--accent-bg);
+  }
+}
+
+:root[data-app='customer'] .pf-identity .pf-stat:active {
+  background-color: var(--accent-bg-strong);
+}
+
+/* --------------------------------------------------------------------------
+   The profile's two lists, demoted
+
+   Boxes inside a page compete with the card above them. On the ground, with a
+   hairline between rows, they read as the quiet half of the screen — and not
+   one row, link or chevron has moved.
+
+   (0,5,0): customer.css states the light-mode `.list-card` shadow at (0,4,0)
+   and is imported after this file.
+   -------------------------------------------------------------------------- */
+
+/* The card dissolves. `overflow: visible` because the base `.list-card` clips,
+   and customer.css draws focus as a 2px outline plus a 5px halo — a clipped
+   ring on the first or last row is a real keyboard regression.
+
+   (0,5,0) / (0,6,0) throughout: customer.css states the light-mode
+   `.list-card` shadow at (0,4,0) and is imported after this file. */
+:root[data-app='customer'] .list-card.pf-list.pf-list-flat,
+:root[data-app='customer'] .pf-settings .list-card:not(.pf-card-keep) {
+  overflow: visible;
+  margin-inline: calc(-1 * var(--space-3));
+  border-color: transparent;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+/* The negative margin above and this padding cancel, so the row's text still
+   lands on the page's own gutter — but a hover or a press now has a body to
+   fill instead of hugging the glyphs. */
+:root[data-app='customer'] .pf-list.pf-list-flat .list-row,
+:root[data-app='customer'] .pf-settings .list-card:not(.pf-card-keep) .list-row {
+  min-height: 3.75rem;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-3);
+  border-bottom-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+/* A gold hairline that fades into the gutter rather than a border that butts
+   into it — the same rule the FAQ volume and the chapter heads are drawn with.
+   In the night mood `--border-light` is gold at 0.09 and all but disappears;
+   this reads at both. */
+:root[data-app='customer'] .pf-list.pf-list-flat .list-row:last-child,
+:root[data-app='customer'] .pf-settings .list-card:not(.pf-card-keep) .list-row:last-child {
+  background-image: none;
+}
+
+/* No plate under the glyph once the card is gone: the icon is the gold. */
+:root[data-app='customer'] .pf-list.pf-list-flat .list-row-icon,
+:root[data-app='customer'] .pf-settings .list-card:not(.pf-card-keep) .list-row-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: var(--accent-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='customer'] .pf-list.pf-list-flat a.list-row:hover,
+  :root[data-app='customer'] .pf-list.pf-list-flat button.list-row:hover,
+  :root[data-app='customer'] .pf-settings .list-card:not(.pf-card-keep) a.list-row:hover,
+  :root[data-app='customer'] .pf-settings .list-card:not(.pf-card-keep) button.list-row:hover {
+    background-color: var(--hover-bg);
+    border-radius: var(--radius);
+  }
+}
+
+/* Declared after the hover for the same reason as the stat tiles. Colour only,
+   never a transform — an `:active` transform is not a transition and would
+   survive `prefers-reduced-motion`. */
+:root[data-app='customer'] .pf-list.pf-list-flat a.list-row:active,
+:root[data-app='customer'] .pf-list.pf-list-flat button.list-row:active,
+:root[data-app='customer'] .pf-settings .list-card:not(.pf-card-keep) a.list-row:active,
+:root[data-app='customer'] .pf-settings .list-card:not(.pf-card-keep) button.list-row:active {
+  background-color: var(--accent-bg);
+  border-radius: var(--radius);
+}
+
+/* --------------------------------------------------------------------------
+   Settings — rhythm, and a destructive group that sits apart
+
+   Apart rather than loud: a rule, a held breath of space and a recessed
+   ground. Nothing here turns red that was not red already.
+   -------------------------------------------------------------------------- */
+
+/* No extra margin: `.pf-settings` already puts 2.5rem between chapters, and
+   2.5rem + 1rem + 2rem of padding read as a hole in the page rather than as a
+   pause. The rule and the 1.5rem under it are the whole signal. */
+:root[data-app='customer'] .pf-danger-zone {
+  padding-top: var(--space-6);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+/* `--bg-muted` is *lighter* than `--bg-primary` in the day mood, so it read as
+   the same ground rather than as a well. `--bg-deep` is below the page in both
+   moods, which is what "set apart, not shouting" needs. */
+:root[data-app='customer'] .pf-danger-zone .list-card.pf-list {
+  border-color: var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-deep);
+  box-shadow: var(--bevel-hair);
+}
+
+/* --------------------------------------------------------------------------
+   Settings, as a document rather than a stack of slabs
+
+   This was the weakest screen in the group: seven identical boxes in a column,
+   which is the exact failure the whole pass exists to fix — every block at the
+   same weight, so nothing on the page is loud and nothing is quiet.
+
+   What it becomes is chapters. Micro-caps heads trailing a gold hairline out
+   to the gutter, rows on the page's own ground with a fading gold rule between
+   them, and 2.5rem of air between one chapter and the next — the same voice
+   the profile's own lists already speak, so the account section reads as one
+   place rather than two.
+
+   Two things keep a body, because two things here are objects rather than
+   settings: the three appearance tiles, which are a visual choice and should
+   feel like one, and the saved wallets and cards, which are things a customer
+   owns. Both opt out with `.pf-card-keep`. The demo group keeps its own
+   recessed well below. Everything else dissolves into the page.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .pf-screen.pf-settings {
+  gap: var(--space-10);
+}
+
+/* The two objects. (0,6,0) rather than (0,5,0): the danger zone's own card is
+   also `.pf-card-keep` and states its shadow at (0,5,0) further down, and a tie
+   here would raise the one group that is meant to sit below the page. */
+:root[data-app='customer'] .pf-settings .section:not(.pf-danger-zone) > .card,
+:root[data-app='customer'] .pf-settings .section:not(.pf-danger-zone) > .list-card.pf-card-keep {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+
+:root[data-app='customer'] .pf-settings .pf-theme {
+  gap: var(--space-3);
+}
+
+/* The base `.list-card` clips, and customer.css draws focus as a 2px outline
+   plus a 5px halo — on the first or last row of a card that halo is eaten and
+   a keyboard loses the edge of the list. The clip is released and the card's
+   corners are carried by its end rows instead, so a hover ground still stops
+   at the silhouette. */
+:root[data-app='customer'] .pf-settings .list-card.pf-card-keep {
+  overflow: visible;
+}
+
+:root[data-app='customer'] .pf-settings .list-card.pf-card-keep > :first-child {
+  border-start-start-radius: inherit;
+  border-start-end-radius: inherit;
+}
+
+:root[data-app='customer'] .pf-settings .list-card.pf-card-keep > :last-child {
+  border-end-start-radius: inherit;
+  border-end-end-radius: inherit;
+}
+
+:root[data-app='customer'] .pf-settings .section > .card > .field-hint {
+  margin-top: var(--space-1);
+  font-size: var(--fs-xs);
+  line-height: var(--leading-normal);
+  color: var(--text-tertiary);
+}
+
+/* The last control on an account screen should not be the loudest thing on it
+   — a customer's own name is. Log out keeps its danger ink, which is the part
+   that carries meaning, and loses the filled ground, which was only volume. */
+:root[data-app='customer'] .pf-screen > .btn-danger-soft {
+  margin-top: var(--space-2);
+  border-color: var(--border-color);
+  background-color: transparent;
+  color: var(--status-danger-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='customer'] .pf-screen > .btn-danger-soft:hover:not(:disabled) {
+    border-color: transparent;
+    background-color: var(--status-danger-bg);
+  }
+}
+
+/* Toggles: the checked track is the same gold every other chosen thing in the
+   app answers in. */
+:root[data-app='customer'] .pf-screen .pf-toggle-row {
+  padding-block: var(--space-2);
+}
+
+:root[data-app='customer'] .pf-screen .switch-text strong {
+  font-size: var(--fs-base);
+  letter-spacing: var(--tracking-tight);
+}
+
+:root[data-app='customer'] .pf-screen .switch-text small {
+  margin-top: var(--space-1);
+  font-size: var(--fs-sm);
+  line-height: var(--leading-normal);
+}
+
+:root[data-app='customer'] .pf-screen .switch input:checked + .switch-track {
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent);
+}
+
+/* Brand hues stay exactly as they are — R9: these are recognition cues, not
+   palette. Only the bevel is added. */
+:root[data-app='customer'] .pf-screen .pf-pay-dot {
+  width: 0.6875rem;
+  height: 0.6875rem;
+  box-shadow: var(--bevel-hair);
+}
+
+/* Appearance picker, in the customer's scope only. The base rules stay as
+   they are for ProSettingsPage, which imports the same component. */
+:root[data-app='customer'] .pf-theme-option {
+  border-width: 1px;
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top), var(--elev-card);
+  font-size: var(--fs-xs);
+}
+
+:root[data-app='customer'] .pf-theme-option svg {
+  color: var(--text-tertiary);
+  transition: color var(--speed) var(--ease);
+}
+
+:root[data-app='customer'] .pf-theme-option[aria-checked='true'] {
+  border-color: var(--accent-line);
+  background-image: var(--accent-gradient-soft);
+  color: var(--accent-ink);
+  box-shadow: var(--bevel-top), var(--elev-raised), var(--glow-accent);
+}
+
+:root[data-app='customer'] .pf-theme-option[aria-checked='true'] svg {
+  color: var(--accent-ink);
+}
+
+/* Deliberately NOT micro-caps. `profile.appVersion` is
+   "Eureka Hair App · v0.1.0" — uppercasing it shouts the wordmark and turns
+   the version into "V0.1.0", and the Bangla string is half Latin, so it would
+   shout there too. A colophon is quiet: small, tracked, dim. */
+:root[data-app='customer'] .pf-version {
+  margin-top: calc(-1 * var(--space-4));
+  padding-block: var(--space-2) var(--space-1);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-dim);
+}
+
+/* --------------------------------------------------------------------------
+   Edit profile — choosing about yourself should feel good
+
+   Scoped to `.pf-edit-form`, so the identical `.tile-grid` on the
+   registration step and the `.auth-gender` tiles on the signed-out screens
+   are untouched.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .pf-edit-form {
+  gap: var(--space-8);
+}
+
+:root[data-app='customer'] .pf-edit-form .pf-avatar-picker {
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-2);
+}
+
+:root[data-app='customer'] .pf-edit-form .pf-avatar-picker .avatar {
+  box-shadow:
+    0 0 0 2px var(--bg-primary),
+    0 0 0 3px var(--accent-line),
+    var(--glow-accent);
+}
+
+/* The group headings only. GenderPicker's label is the one `.field` that is a
+   direct child of the form; every text input's label sits a level deeper
+   inside `.stack` and keeps the ordinary field voice. */
+:root[data-app='customer'] .pf-choice > .pf-field-label,
+:root[data-app='customer'] .pf-edit-form > .field > .field-label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+:root[data-app='customer'] .pf-choice {
+  gap: var(--space-3);
+}
+
+/* The area row is a scroller, so it gets its own breathing line under it
+   rather than the tighter gap the tile groups want. */
+:root[data-app='customer'] .pf-choice-areas .field-hint {
+  margin-top: var(--space-1);
+}
+
+:root[data-app='customer'] .pf-choice .tile,
+:root[data-app='customer'] .pf-edit-form .auth-gender-option {
+  position: relative;
+  overflow: hidden;
+  border-width: 1px;
+  border-color: var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top), var(--elev-card);
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+
+:root[data-app='customer'] .pf-choice .tile-title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+:root[data-app='customer'] .pf-choice .tile-sub {
+  font-size: var(--fs-sm);
+  line-height: var(--leading-normal);
+}
+
+:root[data-app='customer'] .pf-choice .tile[aria-pressed='true'],
+:root[data-app='customer'] .pf-edit-form .auth-gender-option[aria-checked='true'] {
+  border-color: var(--accent-line);
+  background-color: var(--bg-elevated);
+  background-image: var(--accent-gradient-soft);
+  color: var(--text-primary);
+  box-shadow: var(--bevel-top), var(--elev-raised), var(--glow-accent);
+}
+
+/* A bar of real gold along the top of the chosen tile. Decorative only —
+   `aria-pressed` / `aria-checked` still carry the state. */
+:root[data-app='customer'] .pf-choice .tile[aria-pressed='true']::after,
+:root[data-app='customer'] .pf-edit-form .auth-gender-option[aria-checked='true']::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  height: 2px;
+  background-image: var(--accent-gradient);
+}
+
+:root[data-app='customer'] .pf-edit-form .auth-gender-option[aria-checked='true'] .auth-gender-icon {
+  background-image: var(--accent-gradient);
+  color: var(--accent-on);
+  box-shadow: var(--glow-accent);
+}
+
+:root[data-app='customer'] .pf-choice .tile:active,
+:root[data-app='customer'] .pf-edit-form .auth-gender-option:active {
+  transform: scale(0.985);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='customer'] .pf-choice .tile:hover,
+  :root[data-app='customer'] .pf-edit-form .auth-gender-option:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--bevel-top), var(--elev-raised);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Saved and My reviews
+
+   Near-empty for most customers, so the empty state is the experience rather
+   than an afterthought: a lit gold medallion, a serif line, and room.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .empty.pf-empty {
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-5);
+}
+
+:root[data-app='customer'] .pf-empty .icon-circle {
+  width: 5rem;
+  height: 5rem;
+  margin-bottom: var(--space-5);
+  background-color: var(--bg-secondary);
+  background-image: var(--accent-gradient-soft);
+  color: var(--accent-ink);
+  box-shadow: var(--bevel-top), var(--bevel-hair), var(--elev-card);
+}
+
+:root[data-app='customer'] .pf-empty h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+
+:root[data-app='customer'] .pf-empty p {
+  max-width: 20rem;
+  font-size: var(--fs-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+}
+
+:root[data-app='customer'] .pf-empty .btn {
+  margin-top: var(--space-5);
+}
+
+/* The count line above a list, as an eyebrow rather than a sentence. It
+   belongs to the list under it, not to the chapter gap above it, so it takes
+   back most of `.pf-screen`'s 2rem. */
+:root[data-app='customer'] .pf-count {
+  margin-bottom: calc(-1 * var(--space-6));
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+:root[data-app='customer'] .pf-saved-list {
+  gap: var(--space-4);
+}
+
+:root[data-app='customer'] .pf-reviews {
+  gap: var(--space-3);
+}
+
+/* booking.css dresses the identical `.review` on the professional's page and
+   on the reviews page at `--radius-lg`, `--space-4 --space-5`, name at
+   `--fs-md` on the display face. Same component, same app, same treatment —
+   a customer should not meet two kinds of review card. */
+:root[data-app='customer'] .pf-reviews .review {
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+}
+
+:root[data-app='customer'] .pf-reviews .review-head {
+  padding-bottom: var(--space-3);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='customer'] .pf-reviews .review-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary);
+}
+
+:root[data-app='customer'] .pf-reviews .review-meta {
+  font-size: var(--fs-xs);
+  color: var(--text-tertiary);
+}
+
+:root[data-app='customer'] .pf-reviews .review-text {
+  font-size: var(--fs-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   The booking card — deliberately not dressed here
+
+   `BookingCard` renders on exactly one screen, `.bkl-screen`, and booking.css
+   already dresses it there: a status-tinted band of light down the card's
+   inside edge, the day in micro-caps, the services in the display face, a gold
+   divider. Every `.bkl-` rule in this file above the customer section is the
+   shared base those overrides layer on, and that is all this section should
+   own.
+
+   A gold `::before` added here would tie booking.css's band on specificity —
+   both land at (0,4,1) — and win on import order alone, silently replacing the
+   status colour on precisely the cards whose status matters most, while
+   leaving the 24px gutter booking.css reserves for the band empty. One card,
+   one hand.
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   Help — one bound volume rather than six loose boxes
+
+   Two boxes of identical weight is the same failure as seven, so the three
+   ways to reach a human are raised and the questions sit a step below them.
+   `.pf-list` is the contact card and nothing else on this screen: the FAQ
+   volume is a plain div, so no `:first-child` guess is needed.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .pf-help .list-card.pf-list {
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+
+:root[data-app='customer'] .pf-faq-list {
+  gap: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+:root[data-app='customer'] .pf-faq-list .pf-faq {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='customer'] .pf-faq-list .pf-faq:last-child {
+  background-image: none;
+}
+
+/* Declared before the guarded hover below, so the base kit's unguarded
+   `summary:hover` cannot stick on a touch screen. */
+:root[data-app='customer'] .pf-faq-list summary {
+  min-height: 3.5rem;
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  background-color: transparent;
+}
+
+/* The volume's own corners, carried by the first and last row — the list is
+   not clipped, so a focused summary keeps its whole ring. */
+:root[data-app='customer'] .pf-faq-list .pf-faq:first-child summary {
+  border-start-start-radius: var(--radius-xl);
+  border-start-end-radius: var(--radius-xl);
+}
+
+:root[data-app='customer'] .pf-faq-list .pf-faq:last-child:not([open]) summary {
+  border-end-start-radius: var(--radius-xl);
+  border-end-end-radius: var(--radius-xl);
+}
+
+:root[data-app='customer'] .pf-faq-list summary svg {
+  color: var(--accent-ink);
+}
+
+:root[data-app='customer'] .pf-faq-list .pf-faq[open] summary {
+  border-bottom: 0;
+  color: var(--accent-ink);
+}
+
+:root[data-app='customer'] .pf-faq-list .pf-faq-body {
+  padding: 0 var(--space-5) var(--space-5);
+  font-size: var(--fs-base);
+  line-height: var(--leading-relaxed);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='customer'] .pf-faq-list summary:hover {
+    background-color: var(--hover-bg);
+  }
+}
+
+:root[data-app='customer'] .pf-signoff {
+  margin-top: calc(-1 * var(--space-4));
+  font-size: var(--fs-sm);
+  color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------------------------
+   The sheets this section owns
+
+   customer.css already gives every `.sheet` its corner, its bevel and its
+   arrival. These are the contents.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .pf-receipt .bkl-receipt-head {
+  padding: var(--space-4) var(--space-5);
+  border-color: var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--bevel-hair);
+}
+
+:root[data-app='customer'] .pf-receipt .bkl-receipt-head .mono {
+  font-size: var(--fs-base);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-primary);
+}
+
+:root[data-app='customer'] .pf-receipt .kv {
+  gap: var(--space-3);
+}
+
+:root[data-app='customer'] .pf-policy-list {
+  gap: var(--space-4);
+}
+
+:root[data-app='customer'] .pf-policy-list li {
+  font-size: var(--fs-base);
+  line-height: var(--leading-relaxed);
+}
+
+/* booking.css already states this numeral for `.bk-done .checklist`, which a
+   customer sees on the confirmation screen. Matched rather than re-invented:
+   a soft gold wash inside a gold hairline, ink in `--accent-ink`. */
+:root[data-app='customer'] .pf-policy-list .num {
+  background-color: transparent;
+  background-image: var(--accent-gradient-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-bg-strong);
+  color: var(--accent-ink);
+}
+
+:root[data-app='customer'] .pf-review-form {
+  gap: var(--space-5);
+}
+
+:root[data-app='customer'] .pf-review-form .star-btn[data-on='true'] {
+  filter: drop-shadow(0 2px 6px var(--ring));
+}
+
+:root[data-app='customer'] .pf-cancel {
+  gap: var(--space-4);
+}
+
+/* --------------------------------------------------------------------------
+   Change password
+
+   This route sits outside the CustomerOnly guard and its inputs are shared
+   with the signed-out screens, so nothing here touches an `.auth-*` class:
+   only air, on a wrapper this page alone carries.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .pf-password {
+  gap: var(--space-6);
+}
+
+:root[data-app='customer'] .pf-password > .caption {
+  font-size: var(--fs-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+}
+
+/* --------------------------------------------------------------------------
+   Bangla
+
+   base.css holds `.label` at 0.02em because wide tracking pulls a conjunct
+   apart, and every rule above that sets tracking on translated text
+   out-specifies it. Each one is given the same width back here.
+   -------------------------------------------------------------------------- */
+
+:root[data-lang='bn'][data-app='customer'] .pf-screen .section > .label,
+:root[data-lang='bn'][data-app='customer'] .pf-identity .pf-header .caption,
+:root[data-lang='bn'][data-app='customer'] .pf-identity .pf-stat span,
+:root[data-lang='bn'][data-app='customer'] .pf-choice > .pf-field-label,
+:root[data-lang='bn'][data-app='customer'] .pf-edit-form > .field > .field-label,
+:root[data-lang='bn'][data-app='customer'] .pf-count,
+:root[data-lang='bn'][data-app='customer'] .pf-version {
+  letter-spacing: 0.02em;
+}
+
+/* base.css flattens heading tracking to 0 under `bn` for the same reason, and
+   the display-face headings added above out-specify it. Bengali conjuncts are
+   drawn to their own fit and a -0.035em pull closes them onto each other. */
+:root[data-lang='bn'][data-app='customer'] .pf-identity .pf-header h2,
+:root[data-lang='bn'][data-app='customer'] .pf-empty h3,
+:root[data-lang='bn'][data-app='customer'] .pf-reviews .review-name {
+  letter-spacing: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion
+
+   base.css collapses transition durations, but a `transform` set on :active
+   is not a transition and survives it.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-app='customer'] .pf-choice .tile:active,
+  :root[data-app='customer'] .pf-edit-form .auth-gender-option:active {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   The professional's Settings screen — the customer's, for the other three
+
+   ProSettingsPage now renders the same markup as the customer's SettingsPage
+   (`.pf-screen .pf-settings`, `.section > .label` chapter heads, ListCard
+   rows), so these are that screen's rules mirrored onto the three provider
+   scopes by attribute substitution. Nothing is re-designed here and nothing is
+   invented: if the customer's settings rhythm changes, this block is what has
+   to change with it.
+
+   All three roles are covered. Only barber and salon_employee had any settings
+   treatment before, and the salon owner's screen was the base kit — which is
+   the inconsistency this closes.
+   ========================================================================== */
+
+:root[data-app='salon_owner'] .pf-screen,
+:root[data-app='barber'] .pf-screen,
+:root[data-app='salon_employee'] .pf-screen {
+  gap: var(--space-8);
+  padding-bottom: var(--space-10);
+}
+:root[data-app='salon_owner'] .pf-screen .section,
+:root[data-app='barber'] .pf-screen .section,
+:root[data-app='salon_employee'] .pf-screen .section {
+  gap: var(--space-3);
+}
+:root[data-app='salon_owner'] .pf-screen .section > .label,
+:root[data-app='barber'] .pf-screen .section > .label,
+:root[data-app='salon_employee'] .pf-screen .section > .label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  color: var(--text-tertiary);
+}
+:root[data-app='salon_owner'] .pf-screen .section > .label::after,
+:root[data-app='barber'] .pf-screen .section > .label::after,
+:root[data-app='salon_employee'] .pf-screen .section > .label::after {
+  content: '';
+  flex: 1 1 auto;
+  height: 1px;
+  background-image: var(--rule-gradient);
+}
+:root[data-app='salon_owner'] .pf-screen .list-card,
+:root[data-app='barber'] .pf-screen .list-card,
+:root[data-app='salon_employee'] .pf-screen .list-card {
+  border-radius: var(--radius-xl);
+}
+:root[data-app='salon_owner'] .pf-screen .list-row,
+:root[data-app='barber'] .pf-screen .list-row,
+:root[data-app='salon_employee'] .pf-screen .list-row {
+  gap: var(--space-4);
+  min-height: 3.75rem;
+  padding: var(--space-3) var(--space-4);
+}
+:root[data-app='salon_owner'] .pf-screen .list-row-icon,
+:root[data-app='barber'] .pf-screen .list-row-icon,
+:root[data-app='salon_employee'] .pf-screen .list-row-icon {
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: 50%;
+  background-color: var(--bg-elevated);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-hair);
+  color: var(--accent-ink);
+}
+:root[data-app='salon_owner'] .pf-screen .list-row-title,
+:root[data-app='barber'] .pf-screen .list-row-title,
+:root[data-app='salon_employee'] .pf-screen .list-row-title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='salon_owner'] .pf-screen .list-row-sub,
+:root[data-app='barber'] .pf-screen .list-row-sub,
+:root[data-app='salon_employee'] .pf-screen .list-row-sub {
+  margin-top: var(--space-1);
+  font-size: var(--fs-sm);
+  line-height: var(--leading-normal);
+  color: var(--text-tertiary);
+}
+:root[data-app='salon_owner'] .pf-screen .list-row-end,
+:root[data-app='barber'] .pf-screen .list-row-end,
+:root[data-app='salon_employee'] .pf-screen .list-row-end {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-app='salon_owner'] .pf-screen .list-row-danger .list-row-icon,
+:root[data-app='barber'] .pf-screen .list-row-danger .list-row-icon,
+:root[data-app='salon_employee'] .pf-screen .list-row-danger .list-row-icon {
+  background-image: none;
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-ink);
+}
+:root[data-app='salon_owner'] .list-card.pf-list.pf-list-flat,
+:root[data-app='salon_owner'] .pf-settings .list-card:not(.pf-card-keep),
+:root[data-app='barber'] .list-card.pf-list.pf-list-flat,
+:root[data-app='barber'] .pf-settings .list-card:not(.pf-card-keep),
+:root[data-app='salon_employee'] .list-card.pf-list.pf-list-flat,
+:root[data-app='salon_employee'] .pf-settings .list-card:not(.pf-card-keep) {
+  overflow: visible;
+  margin-inline: calc(-1 * var(--space-3));
+  border-color: transparent;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+:root[data-app='salon_owner'] .pf-list.pf-list-flat .list-row,
+:root[data-app='salon_owner'] .pf-settings .list-card:not(.pf-card-keep) .list-row,
+:root[data-app='barber'] .pf-list.pf-list-flat .list-row,
+:root[data-app='barber'] .pf-settings .list-card:not(.pf-card-keep) .list-row,
+:root[data-app='salon_employee'] .pf-list.pf-list-flat .list-row,
+:root[data-app='salon_employee'] .pf-settings .list-card:not(.pf-card-keep) .list-row {
+  min-height: 3.75rem;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-3);
+  border-bottom-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+:root[data-app='salon_owner'] .pf-list.pf-list-flat .list-row:last-child,
+:root[data-app='salon_owner'] .pf-settings .list-card:not(.pf-card-keep) .list-row:last-child,
+:root[data-app='barber'] .pf-list.pf-list-flat .list-row:last-child,
+:root[data-app='barber'] .pf-settings .list-card:not(.pf-card-keep) .list-row:last-child,
+:root[data-app='salon_employee'] .pf-list.pf-list-flat .list-row:last-child,
+:root[data-app='salon_employee'] .pf-settings .list-card:not(.pf-card-keep) .list-row:last-child {
+  background-image: none;
+}
+:root[data-app='salon_owner'] .pf-list.pf-list-flat .list-row-icon,
+:root[data-app='salon_owner'] .pf-settings .list-card:not(.pf-card-keep) .list-row-icon,
+:root[data-app='barber'] .pf-list.pf-list-flat .list-row-icon,
+:root[data-app='barber'] .pf-settings .list-card:not(.pf-card-keep) .list-row-icon,
+:root[data-app='salon_employee'] .pf-list.pf-list-flat .list-row-icon,
+:root[data-app='salon_employee'] .pf-settings .list-card:not(.pf-card-keep) .list-row-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  color: var(--accent-ink);
+}
+:root[data-app='salon_owner'] .pf-list.pf-list-flat a.list-row:active,
+:root[data-app='salon_owner'] .pf-list.pf-list-flat button.list-row:active,
+:root[data-app='salon_owner'] .pf-settings .list-card:not(.pf-card-keep) a.list-row:active,
+:root[data-app='salon_owner'] .pf-settings .list-card:not(.pf-card-keep) button.list-row:active,
+:root[data-app='barber'] .pf-list.pf-list-flat a.list-row:active,
+:root[data-app='barber'] .pf-list.pf-list-flat button.list-row:active,
+:root[data-app='barber'] .pf-settings .list-card:not(.pf-card-keep) a.list-row:active,
+:root[data-app='barber'] .pf-settings .list-card:not(.pf-card-keep) button.list-row:active,
+:root[data-app='salon_employee'] .pf-list.pf-list-flat a.list-row:active,
+:root[data-app='salon_employee'] .pf-list.pf-list-flat button.list-row:active,
+:root[data-app='salon_employee'] .pf-settings .list-card:not(.pf-card-keep) a.list-row:active,
+:root[data-app='salon_employee'] .pf-settings .list-card:not(.pf-card-keep) button.list-row:active {
+  background-color: var(--accent-bg);
+  border-radius: var(--radius);
+}
+:root[data-app='salon_owner'] .pf-danger-zone .list-card.pf-list,
+:root[data-app='barber'] .pf-danger-zone .list-card.pf-list,
+:root[data-app='salon_employee'] .pf-danger-zone .list-card.pf-list {
+  border-color: var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-deep);
+  box-shadow: var(--bevel-hair);
+}
+:root[data-app='salon_owner'] .pf-screen.pf-settings,
+:root[data-app='barber'] .pf-screen.pf-settings,
+:root[data-app='salon_employee'] .pf-screen.pf-settings {
+  gap: var(--space-10);
+}
+:root[data-app='salon_owner'] .pf-settings .section:not(.pf-danger-zone) > .card,
+:root[data-app='salon_owner'] .pf-settings .section:not(.pf-danger-zone) > .list-card.pf-card-keep,
+:root[data-app='barber'] .pf-settings .section:not(.pf-danger-zone) > .card,
+:root[data-app='barber'] .pf-settings .section:not(.pf-danger-zone) > .list-card.pf-card-keep,
+:root[data-app='salon_employee'] .pf-settings .section:not(.pf-danger-zone) > .card,
+:root[data-app='salon_employee'] .pf-settings .section:not(.pf-danger-zone) > .list-card.pf-card-keep {
+  border-radius: var(--radius-xl);
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+:root[data-app='salon_owner'] .pf-settings .pf-theme,
+:root[data-app='barber'] .pf-settings .pf-theme,
+:root[data-app='salon_employee'] .pf-settings .pf-theme {
+  gap: var(--space-3);
+}
+:root[data-app='salon_owner'] .pf-settings .list-card.pf-card-keep,
+:root[data-app='barber'] .pf-settings .list-card.pf-card-keep,
+:root[data-app='salon_employee'] .pf-settings .list-card.pf-card-keep {
+  overflow: visible;
+}
+:root[data-app='salon_owner'] .pf-settings .list-card.pf-card-keep > :first-child,
+:root[data-app='barber'] .pf-settings .list-card.pf-card-keep > :first-child,
+:root[data-app='salon_employee'] .pf-settings .list-card.pf-card-keep > :first-child {
+  border-start-start-radius: inherit;
+  border-start-end-radius: inherit;
+}
+:root[data-app='salon_owner'] .pf-settings .list-card.pf-card-keep > :last-child,
+:root[data-app='barber'] .pf-settings .list-card.pf-card-keep > :last-child,
+:root[data-app='salon_employee'] .pf-settings .list-card.pf-card-keep > :last-child {
+  border-end-start-radius: inherit;
+  border-end-end-radius: inherit;
+}
+:root[data-app='salon_owner'] .pf-settings .section > .card > .field-hint,
+:root[data-app='barber'] .pf-settings .section > .card > .field-hint,
+:root[data-app='salon_employee'] .pf-settings .section > .card > .field-hint {
+  margin-top: var(--space-1);
+  font-size: var(--fs-xs);
+  line-height: var(--leading-normal);
+  color: var(--text-tertiary);
+}
+:root[data-app='salon_owner'] .pf-screen > .btn-danger-soft,
+:root[data-app='barber'] .pf-screen > .btn-danger-soft,
+:root[data-app='salon_employee'] .pf-screen > .btn-danger-soft {
+  margin-top: var(--space-2);
+  border-color: var(--border-color);
+  background-color: transparent;
+  color: var(--status-danger-ink);
+}
+:root[data-app='salon_owner'] .pf-screen .pf-toggle-row,
+:root[data-app='barber'] .pf-screen .pf-toggle-row,
+:root[data-app='salon_employee'] .pf-screen .pf-toggle-row {
+  padding-block: var(--space-2);
+}
+:root[data-app='salon_owner'] .pf-screen .switch-text strong,
+:root[data-app='barber'] .pf-screen .switch-text strong,
+:root[data-app='salon_employee'] .pf-screen .switch-text strong {
+  font-size: var(--fs-base);
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='salon_owner'] .pf-screen .switch-text small,
+:root[data-app='barber'] .pf-screen .switch-text small,
+:root[data-app='salon_employee'] .pf-screen .switch-text small {
+  margin-top: var(--space-1);
+  font-size: var(--fs-sm);
+  line-height: var(--leading-normal);
+}
+:root[data-app='salon_owner'] .pf-screen .switch input:checked + .switch-track,
+:root[data-app='barber'] .pf-screen .switch input:checked + .switch-track,
+:root[data-app='salon_employee'] .pf-screen .switch input:checked + .switch-track {
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent);
+}
+:root[data-app='salon_owner'] .pf-screen .pf-pay-dot,
+:root[data-app='barber'] .pf-screen .pf-pay-dot,
+:root[data-app='salon_employee'] .pf-screen .pf-pay-dot {
+  width: 0.6875rem;
+  height: 0.6875rem;
+  box-shadow: var(--bevel-hair);
+}
+:root[data-app='salon_owner'] .pf-theme-option,
+:root[data-app='barber'] .pf-theme-option,
+:root[data-app='salon_employee'] .pf-theme-option {
+  border-width: 1px;
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top), var(--elev-card);
+  font-size: var(--fs-xs);
+}
+:root[data-app='salon_owner'] .pf-theme-option svg,
+:root[data-app='barber'] .pf-theme-option svg,
+:root[data-app='salon_employee'] .pf-theme-option svg {
+  color: var(--text-tertiary);
+  transition: color var(--speed) var(--ease);
+}
+:root[data-app='salon_owner'] .pf-theme-option[aria-checked='true'],
+:root[data-app='barber'] .pf-theme-option[aria-checked='true'],
+:root[data-app='salon_employee'] .pf-theme-option[aria-checked='true'] {
+  border-color: var(--accent-line);
+  background-image: var(--accent-gradient-soft);
+  color: var(--accent-ink);
+  box-shadow: var(--bevel-top), var(--elev-raised), var(--glow-accent);
+}
+:root[data-app='salon_owner'] .pf-theme-option[aria-checked='true'] svg,
+:root[data-app='barber'] .pf-theme-option[aria-checked='true'] svg,
+:root[data-app='salon_employee'] .pf-theme-option[aria-checked='true'] svg {
+  color: var(--accent-ink);
+}
+:root[data-app='salon_owner'] .pf-version,
+:root[data-app='barber'] .pf-version,
+:root[data-app='salon_employee'] .pf-version {
+  margin-top: calc(-1 * var(--space-4));
+  padding-block: var(--space-2) var(--space-1);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-dim);
+}
+:root[data-app='salon_owner'] .pf-help .list-card.pf-list,
+:root[data-app='barber'] .pf-help .list-card.pf-list,
+:root[data-app='salon_employee'] .pf-help .list-card.pf-list {
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+:root[data-lang='bn'][data-app='salon_owner'] .pf-screen .section > .label,
+:root[data-lang='bn'][data-app='salon_owner'] .pf-identity .pf-header .caption,
+:root[data-lang='bn'][data-app='salon_owner'] .pf-identity .pf-stat span,
+:root[data-lang='bn'][data-app='salon_owner'] .pf-choice > .pf-field-label,
+:root[data-lang='bn'][data-app='salon_owner'] .pf-edit-form > .field > .field-label,
+:root[data-lang='bn'][data-app='salon_owner'] .pf-count,
+:root[data-lang='bn'][data-app='salon_owner'] .pf-version,
+:root[data-lang='bn'][data-app='barber'] .pf-screen .section > .label,
+:root[data-lang='bn'][data-app='barber'] .pf-identity .pf-header .caption,
+:root[data-lang='bn'][data-app='barber'] .pf-identity .pf-stat span,
+:root[data-lang='bn'][data-app='barber'] .pf-choice > .pf-field-label,
+:root[data-lang='bn'][data-app='barber'] .pf-edit-form > .field > .field-label,
+:root[data-lang='bn'][data-app='barber'] .pf-count,
+:root[data-lang='bn'][data-app='barber'] .pf-version,
+:root[data-lang='bn'][data-app='salon_employee'] .pf-screen .section > .label,
+:root[data-lang='bn'][data-app='salon_employee'] .pf-identity .pf-header .caption,
+:root[data-lang='bn'][data-app='salon_employee'] .pf-identity .pf-stat span,
+:root[data-lang='bn'][data-app='salon_employee'] .pf-choice > .pf-field-label,
+:root[data-lang='bn'][data-app='salon_employee'] .pf-edit-form > .field > .field-label,
+:root[data-lang='bn'][data-app='salon_employee'] .pf-count,
+:root[data-lang='bn'][data-app='salon_employee'] .pf-version {
+  letter-spacing: 0.02em;
+}

@@ -1,0 +1,254 @@
+/* The customer-facing directory: who a customer can book, from the backend.
+
+   Every salon and independent barber comes out of `/api/directory/` in one
+   shape, so a search result and a detail page are the same record with more
+   of it filled in. There is no fixture behind any of this — a listing exists
+   because somebody finished signing up for it. */
+
+import type {
+  AcceptanceMode,
+  Audience,
+  BusinessType,
+  GalleryPhoto,
+  GeoPoint,
+  Professional,
+  Service,
+  StaffMember,
+} from '../types';
+import type { WeekSchedule } from '../types/schedule';
+import { api } from './apiClient';
+import { hashUnit } from './id';
+
+/* --- What the wire looks like --------------------------------------------- */
+
+interface ApiLocation {
+  area: string;
+  city: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+interface ApiDay {
+  day: WeekSchedule[number]['day'];
+  is_closed: boolean;
+  intervals: Array<{ start: string; end: string }>;
+}
+
+interface ApiService {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  duration: number;
+  buffer_minutes: number;
+  audience: 'all' | 'male' | 'female';
+  includes: string[];
+  steps: string[];
+  popular: boolean;
+  eligible_employee_ids: string[];
+}
+
+interface ApiStaff {
+  id: string;
+  name: string;
+  title: string;
+  avatar: string;
+  specialties: string[];
+  experience_years: number;
+  chair_status: string;
+  /** This chair's own score: the mean of the reviews of work done in it, and
+      null when there are none. */
+  rating: number | null;
+  review_count: number;
+  /** This chair's effective week: its own hours, or the salon's when it has
+      set none. Resolved server-side, the same way booking resolves it. */
+  hours: ApiDay[];
+}
+
+interface ApiListing {
+  id: string;
+  kind: 'salon' | 'barber';
+  type: BusinessType;
+  name: string;
+  tagline: string;
+  bio: string;
+  audience: Audience;
+  avatar: string;
+  cover_image: string;
+  gallery: Array<{ id: number; image: string; caption: string }>;
+  location: ApiLocation;
+  distance_km: number | null;
+  phone: string;
+  email: string;
+  category: string;
+  specialties: string[];
+  experience_years: number | null;
+  verified: boolean;
+  accepting_clients: boolean;
+  acceptance: AcceptanceMode;
+  amenities: string[];
+  women_only: boolean;
+  private_booth: boolean;
+  price_from: number | null;
+  service_count: number;
+  staff_count: number;
+  hours: ApiDay[];
+  open_now: boolean;
+  rating: number | null;
+  review_count: number;
+  services?: ApiService[];
+  staff?: ApiStaff[];
+}
+
+interface ApiDirectory {
+  count: number;
+  results: ApiListing[];
+}
+
+/* --- Mapping -------------------------------------------------------------- */
+
+const toGallery = (rows: ApiListing['gallery']): GalleryPhoto[] =>
+  rows.map((row) => ({ id: row.id, image: row.image, caption: row.caption }));
+
+const toWeek = (days: ApiDay[]): WeekSchedule =>
+  days.map((day) => ({
+    day: day.day,
+    closed: day.is_closed,
+    intervals: day.intervals.map((interval) => ({ ...interval })),
+  }));
+
+export function toProfessional(row: ApiListing): Professional {
+  return {
+    id: row.id,
+    kind: row.kind,
+    name: row.name,
+    type: row.type,
+    audience: row.audience,
+    tagline: row.tagline,
+    bio: row.bio,
+    location: {
+      area: row.location.area,
+      city: row.location.city,
+      address: row.location.address,
+      lat: row.location.latitude ?? 0,
+      lng: row.location.longitude ?? 0,
+    },
+    phone: row.phone,
+    email: row.email,
+    avatar: row.avatar,
+    coverImage: row.cover_image,
+    gallery: toGallery(row.gallery),
+    category: row.category,
+    specialties: row.specialties ?? [],
+    experienceYears: row.experience_years,
+    rating: row.rating,
+    reviewCount: row.review_count,
+    hours: toWeek(row.hours),
+    openNow: row.open_now,
+    acceptance: row.acceptance,
+    priceFrom: row.price_from,
+    serviceCount: row.service_count,
+    staffCount: row.staff_count,
+    verified: row.verified,
+    acceptingClients: row.accepting_clients,
+    womenOnly: row.women_only,
+    privateBooth: row.private_booth,
+    amenities: row.amenities ?? [],
+    distanceKm: row.distance_km ?? undefined,
+  };
+}
+
+/** `suitableFor` on the customer side and `audience` on the provider's are the
+    same fact in two vocabularies. */
+const SUITS = { all: 'all', male: 'men', female: 'women' } as const;
+
+export const toService = (row: ApiService, professionalId: string): Service => ({
+  id: row.id,
+  professionalId,
+  name: row.name,
+  category: row.category,
+  duration: row.duration,
+  price: row.price,
+  description: row.description,
+  includes: row.includes ?? [],
+  suitableFor: SUITS[row.audience] ?? 'all',
+  // Hairstyles are a catalogue of their own with no backend link to a price
+  // list yet, so nothing here claims to match a try-on.
+  hairstyleIds: [],
+  // Already on the wire and previously dropped here, which is why the customer
+  // side could not tell which stylist may perform what.
+  staffIds: (row.eligible_employee_ids ?? []).map(String),
+  popular: row.popular,
+});
+
+export const toStaff = (row: ApiStaff, professionalId: string): StaffMember => ({
+  id: row.id,
+  professionalId,
+  name: row.name,
+  title: row.title,
+  rating: row.rating ?? null,
+  reviewCount: row.review_count ?? 0,
+  specialties: row.specialties ?? [],
+  experienceYears: row.experience_years,
+  tone: Math.floor(hashUnit(`${professionalId}:${row.id}`) * 6),
+  // The week this chair actually works. The server has already applied the
+  // inheritance — own hours, else the salon's — so the calendar can ask about
+  // one stylist without re-deriving the rule and getting it wrong.
+  hours: toWeek(row.hours),
+  // Days off are the fixtures' way of saying the same thing; a real chair
+  // closes the day in `hours` instead.
+  daysOff: [],
+});
+
+export interface DirectoryDetail {
+  professional: Professional;
+  services: Service[];
+  staff: StaffMember[];
+}
+
+/* --- Calls ---------------------------------------------------------------- */
+
+export interface DirectoryFilters {
+  query?: string;
+  type?: 'all' | 'salon' | 'barber';
+  audience?: Audience | 'all';
+  openNow?: boolean;
+  area?: string;
+  sort?: 'distance' | 'price' | 'name';
+  limit?: number;
+}
+
+const queryString = (point: GeoPoint | undefined, filters: DirectoryFilters): string => {
+  const params = new URLSearchParams();
+  if (point) {
+    params.set('lat', String(point.lat));
+    params.set('lng', String(point.lng));
+  }
+  if (filters.query) params.set('q', filters.query);
+  if (filters.type && filters.type !== 'all') params.set('type', filters.type);
+  if (filters.audience && filters.audience !== 'all') params.set('audience', filters.audience);
+  if (filters.openNow) params.set('open_now', 'true');
+  if (filters.area) params.set('area', filters.area);
+  if (filters.sort) params.set('sort', filters.sort);
+  if (filters.limit) params.set('limit', String(filters.limit));
+  const query = params.toString();
+  return query ? `?${query}` : '';
+};
+
+export const directoryService = {
+  async list(point: GeoPoint | undefined, filters: DirectoryFilters = {}): Promise<Professional[]> {
+    const data = await api.get<ApiDirectory>(`/directory/${queryString(point, filters)}`);
+    return data.results.map(toProfessional);
+  },
+
+  async get(id: string, point?: GeoPoint): Promise<DirectoryDetail> {
+    const row = await api.get<ApiListing>(`/directory/${id}/${queryString(point, {})}`);
+    return {
+      professional: toProfessional(row),
+      services: (row.services ?? []).map((service) => toService(service, row.id)),
+      staff: (row.staff ?? []).map((member) => toStaff(member, row.id)),
+    };
+  },
+};

@@ -1,0 +1,19 @@
+{
+  "name": "Eureka Hair App",
+  "short_name": "Eureka",
+  "description": "See the cut before the cut. Try hairstyles on your photo and book a salon or barber.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#16130f",
+  "theme_color": "#16130f",
+  "lang": "en",
+  "categories": ["beauty", "lifestyle"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

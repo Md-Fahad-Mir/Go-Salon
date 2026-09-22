@@ -1,0 +1,1471 @@
+/* ==========================================================================
+   booking screens
+   .pro-  professional detail + reviews
+   .bk-   booking wizard (services → stylist → when → confirm → pay → done)
+   ========================================================================== */
+
+/* --- Professional detail --------------------------------------------------- */
+
+.pro-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.125rem var(--screen-padding) 1rem;
+}
+
+.pro-head { display: flex; flex-direction: column; gap: 0.625rem; }
+.pro-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; }
+.pro-rating-row { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; }
+
+/* Info list: stack title over subtitle (the shared row leaves them inline) */
+.pro-body .list-row-title,
+.pro-body .list-row-sub { display: block; }
+
+/* Hours disclosure inside the info list */
+.pro-hours-toggle[aria-expanded='true'] { border-bottom-color: transparent; }
+.pro-hours[hidden] { display: none; }
+.pro-chevron { transition: transform var(--speed) var(--ease-out); }
+[aria-expanded='true'] .pro-chevron { transform: rotate(180deg); }
+
+.pro-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0 1rem 0.875rem 4.125rem;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.875rem;
+}
+.pro-hours-day { display: flex; justify-content: space-between; gap: 1rem; color: var(--text-secondary); }
+.pro-hours-day dd { margin: 0; font-variant-numeric: tabular-nums; text-align: end; }
+.pro-hours-day[data-closed='true'] dd { color: var(--text-dim); }
+.pro-hours-day[data-today='true'] { color: var(--text-primary); font-weight: 600; }
+.pro-hours-day[data-today='true'] dd { color: var(--accent-ink); }
+
+/* Call / Directions / Website */
+.pro-actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+}
+.pro-actions .btn { padding-inline: 0.5rem; flex-direction: column; gap: 0.25rem; min-height: 3.75rem; font-size: 0.8125rem; }
+.pro-actions .btn svg { color: var(--accent-ink); }
+
+.pro-about { font-size: 0.9375rem; line-height: 1.6; }
+
+/* Team cards */
+.pro-team { padding-block: 0.125rem 0.25rem; }
+.pro-staff-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.625rem;
+  width: 11.5rem;
+  padding: 0.875rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+}
+.pro-staff-card .stack-xs { width: 100%; }
+.pro-staff-name { display: block; font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); }
+.pro-staff-card .btn { margin-top: auto; }
+
+/* Portfolio */
+.pro-photo {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius);
+  transition: transform var(--speed) var(--ease-out);
+}
+.pro-photo:active { transform: scale(0.97); }
+.pro-lightbox { display: flex; flex-direction: column; gap: 0.875rem; }
+.pro-lightbox-nav { display: flex; justify-content: space-between; gap: 0.5rem; }
+
+/* Reviews summary (reviews page) */
+.pro-score { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1.25rem; align-items: center; }
+.pro-score-main { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; text-align: center; min-width: 5rem; }
+.pro-stars { display: inline-flex; gap: 0.125rem; color: var(--accent); }
+.pro-stars svg[data-off='true'] { color: var(--border-strong); }
+.pro-dist { display: flex; flex-direction: column; gap: 0.375rem; }
+.pro-dist-row { display: grid; grid-template-columns: 0.75rem minmax(0, 1fr) 1.5rem; gap: 0.5rem; align-items: center; font-size: 0.8125rem; color: var(--text-tertiary); }
+.pro-dist-track { height: 0.4375rem; border-radius: var(--radius-pill); background-color: var(--border-color); overflow: hidden; }
+.pro-dist-fill { display: block; height: 100%; border-radius: inherit; background-color: var(--accent); transition: width var(--speed-slow) var(--ease-out); }
+.pro-dist-count { text-align: end; font-variant-numeric: tabular-nums; }
+
+/* --- Wizard shell ---------------------------------------------------------- */
+
+.bk-steps { padding: 0.875rem var(--screen-padding) 0; }
+.bk-intro { display: flex; flex-direction: column; gap: 0.25rem; }
+/* The reviews page's own masthead. It used to borrow .bk-intro, which is the
+   wizard's, and so read as a fifth booking step. */
+.pro-reviews-head { display: flex; flex-direction: column; gap: 0.25rem; }
+.bk-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.bk-group > .label { padding-top: 0.25rem; }
+.bk-loading { display: flex; justify-content: center; padding: 3rem 0; }
+
+/* Multi-select service option (a card with two buttons, not a nested one) */
+.bk-service { flex-direction: column; align-items: stretch; gap: 0; padding: 0; }
+.bk-service-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  width: 100%;
+  padding: 0.875rem 1rem 0.5rem;
+  text-align: start;
+  color: var(--text-primary);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.bk-service-title { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; }
+.bk-check {
+  display: grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  margin-top: 0.0625rem;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 0.375rem;
+  background-color: var(--input-bg);
+  color: var(--accent-on);
+  transition: background-color var(--speed) var(--ease), border-color var(--speed) var(--ease);
+}
+.bk-check svg { opacity: 0; transform: scale(0.6); transition: all var(--speed) var(--ease-out); }
+.bk-check[data-on='true'] { background-color: var(--accent); border-color: var(--accent); }
+.bk-check[data-on='true'] svg { opacity: 1; transform: none; }
+.bk-service-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  align-self: flex-start;
+  min-height: 2.75rem;
+  padding: 0 1rem 0 3.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+}
+.bk-service-more svg { transition: transform var(--speed) var(--ease-out); }
+.bk-service-more[aria-expanded='true'] svg { transform: rotate(180deg); }
+.bk-service-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0 1rem 0.875rem 3.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+.bk-service-details[hidden] { display: none; }
+.bk-service-details li { display: flex; align-items: center; gap: 0.5rem; }
+.bk-service-details svg { color: var(--status-success-ink); flex-shrink: 0; }
+
+/* Stylist + payment radios: stack title over subtitle */
+.bk-staff .option-title,
+.bk-staff .option-sub,
+.bk-pay .option-title,
+.bk-pay .option-sub { display: block; }
+
+/* Stylist radio */
+.bk-staff-any { width: 3rem; height: 3rem; }
+.bk-staff-meta { display: flex; align-items: center; gap: 0.25rem; margin-top: 0.125rem; font-size: 0.8125rem; }
+
+/* Date & time */
+.bk-times-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
+.bk-times-head h3 { font-size: 1rem; }
+
+/* Summary */
+.bk-sum-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.bk-sum .card-head { margin-bottom: 0.5rem; }
+.bk-sum .card-head .link-btn { min-height: 2rem; margin: -0.25rem -0.25rem -0.25rem 0; font-size: 0.875rem; }
+.bk-sum .kv-row dd { text-align: end; }
+.bk-agree { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+.bk-agree .check { flex: 1; min-width: 0; }
+.bk-agree .link-btn { white-space: nowrap; }
+
+/* Payment */
+.bk-total { display: flex; flex-direction: column; align-items: center; gap: 0.125rem; padding: 0.5rem 0 0.25rem; text-align: center; }
+.bk-pay { flex-direction: column; align-items: stretch; gap: 0; padding: 0; }
+.bk-pay-main {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  width: 100%;
+  min-height: 3.5rem;
+  padding: 0.75rem 1rem;
+  text-align: start;
+  color: var(--text-primary);
+  border-radius: var(--radius);
+}
+.bk-pay-dot {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+  margin-inline: 0.375rem 0.125rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0.3125rem var(--bg-elevated);
+}
+.bk-pay-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  margin: 0 0.75rem 0.5rem 3.125rem;
+  padding: 0.25rem 0 0.25rem 0.75rem;
+  border-inline-start: 2px solid var(--accent-bg-strong);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.bk-pay-detail .link-btn { min-height: 2.25rem; font-size: 0.875rem; }
+.bk-secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-align: center;
+}
+.bk-processing { display: flex; justify-content: center; padding: 0.75rem 0 0.25rem; }
+.bk-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+/* Confirmation */
+.bk-hero { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding-top: 0.5rem; text-align: center; }
+.bk-hero h2 { margin-top: 0.5rem; }
+.bk-pop { animation: bk-pop 0.6s var(--ease-out) both; }
+.bk-pop svg { animation: bk-pop-icon 0.5s var(--ease-out) 0.15s both; }
+@keyframes bk-pop {
+  0% { opacity: 0; transform: scale(0.4); }
+  60% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1; transform: none; }
+}
+@keyframes bk-pop-icon {
+  from { opacity: 0; transform: scale(0.5) rotate(-12deg); }
+  to { opacity: 1; transform: none; }
+}
+.bk-ref { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.bk-services-list { display: flex; flex-direction: column; gap: 0.25rem; }
+.bk-services-list li { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.9375rem; color: var(--text-primary); }
+.bk-services-list li span:last-child { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.bk-detail-rows { display: flex; flex-direction: column; gap: 0.625rem; }
+.bk-detail-rows li { display: flex; align-items: flex-start; gap: 0.625rem; font-size: 0.9375rem; color: var(--text-secondary); }
+.bk-detail-rows li svg { flex-shrink: 0; margin-top: 0.1875rem; color: var(--accent-ink); }
+.bk-detail-rows strong { display: block; font-weight: 600; }
+.bk-policy li span:last-child { color: var(--text-secondary); font-size: 0.9375rem; line-height: 1.5; }
+
+@media (max-width: 21.25rem) {
+  .pro-staff-card { width: 10.5rem; }
+  .pro-score { grid-template-columns: 1fr; justify-items: center; }
+  .pro-dist { width: 100%; }
+}
+
+/* A real photograph fills the same frame the placeholder art does. */
+.pro-photo { object-fit: cover; }
+.pro-cover-photo { position: relative; display: block; }
+.pro-cover-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.pro-cover-banner {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.pro-photo-img,
+.pro-lightbox-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+.pro-lightbox-img { border-radius: var(--radius-lg); }
+
+/* The business's own picture, sitting *on* the cover rather than under it.
+   Two things are needed for that and neither is the negative margin:
+
+   - A stacking position. `.carousel` is positioned, so a plain block-level
+     sibling after it paints underneath — the top half of the circle used to
+     disappear into the photograph.
+   - Its own ring. A bare drop shadow here replaced the one `ring` asks for,
+     which left a dark logo with no edge at all against a dark cover. The ring
+     is the page colour, so the picture reads as lifted off the photograph. */
+.pro-head-avatar {
+  position: relative;
+  z-index: 1;   /* over the carousel; the app's chrome starts at 15 */
+  /* Half of the picture's 4.5rem overlaps the cover, once .pro-body's own
+     1.125rem of top padding is taken back. */
+  margin-top: -3.375rem;
+  margin-bottom: 0.25rem;
+  box-shadow: 0 0 0 3px var(--bg-primary), 0 6px 16px rgb(0 0 0 / 0.3);
+}
+
+/* --- Portfolio mosaic ------------------------------------------------------
+   The salon's work. How it is laid out depends on how much there is: a grid
+   built for six holding one photograph looks like a page that failed, and
+   most salons here have exactly one. */
+
+.pro-mosaic {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.pro-shot {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background-color: var(--art-bg);
+  cursor: zoom-in;
+  aspect-ratio: 1;
+}
+.pro-shot > img {
+  /* Taken out of flow on purpose: in the mosaic the feature tile spans two
+     rows, and an in-flow portrait photograph inside it pushed those rows
+     taller than the square tiles beside it, leaving gaps down the column.
+     The tile decides its own size; the picture fills whatever that is. */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 460ms var(--ease-out);
+}
+.pro-shot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* One photograph is a feature, not a lonely thumbnail. */
+.pro-mosaic[data-count='1'] { grid-template-columns: 1fr; }
+.pro-mosaic[data-count='1'] .pro-shot { aspect-ratio: 16 / 10; }
+
+/* Two sit side by side, a little taller than square. */
+.pro-mosaic[data-count='2'] .pro-shot { aspect-ratio: 4 / 5; }
+
+/* Three and six tile perfectly against a feature: 2×2 plus a column of
+   squares, and for six a full bottom row. */
+.pro-mosaic[data-count='3'],
+.pro-mosaic[data-count='6'] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.pro-mosaic[data-count='3'] .pro-shot:first-child,
+.pro-mosaic[data-count='6'] .pro-shot:first-child {
+  grid-column: span 2;
+  grid-row: span 2;
+  aspect-ratio: auto;   /* the two square rows it spans set the height */
+}
+
+/* Four is an even 2×2 — no feature, no hole. Five cannot be a rectangle of
+   equal tiles at all, so the odd one out is promoted: a wide feature over a
+   2×2 block, rather than a last row with a gap where a sixth photo isn't. */
+.pro-mosaic[data-count='5'] .pro-shot:first-child {
+  grid-column: span 2;
+  aspect-ratio: 16 / 10;
+}
+
+.pro-shot-caption {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 1.5rem 0.5rem 0.4rem;
+  background: linear-gradient(to top, var(--scrim-strong), transparent);
+  color: var(--media-ink);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-align: start;
+  line-height: 1.25;
+  /* One line: a caption is a label here, not a paragraph. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pro-shot:hover > img { transform: scale(1.06); }
+}
+.pro-shot:active > img { transform: scale(0.99); }
+
+/* More room to breathe once there is room. */
+@media (min-width: 700px) {
+  .pro-mosaic { gap: 0.75rem; }
+  .pro-mosaic[data-count='1'] .pro-shot { aspect-ratio: 21 / 9; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pro-shot > img { transition: none; }
+  .pro-shot:hover > img, .pro-shot:active > img { transform: none; }
+}
+
+/* ==========================================================================
+   The customer's journey — "Atelier"
+
+   Everything from here down is scoped to `:root[data-app='customer']`, the
+   attribute AppFrame stamps for a signed-in customer and nobody else, so the
+   four professional apps — which render .bk-loading, .pro-score and every
+   shared primitive these screens are built from — are untouched.
+
+   Three ordering facts govern the selectors below:
+
+   1. index.css imports booking.css *before* customer.css, so a rule here that
+      ties on specificity with one there loses. Anything that re-dresses a
+      primitive customer.css already touches (.card, .slot, .label, .caption,
+      h2 …) therefore carries a page-level class too, which puts it a step
+      above rather than a step behind.
+   2. ui.css states the *disabled* slot after the pressed one deliberately: a
+      time that has since been taken must read as unavailable, not as picked.
+      Raising the pressed state here without raising the disabled state with it
+      would quietly bring that bug back, so both are restated, in that order.
+   3. Letter-spacing is never set on a bare .label. customer.css already gives
+      every label the micro-caps tracking *and* the Bangla override that pulls
+      a conjunct back together; these rules add the gold and the rule line and
+      inherit the rest, so the Bangla exception keeps working.
+   ========================================================================== */
+
+/* --- Page scopes ----------------------------------------------------------
+   The hook goes on <Screen>, which already takes a className, rather than on a
+   new wrapper element: nothing here needs an extra div, and the document has
+   to stay the scroll container. */
+
+:root[data-app='customer'] .bk-step > .screen-body,
+:root[data-app='customer'] .bk-done > .screen-body,
+:root[data-app='customer'] .pro-reviews > .screen-body,
+:root[data-app='customer'] .bkl-screen > .screen-body,
+:root[data-app='customer'] .bkl-detail > .screen-body {
+  gap: var(--space-6);
+  padding-bottom: var(--space-10);
+}
+
+/* --- The wizard's shared shell --------------------------------------------
+   One masthead, four steps. The title is the display serif (customer.css puts
+   every h2 there), the standfirst is the UI face, and a short gold bar closes
+   the block — the same mark the professional page uses under a section head,
+   so the wizard reads as the same publication. */
+
+:root[data-app='customer'] .bk-intro {
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+:root[data-app='customer'] .bk-intro h2 {
+  font-size: var(--fs-2xl);
+}
+:root[data-app='customer'] .bk-intro .caption {
+  max-width: 34ch;
+  color: var(--text-tertiary);
+}
+:root[data-app='customer'] .bk-intro::after {
+  content: '';
+  width: 2.25rem;
+  height: 2px;
+  margin-top: var(--space-1);
+  border-radius: 2px;
+  background-image: var(--accent-gradient);
+}
+
+/* The rail. Four equal hairlines say nothing; a filled length against an
+   unfilled one says how far along this is. The steps taken are gold and thick,
+   the ones to come are a thread, and both are centred on the same line so the
+   change in weight is the only thing that moves. */
+
+:root[data-app='customer'] .bk-steps {
+  padding: var(--space-4) var(--screen-padding) 0;
+}
+:root[data-app='customer'] .bk-steps .steps {
+  align-items: center;
+  gap: var(--space-2);
+}
+:root[data-app='customer'] .bk-steps .steps span {
+  height: 2px;
+  background-color: var(--border-color);
+}
+:root[data-app='customer'] .bk-steps .steps span[data-done='true'] {
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background-color: transparent;
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent);
+}
+:root[data-app='customer'] .bk-steps .steps-label {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+/* Bangla has no case, and wide tracking pulls its conjuncts apart. */
+:root[data-lang='bn'][data-app='customer'] .bk-steps .steps-label {
+  letter-spacing: 0.02em;
+}
+
+/* --- Step 1 · who — the cast ----------------------------------------------
+   A stylist is a person, so the row is a portrait with a name under a light,
+   not a radio with a picture next to it.
+
+   One rule runs through all four steps, and it is the whole hierarchy of the
+   wizard: at rest a choice is FLAT — a plate with a lit top edge and no shadow
+   — and the one that has been made is the only thing that comes up off the
+   page. A stylist, a service and an hour therefore answer in the same three
+   heights (flat, hovered, chosen), so a customer learns the language in step
+   one and reads steps two and three without looking. */
+
+:root[data-app='customer'] .bk-step-who .option.bk-staff {
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 5rem;
+  padding: var(--space-4);
+  border-width: 1px;
+  border-color: var(--border-light);
+  border-radius: var(--radius-xl);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top);
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+:root[data-app='customer'] .bk-step-who .option.bk-staff[aria-checked='true'] {
+  border-color: transparent;
+  background-color: var(--bg-elevated);
+  box-shadow:
+    var(--bevel-top),
+    var(--elev-raised),
+    inset 0 0 0 1.5px var(--accent);
+}
+:root[data-app='customer'] .bk-step-who .bk-staff .option-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='customer'] .bk-step-who .bk-staff .option-sub {
+  color: var(--text-tertiary);
+}
+/* The chosen one is lit: the picture picks up the gold ring the page keeps for
+   "this one", and the mark beside it fills with the same gradient. */
+:root[data-app='customer'] .bk-step-who .bk-staff[aria-checked='true'] .avatar,
+:root[data-app='customer'] .bk-step-who .bk-staff[aria-checked='true'] .icon-circle {
+  box-shadow: 0 0 0 2px var(--bg-elevated), 0 0 0 3.5px var(--accent), var(--glow-accent);
+}
+:root[data-app='customer'] .bk-step-who .bk-staff .radio-mark {
+  border-color: var(--border-color);
+  transition: border-color var(--speed) var(--ease), box-shadow var(--speed) var(--ease);
+}
+:root[data-app='customer'] .bk-step-who .bk-staff[aria-checked='true'] .radio-mark {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+:root[data-app='customer'] .bk-step-who .bk-staff .radio-mark::after {
+  background-color: transparent;
+  background-image: var(--accent-gradient);
+}
+:root[data-app='customer'] .bk-step-who .bk-staff-any {
+  background-image: var(--accent-gradient-soft);
+  color: var(--accent-ink);
+}
+
+/* --- Step 2 · what — the menu ---------------------------------------------
+   The closest thing in the app to a printed carte: a letterspaced chapter head
+   with a gold rule running off it, and every price on one rail down the right
+   edge so the column can be read on its own. The prices stay on the UI face —
+   formatBdt writes ৳ and Bangla sets its digits in Bengali numerals, and a
+   Latin serif has neither. */
+
+:root[data-app='customer'] .bk-step-menu .bk-group {
+  gap: var(--space-3);
+}
+:root[data-app='customer'] .bk-step-menu .bk-group > .label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  color: var(--accent-ink);
+}
+:root[data-app='customer'] .bk-step-menu .bk-group > .label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-image: var(--rule-gradient);
+}
+
+/* A carte does not emboss every dish. Everything on offer sits flat — the
+   same plate the stylists sit on in step one — and only what has actually been
+   chosen comes up off the page, which is what turns a list of twenty prices
+   into "these two". */
+:root[data-app='customer'] .bk-step-menu .option.bk-service {
+  border-width: 1px;
+  border-color: var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top);
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease);
+}
+:root[data-app='customer'] .bk-step-menu .option.bk-service[data-selected='true'] {
+  border-color: transparent;
+  background-color: var(--bg-elevated);
+  box-shadow:
+    var(--bevel-top),
+    var(--elev-raised),
+    inset 0 0 0 1.5px var(--accent);
+}
+:root[data-app='customer'] .bk-step-menu .bk-service-main {
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-4) var(--space-2);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+/* The name of the thing is set in the display face, as a carte sets a dish.
+   Only the name: the price beside it stays on the UI face, because formatBdt
+   writes ৳ and Bangla sets its digits in Bengali numerals. */
+:root[data-app='customer'] .bk-step-menu .bk-service .option-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='customer'] .bk-step-menu .bk-service .option-sub {
+  color: var(--text-tertiary);
+  line-height: var(--leading-normal);
+}
+/* The rail. A fixed measure, ends aligned, tabular figures — so the column of
+   prices lines up whatever the names do. */
+:root[data-app='customer'] .bk-step-menu .bk-service-main .option-end {
+  min-width: 4.25rem;
+  align-self: flex-start;
+  padding-top: 0.0625rem;
+  text-align: end;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-app='customer'] .bk-step-menu .bk-check[data-on='true'] {
+  border-color: transparent;
+  background-color: var(--accent);
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent);
+}
+:root[data-app='customer'] .bk-step-menu .bk-service-more,
+:root[data-app='customer'] .bk-step-menu .bk-service-details {
+  padding-inline-start: 3.375rem;
+}
+:root[data-app='customer'] .bk-step-menu .bk-service-details {
+  padding-bottom: var(--space-4);
+  line-height: var(--leading-normal);
+}
+
+/* --- Step 3 · when — the calendar and the hour ----------------------------
+   The month is a surface of its own rather than loose type on the page, and
+   the times below it are grouped under the same gold-ruled chapter head the
+   menu uses. */
+
+:root[data-app='customer'] .bk-step-when .calendar {
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+:root[data-app='customer'] .bk-step-when .calendar-head strong {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='customer'] .bk-step-when .calendar-dow {
+  color: var(--text-tertiary);
+}
+:root[data-app='customer'] .bk-step-when .calendar-day {
+  border-radius: var(--radius);
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-app='customer'] .bk-step-when .bk-times-head {
+  align-items: baseline;
+  padding-top: var(--space-1);
+}
+:root[data-app='customer'] .bk-step-when .bk-times-head h3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='customer'] .bk-step-when .bk-times-head .caption {
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+:root[data-app='customer'] .bk-step-when .bk-slots {
+  gap: var(--space-5);
+}
+:root[data-app='customer'] .bk-step-when .bk-slot-group {
+  gap: var(--space-3);
+}
+:root[data-app='customer'] .bk-step-when .bk-slot-group > .label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--text-tertiary);
+}
+:root[data-app='customer'] .bk-step-when .bk-slot-group > .label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-image: var(--rule-gradient);
+}
+:root[data-app='customer'] .bk-step-when .slots {
+  gap: var(--space-2);
+}
+:root[data-app='customer'] .bk-step-when .slot {
+  min-height: 3rem;
+  border-color: var(--border-light);
+  border-radius: var(--radius);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top);
+}
+:root[data-app='customer'] .bk-step-when .slot[aria-pressed='true'] {
+  border-color: transparent;
+  background-color: var(--accent);
+  background-image: var(--accent-gradient);
+  color: var(--accent-on);
+  box-shadow: var(--glow-accent), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+/* After the pressed rule and above it, exactly as ui.css does: an hour that
+   has been taken since it was picked has to look taken. */
+:root[data-app='customer'] .bk-step-when .slot:disabled,
+:root[data-app='customer'] .bk-step-when .slot:disabled[aria-pressed='true'] {
+  border-color: var(--border-color);
+  border-style: dashed;
+  background-color: transparent;
+  background-image: none;
+  color: var(--text-dim);
+  box-shadow: none;
+}
+
+/* --- Step 4 · yes — the ledger --------------------------------------------
+   Six cards of equal weight is a form, not a decision. Here the record is
+   quiet — hairline, no lift, micro-caps heads — and the money is the one thing
+   that sits up off the page. */
+
+:root[data-app='customer'] .bk-step-confirm .bk-sum {
+  gap: var(--space-3);
+}
+:root[data-app='customer'] .bk-step-confirm .bk-sum .card {
+  border-color: var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: transparent;
+  box-shadow: none;
+}
+:root[data-app='customer'] .bk-step-confirm .bk-sum .card-title {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+:root[data-lang='bn'][data-app='customer'] .bk-step-confirm .bk-sum .card-title {
+  letter-spacing: 0.02em;
+}
+:root[data-app='customer'] .bk-step-confirm .bk-sum-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
+}
+/* The card holding the total is the one that lifts. :has is decoration here —
+   where it is not understood the ledger simply stays flat, and the total row
+   below carries the weight on its own. */
+:root[data-app='customer'] .bk-step-confirm .bk-sum .card:has(.kv-total) {
+  border-color: transparent;
+  background-color: var(--bg-elevated);
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+:root[data-app='customer'] .bk-step-confirm .bk-sum .kv-total {
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+:root[data-app='customer'] .bk-step-confirm .bk-sum .kv-total dd {
+  font-size: var(--fs-xl);
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='customer'] .bk-step-confirm .bk-agree {
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* --- Done · the moment ----------------------------------------------------
+   The weakest screen in the app was a generic green tick over a receipt, with
+   four clusters of controls competing underneath. Nothing is taken away here:
+   the seal becomes the loud thing, the record becomes a ticket, and everything
+   between them recedes so the gold button in the footer is plainly the one
+   thing left to press. */
+
+:root[data-app='customer'] .bk-done .bk-hero {
+  gap: var(--space-3);
+  padding-top: var(--space-8);
+}
+/* A gold seal with two rings of light around it, not a status colour. The
+   check, the title and the badge on the ticket still say which state this is. */
+:root[data-app='customer'] .bk-done .bk-hero .icon-circle {
+  position: relative;
+  background-color: var(--accent);
+  background-image: var(--accent-gradient);
+  color: var(--accent-on);
+  box-shadow: var(--glow-accent), inset 0 2px 0 rgba(255, 255, 255, 0.28);
+}
+:root[data-app='customer'] .bk-done .bk-hero .icon-circle::before,
+:root[data-app='customer'] .bk-done .bk-hero .icon-circle::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+:root[data-app='customer'] .bk-done .bk-hero .icon-circle::before {
+  inset: -0.625rem;
+  border: 1px solid var(--accent-bg-strong);
+}
+:root[data-app='customer'] .bk-done .bk-hero .icon-circle::after {
+  inset: -1.25rem;
+  border: 1px solid var(--accent-bg);
+}
+:root[data-app='customer'] .bk-done .bk-hero h2 {
+  margin-top: var(--space-5);
+  font-size: var(--fs-2xl);
+}
+:root[data-app='customer'] .bk-done .bk-hero .caption {
+  max-width: 30ch;
+  color: var(--text-tertiary);
+}
+:root[data-app='customer'] .bk-done .bk-hero::after {
+  content: '';
+  width: 2.25rem;
+  height: 2px;
+  margin-top: var(--space-2);
+  border-radius: 2px;
+  background-image: var(--accent-gradient);
+}
+
+/* The ticket: the one raised surface on the screen, with a gold thread along
+   its top edge and a perforation where a stub would tear. */
+:root[data-app='customer'] .bk-done .card.bk-ticket {
+  position: relative;
+  border-color: transparent;
+  border-radius: var(--radius-xl);
+  padding-block: var(--space-6);
+  background-color: var(--bg-elevated);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 2px;
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+:root[data-app='customer'] .bk-done .bk-ticket .mono {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-tertiary);
+}
+:root[data-app='customer'] .bk-done .bk-ticket .bk-services-list li {
+  gap: var(--space-5);
+}
+:root[data-app='customer'] .bk-done .bk-ticket .bk-services-list li span:last-child {
+  min-width: 4.25rem;
+  text-align: end;
+  color: var(--text-primary);
+}
+:root[data-app='customer'] .bk-done .bk-ticket .bk-detail-rows {
+  gap: var(--space-4);
+}
+:root[data-app='customer'] .bk-done .bk-ticket .bk-detail-rows strong {
+  color: var(--text-primary);
+  line-height: var(--leading-snug);
+}
+/* The tear. Two punches of the page's own colour sitting half off the card —
+   the card keeps `overflow: visible`, so they read as holes in it. */
+:root[data-app='customer'] .bk-done .bk-ticket-perf {
+  position: relative;
+  height: 1px;
+  border: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--accent-bg-strong) 0 0.375rem,
+    transparent 0.375rem 0.75rem
+  );
+}
+:root[data-app='customer'] .bk-done .bk-ticket-perf::before,
+:root[data-app='customer'] .bk-done .bk-ticket-perf::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 0.875rem;
+  height: 0.875rem;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background-color: var(--bg-primary);
+}
+:root[data-app='customer'] .bk-done .bk-ticket-perf::before {
+  inset-inline-start: calc(-1 * var(--space-5) - 0.4375rem);
+}
+:root[data-app='customer'] .bk-done .bk-ticket-perf::after {
+  inset-inline-end: calc(-1 * var(--space-5) - 0.4375rem);
+}
+
+/* Everything after the ticket steps back. The note becomes a line rather than
+   a green box, the checklist becomes an aside, and the two extras become
+   hairline buttons — so the footer's gold primary is the only loud control. */
+:root[data-app='customer'] .bk-done .callout-success {
+  background-color: transparent;
+  border-color: var(--border-light);
+  color: var(--text-tertiary);
+  font-size: var(--fs-sm);
+}
+:root[data-app='customer'] .bk-done .checklist {
+  gap: var(--space-4);
+}
+:root[data-app='customer'] .bk-done .checklist li {
+  color: var(--text-tertiary);
+  font-size: var(--fs-base);
+  line-height: var(--leading-normal);
+}
+:root[data-app='customer'] .bk-done .checklist .num {
+  background-color: transparent;
+  background-image: var(--accent-gradient-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-bg-strong);
+  color: var(--accent-ink);
+}
+:root[data-app='customer'] .bk-done .section > h3 {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+:root[data-lang='bn'][data-app='customer'] .bk-done .section > h3 {
+  letter-spacing: 0.02em;
+}
+:root[data-app='customer'] .bk-done-actions {
+  gap: var(--space-3);
+  padding-top: var(--space-1);
+}
+/* Scoped through .bk-done as well as the row: customer.css gives every
+   .btn-secondary the bevel and the lift at the same specificity and is
+   imported after this file, so a tie here would quietly lose. */
+:root[data-app='customer'] .bk-done .bk-done-actions .btn-secondary {
+  background-color: transparent;
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+  font-weight: 600;
+  box-shadow: none;
+}
+
+/* --- The bookings list ----------------------------------------------------
+   The card itself is dressed in profile.css, which declares every .bkl- class
+   and is imported after this file: it already gives the next visit the weight
+   — a warm gold body, the raised shadow, a gold thread along its top edge —
+   and leaves the past ones quiet. Re-dressing it from here duplicated that
+   work and, worse, collided with it: both passes wrote .bkl-card::before, and
+   the union of a 3px full-height band and a 2px full-width one is a 3x2px nub
+   in the corner. So only what belongs to *this* screen is set here — the tab
+   rail the list hangs from. */
+
+:root[data-app='customer'] .bkl-screen .tabs {
+  border-bottom-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+:root[data-app='customer'] .bkl-screen .tab[aria-selected='true']::after {
+  background-color: transparent;
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent);
+}
+
+/* --- The booking itself ---------------------------------------------------
+   Same idea one level down: the state is a seal at the top of the page, tinted
+   by what happened, and each block of the record is headed in micro-caps with
+   a gold mark. */
+
+:root[data-app='customer'] .bkl-detail .bkl-hero {
+  gap: var(--space-3);
+  padding-top: var(--space-6);
+}
+:root[data-app='customer'] .bkl-detail .bkl-hero .icon-circle {
+  position: relative;
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+:root[data-app='customer'] .bkl-detail .bkl-hero .icon-circle::before {
+  content: '';
+  position: absolute;
+  inset: -0.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-light);
+  pointer-events: none;
+}
+/* Confirmed is the only one that gets the gold. The others keep their own
+   tone — a cancelled appointment must not look like a celebration. */
+:root[data-app='customer'] .bkl-detail .bkl-hero[data-tone='success'] .icon-circle {
+  background-color: var(--accent);
+  background-image: var(--accent-gradient);
+  color: var(--accent-on);
+  box-shadow: var(--glow-accent), inset 0 2px 0 rgba(255, 255, 255, 0.28);
+}
+:root[data-app='customer'] .bkl-detail .bkl-hero[data-tone='success'] .icon-circle::before {
+  border-color: var(--accent-bg-strong);
+}
+:root[data-app='customer'] .bkl-detail .bkl-hero h2 {
+  font-size: var(--fs-2xl);
+}
+:root[data-app='customer'] .bkl-detail .bkl-section-title {
+  letter-spacing: var(--tracking-widest);
+  color: var(--text-tertiary);
+}
+:root[data-lang='bn'][data-app='customer'] .bkl-detail .bkl-section-title {
+  letter-spacing: 0.02em;
+}
+:root[data-app='customer'] .bkl-detail .card {
+  border-radius: var(--radius-xl);
+}
+:root[data-app='customer'] .bkl-detail .card > div > strong,
+:root[data-app='customer'] .bkl-detail .card > div > .strong {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='customer'] .bkl-detail .bkl-service-row .price {
+  min-width: 4.25rem;
+  text-align: end;
+}
+:root[data-app='customer'] .bkl-detail .kv-total {
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+:root[data-app='customer'] .bkl-detail .kv-total dd {
+  font-size: var(--fs-xl);
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='customer'] .bkl-detail .bkl-ref {
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+/* --- The professional ------------------------------------------------------
+   The page where a customer decides whether to trust a salon. It is a cover
+   story: a photograph, a masthead, then chapters separated by gold rules.
+
+   The mosaic and the picture sitting on the cover are deliberately left alone;
+   they already read the way this page should. */
+
+:root[data-app='customer'] .pro-screen .pro-body {
+  gap: var(--space-8);
+  padding-bottom: var(--space-6);
+}
+
+/* The cover is welded to the page with a fade in the page's own colour, so the
+   photograph ends rather than stops. The dots are lifted above it — the fade
+   is a later sibling and would otherwise wash them out. R7: the slides
+   themselves are never touched, only the dots and the counter. */
+:root[data-app='customer'] .pro-screen .carousel::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 5rem;
+  pointer-events: none;
+  background-image: linear-gradient(to top, var(--bg-primary), transparent);
+}
+:root[data-app='customer'] .pro-screen .carousel-dots {
+  z-index: 1;
+  bottom: var(--space-4);
+  gap: var(--space-2);
+}
+:root[data-app='customer'] .pro-screen .carousel-dots span {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+:root[data-app='customer'] .pro-screen .carousel-dots span[data-active='true'] {
+  width: 1.5rem;
+  background-color: transparent;
+  background-image: var(--accent-gradient);
+}
+:root[data-app='customer'] .pro-screen .carousel-counter {
+  z-index: 1;
+  bottom: var(--space-4);
+  inset-inline-end: var(--space-4);
+}
+:root[data-app='customer'] .pro-screen .carousel-counter .badge {
+  letter-spacing: var(--tracking-wide);
+  font-variant-numeric: tabular-nums;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* The masthead */
+:root[data-app='customer'] .pro-screen .pro-head {
+  gap: var(--space-2);
+}
+:root[data-app='customer'] .pro-screen .pro-head h2 {
+  font-size: var(--fs-2xl);
+}
+:root[data-app='customer'] .pro-screen .pro-tagline {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  color: var(--text-secondary);
+  line-height: var(--leading-snug);
+}
+/* Italic is a Latin idea: Bangla has no cursive companion and the browser
+   would synthesise a slant across the conjuncts. */
+:root:not([data-lang='bn'])[data-app='customer'] .pro-screen .pro-tagline {
+  font-style: italic;
+}
+
+/* Chapter heads: the gold hairline fades out at both ends rather than butting
+   into the gutter, and it is the same mark the wizard closes its intro with. */
+:root[data-app='customer'] .pro-screen .section-head {
+  padding-bottom: var(--space-2);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+:root[data-app='customer'] .pro-screen .section-head h2 {
+  font-size: var(--fs-lg);
+}
+
+/* The house's own account of itself, set as body copy with an initial. */
+:root[data-app='customer'] .pro-screen .pro-about {
+  font-size: var(--fs-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+}
+:root:not([data-lang='bn'])[data-app='customer'] .pro-screen .pro-about::first-letter {
+  float: left;
+  margin-inline-end: 0.08em;
+  font-family: var(--font-display);
+  font-size: 2.4em;
+  font-weight: 600;
+  line-height: 0.86;
+  color: var(--accent-ink);
+}
+
+/* Address, hours and telephone: one quiet slab, gold icons, gold hours. */
+:root[data-app='customer'] .pro-screen .list-card {
+  border-color: var(--border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+:root[data-app='customer'] .pro-screen .list-row-icon {
+  border-radius: var(--radius);
+  background-color: transparent;
+  background-image: var(--accent-gradient-soft);
+  box-shadow: inset 0 0 0 1px var(--accent-bg-strong);
+}
+/* The menu excerpt: prices on the same rail the wizard's menu uses. Matched on
+   the price itself rather than on .list-row-end — the hours row ends in
+   "Hours ⌄", which is a control, not an amount, and darkening it to
+   --text-primary made a disclosure chevron as loud as the address above it. */
+:root[data-app='customer'] .pro-screen .list-row .price {
+  min-width: 4.25rem;
+  text-align: end;
+}
+:root[data-app='customer'] .pro-screen .pro-hours-day[data-today='true'] dd {
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+/* Call / Directions / Email. A utility row, so it stays quiet: hairline slabs
+   with the gold in the icon, not a third row of raised buttons. */
+:root[data-app='customer'] .pro-screen .pro-actions {
+  gap: var(--space-3);
+}
+:root[data-app='customer'] .pro-screen .pro-actions .btn {
+  min-height: 4rem;
+  border-color: var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  /* Deliberately not micro-caps: at 320px an uppercased, tracked
+     "Directions" is wider than the third of a row this button gets, and
+     .btn is `white-space: nowrap` — it would spill, not wrap. */
+  font-size: var(--fs-xs);
+  box-shadow: var(--bevel-top);
+}
+
+/* The team, as a row of plates */
+:root[data-app='customer'] .pro-screen .pro-staff-card {
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-color: var(--border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--bevel-top), var(--elev-card);
+  transition: box-shadow var(--speed) var(--ease), transform var(--speed) var(--ease-out);
+}
+:root[data-app='customer'] .pro-screen .pro-staff-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+/* What people said. Two of them, sitting in a section among other cards, so
+   here a review stays a plate. On the reviews page — where they are the whole
+   content — it becomes a column instead; see the end of this file. */
+:root[data-app='customer'] .pro-screen .review {
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-color: var(--border-light);
+  border-radius: var(--radius-lg);
+}
+:root[data-app='customer'] .pro-screen .review-text {
+  font-size: var(--fs-base);
+  line-height: var(--leading-relaxed);
+}
+:root[data-app='customer'] .pro-screen .review-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+/* --- The reviews page ------------------------------------------------------
+   It used to borrow the wizard's .bk-intro and so read as a fifth booking
+   step. Its own masthead is centred, which no wizard step is, and the rating
+   panel underneath is the customer's alone — the base .pro-score rules are
+   shared with the provider's portfolio screen and stay exactly as they are. */
+
+:root[data-app='customer'] .pro-reviews .pro-reviews-head {
+  align-items: center;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  text-align: center;
+}
+:root[data-app='customer'] .pro-reviews .pro-reviews-head h2 {
+  font-size: var(--fs-2xl);
+}
+:root[data-app='customer'] .pro-reviews .pro-reviews-head .caption {
+  max-width: 32ch;
+  color: var(--text-tertiary);
+}
+:root[data-app='customer'] .pro-reviews .pro-reviews-head::after {
+  content: '';
+  width: 4rem;
+  height: 1px;
+  margin-top: var(--space-2);
+  background-image: var(--rule-gradient);
+}
+
+:root[data-app='customer'] .pro-reviews .card:has(.pro-score) {
+  border-color: transparent;
+  border-radius: var(--radius-xl);
+  background-color: var(--bg-elevated);
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+:root[data-app='customer'] .pro-reviews .pro-score {
+  gap: var(--space-6);
+}
+/* A hairline of gold between the score and the breakdown, drawn as a
+   background so it costs no layout and fades at both ends. */
+:root[data-app='customer'] .pro-reviews .pro-score-main {
+  gap: var(--space-2);
+  padding-inline-end: var(--space-5);
+  background-image: linear-gradient(
+    180deg,
+    transparent,
+    var(--accent-bg-strong) 22%,
+    var(--accent-bg-strong) 78%,
+    transparent
+  );
+  background-repeat: no-repeat;
+  background-position: 100% 50%;
+  background-size: 1px 100%;
+}
+:root[data-app='customer'] .pro-reviews .pro-score-main .display {
+  font-size: var(--fs-3xl);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tighter);
+}
+:root[data-app='customer'] .pro-reviews .pro-stars {
+  color: var(--accent-line);
+}
+:root[data-app='customer'] .pro-reviews .pro-dist-track {
+  height: 0.375rem;
+  background-color: var(--bg-deep);
+  box-shadow: inset 0 1px 2px rgba(44, 34, 22, 0.08);
+}
+/* A brown contact shadow is invisible on obsidian; the night mood needs the
+   well cut deeper, exactly as customer.css does for an input. */
+:root.dark-theme[data-app='customer'] .pro-reviews .pro-dist-track {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+:root[data-app='customer'] .pro-reviews .pro-dist-fill {
+  background-color: transparent;
+  background-image: var(--accent-gradient);
+}
+/* Chosen things answer in gold everywhere else in the app; the sort control
+   is no exception. */
+:root[data-app='customer'] .pro-reviews .segmented button[aria-pressed='true'] {
+  background-color: var(--accent);
+  background-image: var(--accent-gradient);
+  color: var(--accent-on);
+  box-shadow: var(--glow-accent);
+}
+
+/* The testimony, as a column rather than a stack of boxes.
+
+   This was the weakest screen in the group: a masthead, one panel, and then
+   however many identical grey rectangles, each with the same border, the same
+   padding and the same weight — the exact shape of "a generic dashboard with
+   rounder corners". A salon's reviews are the one place a customer is reading
+   somebody else's words, and words belong in a measure, not in a container.
+
+   So the boxes go. The panel above stays the one raised surface on the page —
+   the loud thing — and what follows is quiet: leaves of a column separated by
+   the same gold hairline that heads a chapter everywhere else, with real air
+   between them. The newest one leads at a larger size, the way the first
+   paragraph of a column does, and the rest follow at reading size.
+
+   The text moves to the display face here and only here. It is prose, not
+   interface, and nothing in a review is a price, a taka sign or a Bengali
+   numeral — the rating beside the name is drawn as stars (R4 holds). */
+
+:root[data-app='customer'] .pro-reviews .pro-review-list {
+  gap: 0;
+}
+:root[data-app='customer'] .pro-reviews .pro-review-list .review {
+  gap: var(--space-4);
+  padding: var(--space-6) 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+  box-shadow: none;
+}
+:root[data-app='customer'] .pro-reviews .pro-review-list .review:first-child {
+  padding-top: var(--space-2);
+  background-image: none;
+}
+:root[data-app='customer'] .pro-reviews .pro-review-list .review:last-child {
+  padding-bottom: var(--space-2);
+}
+:root[data-app='customer'] .pro-reviews .pro-review-list .review-text {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
+}
+/* The one that leads. Larger, tighter, and set to a measure — a line of body
+   copy running the full width of a phone is already long; at this size it
+   would be a wall. */
+:root[data-app='customer'] .pro-reviews .pro-review-list .review:first-child .review-text {
+  max-width: 34ch;
+  font-size: var(--fs-lg);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-tight);
+}
+/* The attribution runs under the words, not over them: micro-caps, tertiary,
+   the way a byline sits beneath a pull quote. */
+:root[data-app='customer'] .pro-reviews .pro-review-list .review-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='customer'] .pro-reviews .pro-review-list .review-meta {
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+/* Bangla has no case and wide tracking pulls a conjunct apart; the service
+   name inside this line is the salon's own word and may well be Bangla. */
+:root[data-lang='bn'][data-app='customer'] .pro-reviews .pro-review-list .review-meta {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* The sort control is a tool, not a statement, so it sits between the panel
+   and the column at the quietest weight the kit has. */
+:root[data-app='customer'] .pro-reviews .segmented {
+  background-color: transparent;
+  border-color: var(--border-light);
+  border-radius: var(--radius-pill);
+}
+:root[data-app='customer'] .pro-reviews .segmented button {
+  border-radius: var(--radius-pill);
+}
+
+/* The vertical rule has nothing to divide once the panel stacks. */
+@media (max-width: 21.25rem) {
+  :root[data-app='customer'] .pro-reviews .pro-score-main {
+    padding-inline-end: 0;
+    background-image: none;
+  }
+}
+
+/* --- Pointer feedback ------------------------------------------------------
+   Hover only where there is a pointer that can hover, as the rest of the
+   codebase does; depth on press everywhere. */
+
+@media (hover: hover) and (pointer: fine) {
+  /* The middle height. Something merely under the cursor must never out-rank
+     something that has been chosen, so hover lifts a plate exactly one rung —
+     to --elev-card — and the chosen state keeps --elev-raised to itself. */
+  :root[data-app='customer'] .bk-step-who .option.bk-staff:hover,
+  :root[data-app='customer'] .bk-step-menu .option.bk-service:hover {
+    border-color: var(--border-color);
+    box-shadow: var(--bevel-top), var(--elev-card);
+  }
+  /* Restated in full: a chosen card's own rule ties with the hover rule above
+     and is stated before it, so without this a stylist or a service you had
+     already picked would drop a rung the moment the cursor touched it. */
+  :root[data-app='customer'] .bk-step-who .option.bk-staff[aria-checked='true']:hover,
+  :root[data-app='customer'] .bk-step-menu .option.bk-service[data-selected='true']:hover {
+    border-color: transparent;
+    background-color: var(--bg-elevated);
+    box-shadow:
+      var(--bevel-top),
+      var(--elev-raised),
+      inset 0 0 0 1.5px var(--accent);
+  }
+  /* The hour follows the same three heights: flat, a gold edge under the
+     cursor, and the gradient plus the glow once it is the one. */
+  :root[data-app='customer'] .bk-step-when .slot:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+  :root[data-app='customer'] .pro-screen .pro-staff-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--bevel-top), var(--elev-raised);
+  }
+  :root[data-app='customer'] .pro-screen .pro-actions .btn:hover {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+  }
+}
+
+:root[data-app='customer'] .bk-step-who .option.bk-staff:active,
+:root[data-app='customer'] .bk-step-menu .option.bk-service:active,
+:root[data-app='customer'] .bk-step-when .slot:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* base.css collapses transition durations under reduced motion, but a
+   transform set on :active is not a transition and survives that. */
+@media (prefers-reduced-motion: reduce) {
+  :root[data-app='customer'] .bk-step-who .option.bk-staff:active,
+  :root[data-app='customer'] .bk-step-menu .option.bk-service:active,
+  :root[data-app='customer'] .bk-step-when .slot:active:not(:disabled),
+  :root[data-app='customer'] .pro-screen .pro-staff-card:hover {
+    transform: none;
+  }
+}

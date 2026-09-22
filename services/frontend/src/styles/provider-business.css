@@ -1,0 +1,2165 @@
+/* ==========================================================================
+   provider-business
+
+   The independent professional's own business: rates, portfolio, money,
+   profile and sign-up. Everything here is prefixed `.pb-`; shared provider
+   primitives (`.pro-chart`, `.pro-stat`, `.pro-pill`) live in provider.css and
+   are reused rather than restyled.
+   ========================================================================== */
+
+/* --- Headline block -------------------------------------------------------- */
+
+.pb-headline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.pb-headline .display { font-size: 1.5rem; letter-spacing: -0.02em; }
+.pb-headline-note {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+}
+
+/* --- A service on the menu -------------------------------------------------- */
+
+.pb-service {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color var(--speed) var(--ease), opacity var(--speed) var(--ease);
+}
+.pb-service:hover { border-color: var(--border-strong); }
+/* A switched-off service is dimmed, but its switch stays at full strength so
+   turning it back on is still an obvious tap. */
+.pb-service[data-off='true'] .pb-service-name,
+.pb-service[data-off='true'] .pb-service-meta { opacity: 0.55; }
+.pb-service[data-off='true'] { border-style: dashed; }
+
+.pb-service-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+  min-height: var(--touch-target);
+  padding: 0.75rem 0 0.75rem 0.875rem;
+  text-align: start;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.pb-service-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pb-service-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.pb-service-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+}
+.pb-service-meta strong {
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pb-service-off {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--status-warning-ink);
+}
+
+/* The switch sits on the row itself; its label is the service name, kept for
+   screen readers but hidden, because the name is already right beside it. */
+.pb-service-switch { padding-inline-end: 0.875rem; flex-shrink: 0; }
+.pb-service-switch .switch-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- Service sheet ---------------------------------------------------------- */
+
+.pb-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.pb-includes-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.pb-includes-row .field { flex: 1; min-width: 0; }
+
+/* Colour and bridal work lives on prep time, so the stylist's buffer field is
+   marked out rather than sitting quietly with the rest. */
+.pb-buffer-emph .field-label { color: var(--accent-ink); }
+.pb-buffer-emph .input {
+  border-color: var(--accent);
+  background-color: var(--accent-bg);
+}
+.pb-buffer-emph .field-hint { color: var(--accent-ink); }
+
+/* --- Portfolio -------------------------------------------------------------- */
+
+.pb-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: var(--radius-sm, 0.5rem);
+  overflow: hidden;
+  cursor: pointer;
+}
+.pb-tile .art { border-radius: inherit; }
+.pb-tile-cap {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 0.75rem 0.375rem 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  background: linear-gradient(to top, rgba(20, 15, 10, 0.72), transparent);
+}
+.pb-tile:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.pb-lightbox { border-radius: var(--radius-lg); }
+
+.pb-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+}
+.pb-score .display { font-size: 2.5rem; }
+
+.pb-reply {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-inline-start: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-inline-start: 2px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background-color: var(--accent-bg);
+}
+.pb-reply-head {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+}
+.pb-reply-text { font-size: 0.875rem; line-height: 1.5; color: var(--text-secondary); }
+
+/* --- Earnings --------------------------------------------------------------- */
+
+.pb-net {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  padding-bottom: 0.875rem;
+}
+.pb-net-value {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+}
+.pb-net-kv {
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.pb-chart-legend { list-style: none; margin: 0; padding: 0; }
+
+/* The cash / digital split — the thing a Dhaka professional checks first. */
+.pb-split {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0 0 0.75rem;
+  padding: 0;
+}
+.pb-split-row { display: flex; flex-direction: column; gap: 0.375rem; }
+.pb-split-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+.pb-split-name { flex: 1; min-width: 0; color: var(--text-secondary); }
+.pb-split-amount {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.pb-split-track {
+  display: block;
+  width: 100%;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-muted);
+  overflow: hidden;
+}
+.pb-split-fill {
+  display: block;
+  height: 100%;
+  min-width: 0.5rem;
+  border-radius: var(--radius-pill);
+}
+
+.pb-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.pb-txn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+}
+.pb-txn-name { display: block; font-size: 0.9375rem; font-weight: 600; }
+.pb-txn-meta { display: block; font-size: 0.8125rem; color: var(--text-tertiary); }
+.pb-txn-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+.pb-txn-end strong { font-variant-numeric: tabular-nums; }
+.pb-txn-method {
+  display: flex;
+  align-items: center;
+  gap: 0.3125rem;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.pb-payout { display: flex; flex-direction: column; gap: 0.375rem; }
+.pb-payout-number {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.pb-payout-actions { flex-wrap: wrap; margin-top: 0.25rem; }
+
+/* --- Provider profile -------------------------------------------------------- */
+
+.pb-profile-head {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+.pb-profile-name {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.pb-profile-badges { flex-wrap: wrap; margin-top: 0.375rem; }
+
+.pb-tagline { font-size: 0.9375rem; font-weight: 600; color: var(--text-primary); }
+
+/* Sits where a section's Edit button would be, so a section somebody else
+   owns reads as answered rather than as one whose control went missing. */
+.pb-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: none;
+  padding: 0.1875rem 0.5rem;
+  border-radius: 999px;
+  background-color: var(--bg-muted);
+  color: var(--text-tertiary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.pb-locked svg { flex: none; }
+
+.pb-hours { display: flex; flex-direction: column; gap: 0.5rem; list-style: none; margin: 0; padding: 0; }
+.pb-hours-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.pb-hours-row span:last-child { font-variant-numeric: tabular-nums; text-align: end; }
+
+.pb-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+.pb-day:last-child { border-bottom: 0; padding-bottom: 0; }
+
+/* --- Onboarding -------------------------------------------------------------- */
+
+.pb-onb-intro {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.pb-role { align-items: flex-start; }
+.pb-role .option-end { color: var(--accent-ink); align-self: center; }
+
+.pb-onb-svc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background-color: var(--bg-secondary);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius);
+  transition: border-color var(--speed) var(--ease);
+}
+.pb-onb-svc[data-on='true'] { border-color: var(--accent); background-color: var(--accent-bg); }
+.pb-onb-svc-main {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0;
+  text-align: start;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.pb-onb-svc-check {
+  display: grid;
+  place-items: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  flex-shrink: 0;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-xs);
+  color: #fff;
+}
+.pb-onb-svc[data-on='true'] .pb-onb-svc-check {
+  background-color: var(--accent);
+  border-color: var(--accent);
+}
+.pb-onb-svc-price .input { text-align: start; }
+
+.pb-onb-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 1.5rem 0.5rem 0.5rem;
+  text-align: center;
+}
+.pb-onb-done h2 { font-size: 1.25rem; font-weight: 800; letter-spacing: -0.01em; }
+
+/* --- Narrow phones ----------------------------------------------------------- */
+
+@media (max-width: 359px) {
+  .pb-net-value { font-size: 1.875rem; }
+  .pb-headline .display { font-size: 1.25rem; }
+  .pb-txn-method { font-size: 0.6875rem; }
+}
+
+/* Real photographs in the gallery grid and the lightbox. */
+.pb-tile-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+/* The photo being looked at, with its way forward and back sitting on top of
+   it rather than below: on a phone the picture wants the whole width, and a
+   thumb reaches the middle of the screen more easily than the bottom. */
+.pb-viewer { position: relative; }
+.pb-viewer-nav {
+  position: absolute;
+  inset-inline: 0.5rem;
+  top: 50%;
+  display: flex;
+  justify-content: space-between;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.pb-viewer-nav > * { pointer-events: auto; }
+
+.pb-lightbox {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+}
+
+/* ========================================================================== */
+/* THE SALON OWNER — the shopfront and the price menu                         */
+/*                                                                            */
+/* Scoped to `:root[data-app='salon_owner']`, the value AppFrame stamps on     */
+/* <html> for a signed-in owner. Everything above this banner is shared with   */
+/* the barber and the salon employee — `.pb-tile` and `.pb-lightbox` are their */
+/* own portfolio, `.pb-day` is the hours editor all three roles open — so not  */
+/* one base rule is edited. This scope layers over them and nothing else.      */
+/*                                                                            */
+/* Two levels, on purpose:                                                    */
+/*                                                                            */
+/*   - `.sp-shop` and `.sp-menu-screen` are the two screens' own <main>. Every */
+/*     override on a shared primitive — `.list-row`, `.kv`, `.photo-grid`,     */
+/*     `.segmented`, `.ps-staff-card` — hangs off one of them, because those   */
+/*     same classes also carry the roster, the queue and the analytics screen, */
+/*     and those are not this file's to redesign.                             */
+/*   - `.pb-tile` and its lightbox are owner-wide, because GalleryGrid is the  */
+/*     owner's own body of work wherever it renders.                          */
+/*                                                                            */
+/* Where this deliberately diverges from customer.css, and why:               */
+/*                                                                            */
+/*   - the 1rem gutter is kept. Air is bought between sections, never inside   */
+/*     the week table or the menu, where rows-per-screen is the product.       */
+/*   - the menu keeps `.list-row`'s 3.5rem height and its tap targets. What    */
+/*     changes is the edge: a fading gold rule in place of a flat border.      */
+/*   - no drop shadow is added per row anywhere below.                        */
+/*                                                                            */
+/* The hard rules, restated where they bite here:                             */
+/*                                                                            */
+/*   R4  No display serif on a figure. Every price below is written by         */
+/*       formatBdt, which emits U+09F3, and Bangla renders Bengali numerals —  */
+/*       a Latin serif carries neither. `.sp-name` is the one serif added and  */
+/*       it is a business name. `font-variant-numeric: tabular-nums` stays the */
+/*       marker of "this is a figure".                                        */
+/*   R6  Nothing here touches `.carousel-track` or a slide. The cover scrim    */
+/*       rides `.carousel`'s own pseudo-element, outside the element Carousel  */
+/*       measures `scrollLeft / clientWidth` on.                              */
+/*   R7  Every tracking or `text-transform` introduced below carries a Bangla  */
+/*       companion in O11 at one step more specificity — Bengali has no case   */
+/*       and 0.15em pulls a conjunct apart.                                   */
+/*   R9  The `--status-*` pairs are untouched. Gold appears as a text shade    */
+/*       only through `--accent-ink`, which is that pair's legible half.       */
+/*   R12 No tap target below 44px: no height, padding or min-height on a       */
+/*       control is reduced anywhere in this file.                            */
+/*                                                                            */
+/* There is no `@media` block below and no new hover or press state.           */
+/* check-scope.mjs reads a shared stylesheet line by line against the nearest  */
+/* enclosing selector, and an at-rule opener has no selector to be scoped by,  */
+/* so every line inside one would read as an unscoped edit to a rule the       */
+/* barber and the employee share. Everything here is intrinsically responsive  */
+/* instead — `fit-content()`, `minmax()`, `1fr` — and adds no press transform  */
+/* that would survive the reduced-motion duration collapse (R10).             */
+/* ========================================================================== */
+
+/* -------------------------------------------------------------------------- */
+/* O1. The masthead                                                           */
+/*                                                                            */
+/* The cover, the signboard, the one-line pitch and the paragraph beneath it  */
+/* are one object, so the 1.5rem section rhythm closes up between them and     */
+/* opens again at the headline numbers. Nothing moves; only the space changes. */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop > .sp-bio,
+:root[data-app='salon_owner'] .sp-shop > .sp-edit {
+  margin-top: calc(var(--space-3) - var(--space-6));
+}
+
+/* The salon's name. owner.css already binds the display serif to              */
+/* `.sp-identity h2` at 600 and `--tracking-tighter`; this restates the size   */
+/* the inline style used to pin, so the serif keeps a masthead's scale.        */
+:root[data-app='salon_owner'] .sp-name {
+  font-size: var(--fs-xl);
+}
+
+/* The tagline is the salon's own voice rather than a caption, so it takes the */
+/* display face. Bangla stays upright: no Bengali serif ships an italic and    */
+/* the platform would synthesise a slant for it.                              */
+:root[data-app='salon_owner'] .sp-tagline {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--fs-base);
+  line-height: var(--leading-snug);
+  color: var(--text-secondary);
+}
+
+/* Prose, so `--leading-normal` and a measure — the one place on this screen   */
+/* where air inside the block is the right answer.                            */
+:root[data-app='salon_owner'] .sp-bio {
+  font-size: var(--fs-base);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+  max-width: 36rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O2. The cover                                                              */
+/*                                                                            */
+/* Whatever the salon uploaded, which may well be a bright room. The verified  */
+/* badge, the dots and the counter all sit along the bottom edge and have to   */
+/* stay legible on it, so the foot of the picture is graded down.             */
+/*                                                                            */
+/* The scrim is `.carousel::after`, never the track or a slide (R6): Carousel  */
+/* derives its index from the track's `scrollLeft / clientWidth` and sets      */
+/* `aria-hidden` per slide, so a pseudo-element, a padding or a border in      */
+/* there desyncs the dots and hides the slide being looked at. `--scrim-mid`   */
+/* is one of the tokens that deliberately does not flip with the mood, because */
+/* a photograph does not flip either.                                         */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-cover .carousel::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 42%;
+  pointer-events: none;
+  background-image: linear-gradient(to top, var(--scrim-mid), transparent);
+}
+
+/* The dots and the counter are siblings of the scrim inside `.carousel` and   */
+/* come first in tree order, so they need lifting over it. The badges are      */
+/* siblings of `.carousel` itself and already paint above.                    */
+:root[data-app='salon_owner'] .sp-cover .carousel-dots,
+:root[data-app='salon_owner'] .sp-cover .carousel-counter {
+  z-index: 1;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O3. The glance                                                             */
+/*                                                                            */
+/* Three figures, and not three equal ones. Headcount and menu length are      */
+/* counts; what the salon starts at is the number a customer forms a price     */
+/* impression from. It takes the full width of the grid and a champagne plate. */
+/* The figure itself stays on the UI face and tabular, which owner.css already */
+/* holds — `--fs-2xl` is the only thing added to it (R4).                      */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-glance {
+  gap: var(--space-2);
+}
+
+:root[data-app='salon_owner'] .sp-glance > .pro-stat-accent {
+  grid-column: 1 / -1;
+  background-image: var(--accent-gradient-soft);
+  border-color: var(--border-color);
+}
+
+:root[data-app='salon_owner'] .sp-glance > .pro-stat-accent strong {
+  font-size: var(--fs-2xl);
+  line-height: var(--leading-tight);
+}
+
+/* -------------------------------------------------------------------------- */
+/* O4. Lists — the quality of the edge                                        */
+/*                                                                            */
+/* A working list keeps its row height, its padding and its 3.5rem tap target. */
+/* What changes is the rule between rows: the same hairline that fades before  */
+/* it reaches the gutter which owner.css gives the header, the tab bar and an  */
+/* action sheet, so a list reads as set rather than as boxed.                  */
+/*                                                                            */
+/* `background-image` rather than `border-bottom`, because a `.list-row` that  */
+/* is a link or a button paints `--hover-bg` on hover: a background-colour and */
+/* a background-image coexist where two borders would not.                    */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-list .list-row {
+  border-bottom-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='salon_owner'] .sp-list .list-row:last-child {
+  background-image: none;
+}
+
+/* Where a row leads with a glyph rather than a face, its plate becomes a      */
+/* champagne medallion — the treatment provider-queue.css gives the owner's    */
+/* empty-state icon, so the two read as one language. The team list is left    */
+/* out on purpose: an avatar does not want a second disc behind it.           */
+:root[data-app='salon_owner'] .sp-icons .list-row-icon {
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-hair);
+  color: var(--accent-ink);
+}
+
+/* And where a section has nothing in it yet — no menu, no team, no pictures —  */
+/* the one sentence that says so gets the frame the card would have had, so the */
+/* section still closes. A dashed edge on the recessed ground, which is the     */
+/* same thing `.sp-dish[data-inactive]` and the barber's `.pb-service[data-off]` */
+/* mean by a dash: real, and not currently carrying anything.                   */
+/*                                                                              */
+/* `.section >` is load-bearing. The salon's own bio is a `.muted` paragraph    */
+/* too, but it is a direct child of the screen body — it is prose, not an       */
+/* absence, and it must not be put in a box.                                    */
+:root[data-app='salon_owner'] .sp-shop .section > .muted {
+  padding: var(--space-4);
+  font-size: var(--fs-base);
+  background-color: var(--bg-muted);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+/* -------------------------------------------------------------------------- */
+/* O5. The price menu                                                         */
+/*                                                                            */
+/* Six lines of a menu, which is the one place on this screen where the        */
+/* typography is the product. The dish is set at reading size on the UI face;  */
+/* the length of the appointment becomes a micro-caps unit beneath it rather   */
+/* than a second grey sentence; and the price sits on a rail wide enough that  */
+/* three figures and four line up under one another.                          */
+/*                                                                            */
+/* The price stays on the UI face. `.price` already carries tabular-nums,      */
+/* which is this app's reliable marker of "this is a figure, do not set it in  */
+/* a Latin serif that has neither U+09F3 nor a Bengali numeral" (R4).          */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-menu .list-row {
+  gap: var(--space-4);
+}
+
+:root[data-app='salon_owner'] .sp-menu .list-row-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+:root[data-app='salon_owner'] .sp-menu .list-row-sub {
+  margin-top: var(--space-1);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The rail. `flex-end` matters as much as the width: it is what puts the last */
+/* digit of every price on the same vertical.                                 */
+:root[data-app='salon_owner'] .sp-menu .list-row-end {
+  min-width: 4.75rem;
+  justify-content: flex-end;
+}
+
+:root[data-app='salon_owner'] .sp-menu .price {
+  font-size: var(--fs-md);
+  letter-spacing: var(--tracking-tight);
+  color: var(--accent-ink);
+}
+
+/* The last row of the preview is not a dish, it is the way through to the      */
+/* screen that manages them. It is also the only row in this list that is an    */
+/* `<a>`: a dish carries no `to`, so ListRow renders it as a plain `<div>`.     */
+/* It keeps the reading size, because a route out of a card should not be set   */
+/* louder than what is on the menu. Tracking is left to the rule above and to   */
+/* its Bangla companion, which would otherwise be out-specified here.           */
+:root[data-app='salon_owner'] .sp-menu a.list-row .list-row-title {
+  font-size: var(--fs-base);
+}
+
+/* -------------------------------------------------------------------------- */
+/* O6. The week                                                               */
+/*                                                                            */
+/* Seven days of trading, set as a table instead of as seven sentences. The    */
+/* day names share one column sized to the longest of them and the opening     */
+/* times share the next, so every time starts on the same vertical — which is  */
+/* the whole point of tabular figures, and the thing a `space-between` row      */
+/* throws away the moment one day is called Thursday and the next Friday.      */
+/*                                                                            */
+/* `display: contents` on the row is what allows it: dt and dd become cells of */
+/* the one grid while the row element stays in the tree carrying the           */
+/* `data-today` and `data-closed` hooks provider-salon.css colours from. A     */
+/* `<div>` has no semantics to lose and the dl / dt / dd pairing is untouched. */
+/*                                                                            */
+/* Nothing below sets `color` or `font-weight` on a cell, deliberately. Those  */
+/* two are how provider-salon.css says "this is today" and "this day is shut", */
+/* and every selector here would out-specify it and silently take the marking  */
+/* away. Only geometry, size and case are set.                                */
+/*                                                                            */
+/* `fit-content()` rather than `max-content`: the longest Bangla weekday is    */
+/* one unbreakable conjunct run, and on a 320px screen an uncapped day column  */
+/* would leave the times nowhere to go.                                       */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-week-card {
+  padding-block: var(--space-3);
+}
+
+:root[data-app='salon_owner'] .sp-week {
+  display: grid;
+  grid-template-columns: fit-content(9.5rem) minmax(0, 1fr);
+  gap: 0;
+}
+
+:root[data-app='salon_owner'] .sp-week > div {
+  display: contents;
+}
+
+/* The pitch of the rows is held at what the old 0.625rem `.kv` gap gave them, */
+/* so the week still fits one screen. `--leading-snug`, never                  */
+/* `--leading-relaxed`: this is a tabular row, not prose.                      */
+:root[data-app='salon_owner'] .sp-week dt,
+:root[data-app='salon_owner'] .sp-week dd {
+  padding-block: 0.3125rem;
+  line-height: var(--leading-snug);
+}
+
+:root[data-app='salon_owner'] .sp-week dt {
+  padding-inline-end: var(--space-4);
+}
+
+:root[data-app='salon_owner'] .sp-week dd {
+  text-align: start;
+}
+
+/* Today, marked the way a maitre d' marks the day's page: the two cells       */
+/* become one champagne band with a gold rail down its leading edge. The band  */
+/* overruns the card's padding by 0.75rem each side so it reads as a marked    */
+/* row rather than as a highlighted word, and stops 0.25rem short of the       */
+/* card's own border. The accent ink provider-salon.css already gives the text */
+/* is what makes it legible, and it is left exactly as it is.                  */
+/*                                                                            */
+/* The negative margins shrink this row's contribution to the day column and   */
+/* never grow it, so the column is still sized by the other six and nothing    */
+/* shifts when the day rolls over.                                            */
+:root[data-app='salon_owner'] .sp-week [data-today='true'] dt,
+:root[data-app='salon_owner'] .sp-week [data-today='true'] dd {
+  background-color: var(--accent-bg);
+}
+
+:root[data-app='salon_owner'] .sp-week [data-today='true'] dt {
+  margin-inline-start: calc(-1 * var(--space-3));
+  padding-inline-start: calc(var(--space-3) - 2px);
+  border-inline-start: 2px solid var(--accent);
+  border-start-start-radius: var(--radius-xs);
+  border-end-start-radius: var(--radius-xs);
+}
+
+:root[data-app='salon_owner'] .sp-week [data-today='true'] dd {
+  margin-inline-end: calc(-1 * var(--space-3));
+  padding-inline-end: var(--space-3);
+  border-start-end-radius: var(--radius-xs);
+  border-end-end-radius: var(--radius-xs);
+}
+
+/* A shut day is not a time, so it stops pretending to be one and becomes a    */
+/* micro-caps mark instead. Its colour is provider-salon.css's and stays.      */
+/*                                                                            */
+/* The size stays too. dt and dd share a grid row, so shrinking one of them    */
+/* leaves its text sitting above the other's baseline while the row keeps the  */
+/* taller one's height — and a week whose lines do not sit on one baseline is  */
+/* the exact thing this table was set to fix. Case and tracking carry it.      */
+:root[data-app='salon_owner'] .sp-week [data-closed='true'] dd {
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O7. The gallery is a portfolio, not an upload widget                       */
+/*                                                                            */
+/* Owner-wide rather than screen-scoped: GalleryGrid is the owner's own body   */
+/* of work wherever it renders. A tile gets an edge, not an elevation — nine   */
+/* of them in a grid is exactly where a per-tile drop shadow turns into noise, */
+/* and into real paint on a mid-range Android.                                */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop .photo-grid {
+  gap: var(--space-2);
+}
+
+:root[data-app='salon_owner'] .pb-tile {
+  border-radius: var(--radius);
+}
+
+/* The frame rides a pseudo-element rather than the tile's own box-shadow. An   */
+/* inset shadow is painted between an element's background and its content, and */
+/* `.pb-tile` is a button whose whole box is filled by `<img class=             */
+/* "pb-tile-photo">` — so an inset frame set on the tile is drawn and then       */
+/* covered by the photograph. Nothing catches that: no error, no warning, just  */
+/* a rule that does nothing. `::after` is the tile's last child and paints over */
+/* both the photograph and the caption.                                         */
+:root[data-app='salon_owner'] .pb-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--border-color);
+}
+
+/* The caption is drawn on a photograph, so it takes the media ink that does   */
+/* not flip with the mood, and the scrim under it comes off a token rather     */
+/* than off the literal the base rule carries.                                */
+:root[data-app='salon_owner'] .pb-tile-cap {
+  padding: var(--space-4) var(--space-1) var(--space-1);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--media-ink);
+  background: linear-gradient(to top, var(--scrim-strong), transparent);
+}
+
+/* Same trap, no pseudo-element available: `.pb-lightbox` IS the `<img>`, and a */
+/* replaced element paints its content over any inset shadow. So the edge is an */
+/* outer hairline — visible in both moods — and only the elevation is a shadow. */
+:root[data-app='salon_owner'] .pb-lightbox {
+  box-shadow: 0 0 0 1px var(--border-color), var(--elev-card);
+}
+
+/* -------------------------------------------------------------------------- */
+/* O8. Where the salon is                                                     */
+/*                                                                            */
+/* Three lines of equal weight is an address nobody reads. The street leads,   */
+/* and the number under it is a figure, so it gets tabular figures.           */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-place > .row-sm:first-child > span {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+:root[data-app='salon_owner'] .sp-place > .row-sm:last-of-type > span {
+  font-variant-numeric: tabular-nums;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O9. The menu, in working clothes                                           */
+/*                                                                            */
+/* The same menu the shopfront shows, with the edit, the delete and the        */
+/* on-the-menu switch beside every line. Every control stays where it is and   */
+/* at the size it is; what is fixed is the weight.                            */
+/*                                                                            */
+/* provider-salon.css already gives `.ps-staff-card` its radius, its elevation */
+/* and the fading rule above its footer, and deliberately leaves               */
+/* `.ps-staff-name` at 1rem here because this card leads with its price rather */
+/* than with a person's name. Both of those decisions are left alone.          */
+/* -------------------------------------------------------------------------- */
+
+/* The filter bar is NOT dressed here. owner.css gilds the pressed segment and */
+/* owner-sheets.css carries the ink that has to sit on that gold — `--accent-on`*/
+/* at `:root[data-app='salon_owner'] .segmented button[aria-pressed='true']`,   */
+/* owner-wide, which is where it belongs: an owner meets the same control on    */
+/* the analytics screen. A screen-scoped copy here would out-specify it and     */
+/* fork the vocabulary the first time one of the two changed.                   */
+
+:root[data-app='salon_owner'] .sp-menu-screen .pro-section-head span {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tight);
+}
+
+:root[data-app='salon_owner'] .sp-menu-list {
+  gap: var(--space-2);
+}
+
+/* Off the menu. On the roster `[data-inactive]` means "this chair is paused", */
+/* and provider-salon.css answers it by stepping the card off the elevation    */
+/* ladder. Here it means "not currently offered", which is a different fact: a */
+/* dashed edge is how `.pb-service[data-off]` — the barber's own rate card —   */
+/* already says exactly that, so the app says it once rather than twice.       */
+:root[data-app='salon_owner'] .sp-dish[data-inactive='true'] {
+  border-style: dashed;
+  border-color: var(--border-color);
+}
+
+/* The price is the figure an owner scans a menu for, so it leads its row — at */
+/* the size the shopfront's price rail uses, in the accent ink the roster gives */
+/* a stylist's rate. One price, one size, whichever of the two screens it is    */
+/* read on. UI face and tabular, untouched by the serif (R4).                  */
+:root[data-app='salon_owner'] .sp-dish .ps-staff-meta .price {
+  font-size: var(--fs-md);
+  letter-spacing: var(--tracking-tight);
+  color: var(--accent-ink);
+}
+
+/* How long the appointment runs is a unit, not a second price, so it steps out */
+/* of the price's weight class and joins the micro-caps family instead. It is   */
+/* the one unclassed <span> in the first meta row — `.price` and the buffer     */
+/* `.badge` both carry a class — and `:nth-child(2)` is that row, the third     */
+/* child being the stylist count. If the card's markup ever changes, the rule   */
+/* stops matching rather than landing somewhere else.                          */
+:root[data-app='salon_owner'] .sp-dish .ps-staff-meta:nth-child(2) > span:not([class]) {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+}
+
+/* Off the menu, read at arm's length. The dashed edge says it at the card's    */
+/* boundary; this says it in the card's own weight, the way provider.css fades  */
+/* a finished appointment at 0.62. The two icon buttons, the warning callout    */
+/* and the switch all sit outside `.ps-staff-body` and stay at full strength,   */
+/* so putting the service back on the menu is still an obvious, full-contrast   */
+/* tap — the same reasoning the barber's rate card uses for `[data-off]`.       */
+:root[data-app='salon_owner'] .sp-dish[data-inactive='true'] .ps-staff-body {
+  opacity: 0.62;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O10. The unit inside a number field                                        */
+/*                                                                            */
+/* The taka sign and the minutes on the service form. A unit is a mark, not a  */
+/* word competing with the figure beside it.                                  */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-unit {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O11. Bangla companions (R7)                                                */
+/*                                                                            */
+/* Bengali has no case and its conjuncts come apart at wide tracking. base.css */
+/* narrows `.label` for exactly that reason and every rule above would         */
+/* out-specify it, so each one that introduced tracking or a transform states  */
+/* its companion here at one step more specificity. `[data-lang]` is written   */
+/* after `[data-app]` so the owner scope stays a literal substring of the      */
+/* selector for check-scope.mjs.                                              */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'][data-lang='bn'] .sp-name {
+  letter-spacing: 0;
+}
+
+:root[data-app='salon_owner'][data-lang='bn'] .sp-tagline {
+  font-style: normal;
+}
+
+:root[data-app='salon_owner'][data-lang='bn'] .sp-menu .list-row-sub,
+:root[data-app='salon_owner'][data-lang='bn'] .pb-tile-cap,
+:root[data-app='salon_owner'][data-lang='bn'] .sp-week [data-closed='true'] dd,
+:root[data-app='salon_owner'][data-lang='bn'] .sp-dish .ps-staff-meta:nth-child(2) > span:not([class]),
+:root[data-app='salon_owner'][data-lang='bn'] .sp-unit {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* Bengali numerals and conjuncts need back the room a micro-caps size takes   */
+/* away, so the one mark that dropped below 13px comes up again.               */
+:root[data-app='salon_owner'][data-lang='bn'] .sp-menu .list-row-sub {
+  font-size: var(--fs-sm);
+}
+
+/* `--tracking-tight` is -0.02em. Bengali conjuncts collide at negative        */
+/* tracking as surely as they come apart at wide tracking, so every figure and  */
+/* title that took it above is returned to 0 here.                              */
+:root[data-app='salon_owner'][data-lang='bn'] .sp-menu .list-row-title,
+:root[data-app='salon_owner'][data-lang='bn'] .sp-menu .price,
+:root[data-app='salon_owner'][data-lang='bn'] .sp-dish .ps-staff-meta .price,
+:root[data-app='salon_owner'][data-lang='bn'] .sp-menu-screen .pro-section-head span {
+  letter-spacing: 0;
+}
+
+/* ========================================================================== */
+/* THE CHAIR — the barber's and the salon employee's own business             */
+/*                                                                            */
+/* Scoped to `:root[data-app='barber']` and `:root[data-app='salon_employee']`,*/
+/* the two values AppFrame stamps on <html> for the people who work a chair    */
+/* rather than own the room. Everything above the SALON OWNER banner is shared */
+/* by all three — `.pb-tile`, `.pb-lightbox`, `.pb-hours-row` and `.pb-day`    */
+/* render on an owner's screens too — so every rule below is written twice,    */
+/* once per role, never with `:is()`: check-scope.mjs validates each           */
+/* comma-separated part carries a role scope and the `:is()` form defeats it.  */
+/*                                                                            */
+/* Posture. crew.css sets it out: the owner's density, the customer's warmth,  */
+/* the phone column and no desktop width step. These four screens are a        */
+/* barber's hub, their week, their menu and their money, read standing up      */
+/* between clients — so the air is bought between chapters and never inside a  */
+/* row, and the luxury signal is the quality of the edge.                      */
+/*                                                                            */
+/* Screen hooks. Five `ScreenBody` elements carry `pb-screen` plus their own   */
+/* name (`pb-hub`, `pb-rates`, `pb-ledger`, `pb-diary`, `pb-folio`). That is   */
+/* what lets a shared primitive — `.pro-chart`, `.pro-empty-day`, `.review`,   */
+/* `.tab`, `.list-row-icon` — be dressed here without reaching QueuePage,      */
+/* ShiftPage or any other screen these two roles also open, which belong to    */
+/* somebody else's file. Nothing in a portal (`.pb-lightbox`) can use a screen */
+/* hook: BottomSheet renders outside the screen, so those rules are            */
+/* role-scoped.                                                                */
+/*                                                                            */
+/* A screen hook is for reaching a shared primitive WITHOUT reaching another   */
+/* agent's screen — it is not a licence to restate something a sibling file    */
+/* has already said at role scope. `.empty` is the worked example: it is       */
+/* dressed role-wide in provider-queue.css and is deliberately not touched     */
+/* here, because a screen-scoped copy is one step more specific and wins every */
+/* tie in silence. Before adding a rule, check provider-queue.css §C4/§C6,     */
+/* crew.css and crew-sheets.css for the same class.                            */
+/*                                                                            */
+/* Order. crew.css and crew-sheets.css are imported AFTER this file, so a      */
+/* rule here at the same specificity LOSES to theirs. Anything that has to     */
+/* win — the figures crew.css would otherwise set in the display serif, the    */
+/* chart labels provider-queue.css marks as chosen — is written with a screen  */
+/* hook, which puts it a step above and settles it by specificity rather than  */
+/* by import order.                                                           */
+/*                                                                            */
+/* Rules carried: R4 no serif on a figure and never by tag; R6 nothing assumes */
+/* its own width; R8 a one-class rule restates the focus ring it displaces;    */
+/* R9 the --status-* pairs and the payment brand hues are untouched; R10 hover */
+/* behind a fine pointer, press behind reduced motion, no target under 44px;   */
+/* R11 <Art> sets background-color inline — not used by any of these screens.  */
+/* ========================================================================== */
+
+/* -------------------------------------------------------------------------- */
+/* B1. The hub's masthead                                                     */
+/*                                                                            */
+/* ProviderProfilePage is the longest screen in these two apps and was a stack */
+/* of equally-weighted bordered boxes. The first card is not a box: it is who  */
+/* this person is, so it takes the one elevation and the one gold wash on the  */
+/* screen — the same pair crew.css gives `.pq-hero[data-live]`, because "this  */
+/* is you" and "the chair is occupied" are the same kind of singular fact.     */
+/*                                                                            */
+/* `> .pb-profile-head` and not a bare descendant: the class is the masthead's */
+/* alone, but the child combinator keeps the rule from ever reaching a copy    */
+/* nested inside a card further down the screen.                              */
+/*                                                                            */
+/* `.card` IS load-bearing in the selector, and its absence was a silent bug.  */
+/* crew.css restates the light-mood card shadow at                             */
+/* `:root:not(.dark-theme)[data-app='…'] .card` — (0,4,0), exactly what        */
+/* `.pb-hub > .pb-profile-head` scores — and crew.css imports after this file, */
+/* so the tie went to it and the masthead was raised at night and flat by day. */
+/* Naming the class the element already carries takes this to (0,5,0) and      */
+/* settles it by specificity in both moods instead of by import order.         */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-hub > .card.pb-profile-head,
+:root[data-app='salon_employee'] .pb-hub > .card.pb-profile-head {
+  padding: var(--space-5);
+  gap: var(--space-4);
+  border-radius: var(--radius-2xl);
+  border-color: var(--accent-line);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+
+/* A name, not a figure — the serif is safe here and bound by explicit         */
+/* selector, never by tag (R4). crew.css already binds `.title` and `h1`; this */
+/* extends that list rather than widening it.                                  */
+:root[data-app='barber'] .pb-hub .pb-profile-name,
+:root[data-app='salon_employee'] .pb-hub .pb-profile-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+
+/* The line under the name is what they do — a business's kind, or an          */
+/* employee's job title. It is a caption in the markup and an eyebrow in the   */
+/* reading, so it joins the micro-caps family crew.css set up for `.label`.    */
+/* No nowrap and no width: a job title is a `<p>` and wraps (R6).              */
+/*                                                                            */
+/* It takes the case, the size and the tracking of `.label` and NOT its        */
+/* `--text-tertiary`. The card under it is the one on this screen wearing      */
+/* `--accent-gradient-soft`, and in the night mood tertiary ink on that wash   */
+/* falls to about 3.7:1 where base.css's own `.caption` colour holds about     */
+/* 4.8:1. Case and tracking are what make an eyebrow recede; on a gold ground  */
+/* the colour does not have to as well.                                        */
+:root[data-app='barber'] .pb-hub > .pb-profile-head .caption,
+:root[data-app='salon_employee'] .pb-hub > .pb-profile-head .caption {
+  margin-top: var(--space-1);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------------- */
+/* B2. Chapter rhythm                                                         */
+/*                                                                            */
+/* Seven sections ran down this screen with nothing between them but the body  */
+/* gap, and their heads spoke in two voices: `h3.label` at 11px micro-caps and */
+/* `.section-head h3` at 18px/700. One screen, one voice — and a mark on the   */
+/* head that opens each chapter, which is where the air goes on a working list */
+/* rather than inside the rows.                                               */
+/*                                                                            */
+/* The mark is the head sitting ON a fading rule, and NOT a hairline above the */
+/* section. That is the chapter mark the rest of this run already uses —       */
+/* provider-queue.css rules `.pq-settings .section > .label` and               */
+/* `.pq-day > .section > .pro-section-head` exactly this way, and §B4 below    */
+/* rules the rate card's and the diary's heads the same. One product, one      */
+/* chapter mark; a second one drawn in a different place would read as two     */
+/* kinds of structure on screens a barber moves between all day.              */
+/*                                                                            */
+/* `> .section >` and not a loose descendant, for provider-queue.css's reason: */
+/* a chapter mark belongs to a head that OPENS a top-level section, never to a */
+/* sub-head nested in a card. `.label` and `.section-head` are both listed     */
+/* because the hub uses one or the other per section, and both are heads.      */
+/* The rule is a background on the head's own box, so it costs no layout.      */
+/* -------------------------------------------------------------------------- */
+
+/* The rate card's category heads and the diary's two heads are the same mark, */
+/* declared once with them. `.pro-section-head` is a loose descendant on those */
+/* two only because the diary's week head is a direct child of a `.card` and   */
+/* not of a `.section`; neither screen has a sub-head a chapter mark could     */
+/* land on by mistake. Anything added to either screen inside a card gets the  */
+/* rule too, which is the trade for one declaration instead of five.           */
+:root[data-app='barber'] .pb-screen > .section > .label,
+:root[data-app='barber'] .pb-screen > .section > .section-head,
+:root[data-app='barber'] .pb-rates .pro-section-head,
+:root[data-app='barber'] .pb-diary .pro-section-head,
+:root[data-app='salon_employee'] .pb-screen > .section > .label,
+:root[data-app='salon_employee'] .pb-screen > .section > .section-head,
+:root[data-app='salon_employee'] .pb-rates .pro-section-head,
+:root[data-app='salon_employee'] .pb-diary .pro-section-head {
+  padding-bottom: var(--space-2);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='barber'] .pb-hub .section-head h3,
+:root[data-app='salon_employee'] .pb-hub .section-head h3 {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* Whose section this is. `.pb-locked` sits where a section's Edit button      */
+/* would be, so it answers a head rather than competing with it: a hairline    */
+/* and micro-caps instead of a grey pill. `--tracking-wide` and not `-widest`  */
+/* because base.css gives this one `white-space: nowrap` — it is the only      */
+/* element on the hub that cannot wrap out of trouble (R6).                    */
+:root[data-app='barber'] .pb-hub .pb-locked,
+:root[data-app='salon_employee'] .pb-hub .pb-locked {
+  padding: var(--space-1) var(--space-2);
+  background-color: transparent;
+  box-shadow: inset 0 0 0 1px var(--border-color);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* The barber's own line about their business. A tagline is the one piece of   */
+/* voice on a working screen, so it is the one place the serif is set in       */
+/* italic — the customer app's shopfront makes the same move.                  */
+:root[data-app='barber'] .pb-hub .pb-tagline,
+:root[data-app='salon_employee'] .pb-hub .pb-tagline {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
+}
+
+/* The routes out of a screen. A gold wash on the disc, not on the row — there */
+/* are up to four of these in a column and four glowing rows is a background.  */
+/*                                                                            */
+/* `.pb-screen` and not `.pb-hub`: the portfolio's socials list is the same    */
+/* `<ListCard>` of the same `<ListRow>`s, and gilding one list and not the     */
+/* other left a barber two kinds of row icon two taps apart. This is           */
+/* declaration-for-declaration what provider-queue.css gives                   */
+/* `.pq-settings .list-row .list-row-icon`, so all three list screens in these */
+/* two apps agree about what a row icon is.                                    */
+/*                                                                            */
+/* `:not(.list-row-danger)` although these screens have no destructive row     */
+/* today: ui.css tints that disc with `--status-danger-bg`, and a gold wash    */
+/* laid over it at a step higher specificity would quietly harmonise a warning */
+/* toward the accent the first time somebody adds one (R9).                    */
+:root[data-app='barber'] .pb-screen .list-row:not(.list-row-danger) .list-row-icon,
+:root[data-app='salon_employee'] .pb-screen .list-row:not(.list-row-danger) .list-row-icon {
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-hair);
+}
+
+/* -------------------------------------------------------------------------- */
+/* B3. The menu preview, on a rail                                            */
+/*                                                                            */
+/* What this person can be booked for, read on the hub. Same treatment the     */
+/* owner's shopfront menu gets, by design: one product, one price rail. The    */
+/* `flex-end` matters as much as the width — it is what puts the last digit of */
+/* every price on the same vertical.                                          */
+/*                                                                            */
+/* `.price` already carries tabular-nums, this app's marker of "this is a      */
+/* figure, keep it off the Latin serif" (R4). Nothing here binds a face.       */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-menu-rail .list-row-title,
+:root[data-app='salon_employee'] .pb-menu-rail .list-row-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+:root[data-app='barber'] .pb-menu-rail .list-row-sub,
+:root[data-app='salon_employee'] .pb-menu-rail .list-row-sub {
+  margin-top: var(--space-1);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-app='barber'] .pb-menu-rail .list-row-end,
+:root[data-app='salon_employee'] .pb-menu-rail .list-row-end {
+  min-width: 4.75rem;
+  justify-content: flex-end;
+}
+
+:root[data-app='barber'] .pb-menu-rail .price,
+:root[data-app='salon_employee'] .pb-menu-rail .price {
+  font-size: var(--fs-md);
+  letter-spacing: var(--tracking-tight);
+  color: var(--accent-ink);
+}
+
+/* -------------------------------------------------------------------------- */
+/* B4. The rate card                                                          */
+/*                                                                            */
+/* ServicesPage is a menu, and a menu is set: a ruled category head, the       */
+/* service in the display face, and the unit line in micro-caps with the price */
+/* stepping out of it in the accent ink.                                      */
+/*                                                                            */
+/* What is NOT done here: the price is not pulled onto a right-hand rail. It    */
+/* sits inside `.pb-service-meta` between two `·` separators that belong to the */
+/* sentence, and moving it with `order` or `margin-inline-start: auto` would    */
+/* leave those separators stranded. A rail is worth having where the markup     */
+/* already gives one — the hub's preview above, the ledger's rows below — and   */
+/* not worth restructuring a working screen for.                               */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-rates .pb-headline .display,
+:root[data-app='salon_employee'] .pb-rates .pb-headline .display {
+  font-size: var(--fs-2xl);
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+
+:root[data-app='barber'] .pb-rates .pb-headline .caption,
+:root[data-app='salon_employee'] .pb-rates .pb-headline .caption {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+}
+
+:root[data-app='barber'] .pb-rates .pb-headline-note,
+:root[data-app='salon_employee'] .pb-rates .pb-headline-note {
+  margin-top: var(--space-1);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* The category head's chapter mark is declared once, with the hub's and the   */
+/* ledger's, in §B2 — one mark for the group. What is left here is the count   */
+/* beside it. NOT on `.pb-screen`: QueuePage draws five `.pro-section-head`s   */
+/* of its own and belongs to another file.                                    */
+:root[data-app='barber'] .pb-rates .pro-section-head span,
+:root[data-app='barber'] .pb-diary .pro-section-head span,
+:root[data-app='salon_employee'] .pb-rates .pro-section-head span,
+:root[data-app='salon_employee'] .pb-diary .pro-section-head span {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tight);
+}
+
+/* The row keeps its edge and gains a hairline of gold inside it. Deliberately */
+/* no `border-color` and no `border-style`: `[data-off='true']` says "hidden   */
+/* from customers" with a dashed edge, and that signal has to survive.         */
+:root[data-app='barber'] .pb-rates .pb-service,
+:root[data-app='salon_employee'] .pb-rates .pb-service {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--bevel-hair);
+}
+
+:root[data-app='barber'] .pb-rates .pb-service-name,
+:root[data-app='salon_employee'] .pb-rates .pb-service-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
+}
+
+/* How long it takes and what it costs. `--fs-sm` and not the micro-caps 11px: */
+/* this line is data read at arm's length, not a label.                       */
+:root[data-app='barber'] .pb-rates .pb-service-meta,
+:root[data-app='salon_employee'] .pb-rates .pb-service-meta {
+  font-size: var(--fs-sm);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+:root[data-app='barber'] .pb-rates .pb-service-meta strong,
+:root[data-app='salon_employee'] .pb-rates .pb-service-meta strong {
+  font-size: var(--fs-md);
+  letter-spacing: var(--tracking-tight);
+  text-transform: none;
+  color: var(--accent-ink);
+}
+
+/* R9: the warning ink is a recognition cue and is left exactly as it is. Only */
+/* the case and the size change.                                              */
+:root[data-app='barber'] .pb-rates .pb-service-off,
+:root[data-app='salon_employee'] .pb-rates .pb-service-off {
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------------- */
+/* B5. The money                                                              */
+/*                                                                            */
+/* EarningsPage is where a barber decides whether this product is serious.     */
+/*                                                                            */
+/* Every figure on it stays on the UI face and tabular (R4). `formatBdt`       */
+/* writes ৳ (U+09F3) and Bangla renders Bengali numerals — neither of which a  */
+/* Latin serif has — so the net, the ledger sums and the account number are    */
+/* set in the body face on purpose, and there is no rule below that binds      */
+/* `--font-display` anywhere near them.                                        */
+/*                                                                            */
+/* This screen was the weakest of the five and the reason was structural, not  */
+/* decorative: five identical `.card` boxes ran down it, and the first of them */
+/* held what a barber opens the app to find out — what they made — with no     */
+/* more presence than the fee footnote three lines below it. Every other       */
+/* screen in these two apps has a subject: the queue has `.pq-hero`, the hub   */
+/* has its masthead, the diary has the day. The ledger had a list of boxes.    */
+/*                                                                            */
+/* So the takings card becomes that subject, in the two tokens this run        */
+/* already uses for exactly this and in no other combination — the pair        */
+/* crew.css gives `.pq-hero[data-live='true']` and §B1 gives the masthead.     */
+/* Nothing bespoke: one soft-gold surface per screen, and it is the one thing  */
+/* the screen is for.                                                          */
+/*                                                                            */
+/* `> .card.pb-net-card` for §B1's reason — (0,5,0) clears crew.css's          */
+/* light-mood `.card` shadow at (0,4,0), which would otherwise take the        */
+/* elevation back by day and leave it by night. The child combinator keeps it  */
+/* off the payout cards further down, which are `.card`s in a `.stack-sm`.     */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-ledger > .card.pb-net-card,
+:root[data-app='salon_employee'] .pb-ledger > .card.pb-net-card {
+  padding: var(--space-5);
+  border-radius: var(--radius-2xl);
+  border-color: var(--accent-line);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+
+:root[data-app='barber'] .pb-ledger .pb-net-value,
+:root[data-app='salon_employee'] .pb-ledger .pb-net-value {
+  font-size: var(--fs-3xl);
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+
+/* The four lines that add up to the headline, parted from it by the same      */
+/* fading rule the rest of the app uses instead of a grey border.              */
+:root[data-app='barber'] .pb-ledger .pb-net-kv,
+:root[data-app='salon_employee'] .pb-ledger .pb-net-kv {
+  padding-top: var(--space-4);
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* B6. The chart — an axis, a baseline and labels                             */
+/*                                                                            */
+/* On `.pb-screen` rather than on `.pb-ledger`, because the same `.pro-chart`  */
+/* is the barber's takings on Earnings and their week on the diary. It is NOT  */
+/* role-scoped alone: QueuePage and PerformancePage draw `.pro-chart` too and  */
+/* belong to another file.                                                    */
+/*                                                                            */
+/* The baseline is the point. `.pro-chart-col` is a flex column ending in its  */
+/* own `<small>`, so the bars' feet are one label-box plus one column gap up   */
+/* from the bottom of the chart — 1rem + 0.375rem. Pinning the label's         */
+/* line-height to exactly 1rem is what makes that offset a constant instead of */
+/* a guess, which is why the Bangla companion below changes the label's size   */
+/* and never its leading.                                                     */
+/*                                                                            */
+/* crew.css gilds ONLY the peak bar and that principle is kept: a gradient     */
+/* reads as varying density along its own length, so putting one on every bar  */
+/* destroys the comparison the chart exists to make. The bars here get a       */
+/* radius and nothing else.                                                   */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-screen .pro-chart,
+:root[data-app='salon_employee'] .pb-screen .pro-chart {
+  position: relative;
+}
+
+:root[data-app='barber'] .pb-screen .pro-chart::after,
+:root[data-app='salon_employee'] .pb-screen .pro-chart::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 1.375rem;
+  height: 1px;
+  pointer-events: none;
+  background-image: var(--rule-gradient);
+}
+
+:root[data-app='barber'] .pb-screen .pro-chart-bar,
+:root[data-app='salon_employee'] .pb-screen .pro-chart-bar {
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+}
+
+:root[data-app='barber'] .pb-screen .pro-chart-col small,
+:root[data-app='salon_employee'] .pb-screen .pro-chart-col small {
+  font-size: var(--fs-2xs);
+  line-height: 1rem;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* The two marks the chart already makes, restated because the rule above sits */
+/* a step higher than either of them and would take both away without a word.  */
+/* `[data-peak]` is provider.css's best day; `[aria-pressed]` is the day the   */
+/* diary is currently showing, from provider-queue.css at (0,3,0).             */
+:root[data-app='barber'] .pb-screen .pro-chart-col[data-peak='true'] small,
+:root[data-app='barber'] .pb-screen .pro-chart-col[aria-pressed='true'] small,
+:root[data-app='salon_employee'] .pb-screen .pro-chart-col[data-peak='true'] small,
+:root[data-app='salon_employee'] .pb-screen .pro-chart-col[aria-pressed='true'] small {
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+/* The count above a bar is data, not a label, so it is not taken down to the  */
+/* micro-caps size the axis labels use — only the figure is tightened.         */
+:root[data-app='barber'] .pb-screen .pq-chart-count,
+:root[data-app='salon_employee'] .pb-screen .pq-chart-count {
+  letter-spacing: var(--tracking-tight);
+}
+
+/* -------------------------------------------------------------------------- */
+/* B7. How they paid, and what came in                                        */
+/*                                                                            */
+/* R9 throughout: `--pay-bkash` and the rest are recognition cues. The dot and */
+/* the bar keep their brand hue, which arrives inline from `takingsColor`, and */
+/* nothing here touches either. Only the track under the bar and the type      */
+/* around it change.                                                          */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-ledger .pb-split-name,
+:root[data-app='salon_employee'] .pb-ledger .pb-split-name {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+:root[data-app='barber'] .pb-ledger .pb-split-amount,
+:root[data-app='salon_employee'] .pb-ledger .pb-split-amount {
+  font-size: var(--fs-base);
+  letter-spacing: var(--tracking-tight);
+}
+
+:root[data-app='barber'] .pb-ledger .pb-split-track,
+:root[data-app='salon_employee'] .pb-ledger .pb-split-track {
+  height: 0.375rem;
+  box-shadow: inset 0 0 0 1px var(--border-light);
+}
+
+:root[data-app='barber'] .pb-ledger .pb-txn,
+:root[data-app='salon_employee'] .pb-ledger .pb-txn {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--bevel-hair);
+  transition:
+    border-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease);
+}
+
+:root[data-app='barber'] .pb-ledger .pb-txn-name,
+:root[data-app='salon_employee'] .pb-ledger .pb-txn-name {
+  letter-spacing: var(--tracking-tight);
+}
+
+/* The sum is what the row is for, so it leads — at the size and in the ink    */
+/* the price rail uses on the hub. Tabular already, from the base rule.        */
+:root[data-app='barber'] .pb-ledger .pb-txn-end strong,
+:root[data-app='salon_employee'] .pb-ledger .pb-txn-end strong {
+  font-size: var(--fs-md);
+  letter-spacing: var(--tracking-tight);
+  color: var(--accent-ink);
+}
+
+:root[data-app='barber'] .pb-ledger .pb-txn-method,
+:root[data-app='salon_employee'] .pb-ledger .pb-txn-method {
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* `.pb-payout` is a `<Card>`, so crew.css's `.card` rule already gives it the */
+/* --radius-lg corner and the bevel. The rule that restated the radius here    */
+/* was a no-op and is gone: a declaration that changes nothing is a claim      */
+/* somebody later has to disprove.                                             */
+:root[data-app='barber'] .pb-ledger .pb-payout-number,
+:root[data-app='salon_employee'] .pb-ledger .pb-payout-number {
+  font-size: var(--fs-md);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* -------------------------------------------------------------------------- */
+/* B8. The days ahead                                                         */
+/*                                                                            */
+/* `.pq-cal`, `.pq-cal-key`, `.pq-chart-count` and `.pq-day-total` are queue-  */
+/* named but CalendarPage is the only screen in the app that renders any of    */
+/* them, so dressing them from here reaches nothing else. They are still both  */
+/* role-scoped and screen-scoped, so provider-queue.css stays free to own the  */
+/* queue's own surfaces without either file out-ranking the other by accident. */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-diary .pq-cal,
+:root[data-app='salon_employee'] .pb-diary .pq-cal {
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-2);
+  /* The inline padding and the 1px edge are given straight back as negative
+     margin, so the month grid inside keeps EXACTLY the width it has today.
+     `.calendar-day` is `aspect-ratio: 1; width: 100%` across a seven-column
+     grid, so every pixel taken off this card's content box comes off all seven
+     tap targets at once — and on a 320px phone those cells are already the
+     smallest controls in the product (R10). The surface is bought out of the
+     screen's own gutter instead of out of the dates. It bleeds 9px into a 16px
+     gutter, so it cannot reach the viewport edge or start a sideways scroll. */
+  margin-inline: calc(-1 * (var(--space-2) + 1px));
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-2xl);
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+:root[data-app='barber'] .pb-diary .pq-cal-key,
+:root[data-app='salon_employee'] .pb-diary .pq-cal-key {
+  padding-top: var(--space-3);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+/* What the chosen day is worth. A space-between row whose right-hand side is a */
+/* sum that changes when a day is tapped — so `--tracking-wide` on the left     */
+/* label rather than `--tracking-widest`, and no width, no nowrap and no        */
+/* flex-shrink on either side (R6).                                            */
+:root[data-app='barber'] .pb-diary .pq-day-total,
+:root[data-app='salon_employee'] .pb-diary .pq-day-total {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-hair);
+}
+
+/* Same reasoning as the masthead's eyebrow in §B1: the bar this sits on is    */
+/* washed with `--accent-gradient-soft`, and `--text-tertiary` on that wash    */
+/* reads at about 3.7:1 at night. The micro-caps voice is kept; base.css's     */
+/* `.caption` colour is left to do the receding.                               */
+:root[data-app='barber'] .pb-diary .pq-day-total .caption,
+:root[data-app='salon_employee'] .pb-diary .pq-day-total .caption {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+:root[data-app='barber'] .pb-diary .pq-day-total strong,
+:root[data-app='salon_employee'] .pb-diary .pq-day-total strong {
+  font-size: var(--fs-xl);
+  letter-spacing: var(--tracking-tight);
+}
+
+/* The day's list is `<AppointmentRow>` — the queue's row, the same component  */
+/* and the same <Link> to the same screen. provider-queue.css states its seat  */
+/* at role scope, so the diary already gets the edge, the stub hairline and    */
+/* the live wash; but it hangs the PRESS off `.pq-day` and `.pq-requests`, so  */
+/* the identical row landed under the thumb on the queue and stayed dead still */
+/* on the diary. Mirrored here declaration-for-declaration, undone under       */
+/* reduced motion in §B13 — an :active transform is not a transition and       */
+/* survives base.css's collapse.                                              */
+/*                                                                            */
+/* No `box-shadow`, for that file's reason: `.pro-appt` is a <Link>, and a     */
+/* shadow stated here at (0,4,0) would swallow crew.css's focus ring (R8).     */
+:root[data-app='barber'] .pb-diary .pro-appt,
+:root[data-app='salon_employee'] .pb-diary .pro-appt {
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+
+:root[data-app='barber'] .pb-diary .pro-appt:active,
+:root[data-app='salon_employee'] .pb-diary .pro-appt:active {
+  transform: scale(0.99);
+}
+
+/* -------------------------------------------------------------------------- */
+/* B9. Empty states                                                           */
+/*                                                                            */
+/* A new barber meets every one of these on their first afternoon — no         */
+/* services, no takings, no payout account, no photographs, no reviews and an  */
+/* empty day in the diary.                                                    */
+/*                                                                            */
+/* `<EmptyState>` — `.empty` — is NOT dressed here, and the four rules that    */
+/* used to be were removed rather than kept. provider-queue.css now states the */
+/* whole treatment at ROLE scope (`.empty .icon-circle` takes the bezel and    */
+/* the seat, `.empty .icon-circle-neutral` the gold wash, `.empty h3` the      */
+/* --fs-lg step, `.empty p` a 20rem measure), so it already reaches all five   */
+/* of these screens. A screen-scoped copy one step more specific would win     */
+/* every tie silently: this file's `.empty p` was `--leading-relaxed` against  */
+/* that file's `--leading-normal`, which is the same sentence set two ways     */
+/* between two tabs of one app, and its `.empty` padding was byte-identical to */
+/* ui.css's. One statement, in the file that made it first.                    */
+/*                                                                            */
+/* `.pro-empty-day` is a different object and does still belong here, because  */
+/* provider-queue.css scopes ITS version to `.pq-day` — but it is the same     */
+/* object, so the material below is that rule attribute-for-attribute. The     */
+/* diary's empty day and the queue's empty day are one screen apart in the nav */
+/* bar and have to be the same thing: a seated card with a lit top edge, a     */
+/* ringed medallion and a serif title, not a dashed box on one and a card on   */
+/* the other. The dashed edge goes with it — "nothing booked" is a state, not  */
+/* a placeholder, and the queue and the owner both already say so in solid.    */
+/*                                                                            */
+/* CalendarPage hands its icon in as a bare <svg> with no wrapper, exactly as  */
+/* ConfirmDialog does, so the medallion is built out of the glyph itself with  */
+/* the content-box trick crew-sheets.css uses. `> svg` and never ` svg`, so a  */
+/* future nested icon cannot be caught. `strong` by tag is safe here and only  */
+/* here: every string that reaches it is a title — nothing today, no takings   */
+/* yet — and no figure is ever written into it (R4).                          */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-screen .pro-empty-day,
+:root[data-app='salon_employee'] .pb-screen .pro-empty-day {
+  position: relative;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-5);
+  border-style: solid;
+  border-color: var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+  background-image:
+    radial-gradient(70% 7rem at 50% 0.5rem, var(--accent-bg) 0%, transparent 72%),
+    var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+:root[data-app='barber'] .pb-screen .pro-empty-day::before,
+:root[data-app='salon_employee'] .pb-screen .pro-empty-day::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: 1px;
+  background-image: var(--rule-gradient);
+}
+
+/* lucide writes width and height as presentation attributes, so padding grows */
+/* the box around a drawing that stays 26px. `box-sizing: content-box` is not  */
+/* optional: base.css sets border-box on everything, and 0.875rem of padding   */
+/* inside a 26px box would collapse the drawing instead of surrounding it.     */
+:root[data-app='barber'] .pb-screen .pro-empty-day > svg,
+:root[data-app='salon_employee'] .pb-screen .pro-empty-day > svg {
+  box-sizing: content-box;
+  flex-shrink: 0;
+  padding: 0.875rem;
+  border-radius: 50%;
+  color: var(--accent-ink);
+  background-color: var(--accent-bg);
+  box-shadow: var(--bevel-hair);
+}
+
+:root[data-app='barber'] .pb-screen .pro-empty-day strong,
+:root[data-app='salon_employee'] .pb-screen .pro-empty-day strong {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+
+/* `> span` and not a loose `span`: EarningsPage's "no takings yet" writes its */
+/* body into a direct-child <span>, and a descendant selector would also reach */
+/* any span a title is ever wrapped in.                                        */
+:root[data-app='barber'] .pb-screen .pro-empty-day p,
+:root[data-app='barber'] .pb-screen .pro-empty-day > span,
+:root[data-app='salon_employee'] .pb-screen .pro-empty-day p,
+:root[data-app='salon_employee'] .pb-screen .pro-empty-day > span {
+  max-width: 22rem;
+  color: var(--text-tertiary);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+/* -------------------------------------------------------------------------- */
+/* B10. The portfolio                                                         */
+/*                                                                            */
+/* PortfolioPage renders from identical markup for every provider role, so     */
+/* every rule here carries both scopes and a screen hook and none of them      */
+/* edits a base rule.                                                          */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-folio .tabs,
+:root[data-app='salon_employee'] .pb-folio .tabs {
+  border-bottom-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+/* `min-height` is untouched, so the tab keeps its 44px target (R10).          */
+:root[data-app='barber'] .pb-folio .tab,
+:root[data-app='salon_employee'] .pb-folio .tab {
+  font-size: var(--fs-sm);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+:root[data-app='barber'] .pb-folio .tab[aria-selected='true']::after,
+:root[data-app='salon_employee'] .pb-folio .tab[aria-selected='true']::after {
+  background-image: var(--accent-gradient);
+}
+
+/* The score is a FIGURE. crew.css binds `.display` to the serif for these two */
+/* roles, which is right for a headline and wrong for this one element:        */
+/* `formatRating` writes a number and Bangla renders it in Bengali numerals,   */
+/* which a Latin old-style serif does not have (R4). So the face is returned   */
+/* to the body stack — `.pb-score` itself is unstyled, so `inherit` resolves   */
+/* to the app's UI font — and tabular figures mark it as a figure for anybody  */
+/* reading this file later.                                                    */
+:root[data-app='barber'] .pb-folio .pb-score .display,
+:root[data-app='salon_employee'] .pb-folio .pb-score .display {
+  font-family: inherit;
+  font-size: var(--fs-3xl);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-ink);
+}
+
+:root[data-app='barber'] .pb-folio .review,
+:root[data-app='salon_employee'] .pb-folio .review {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+:root[data-app='barber'] .pb-folio .review-meta,
+:root[data-app='salon_employee'] .pb-folio .review-meta {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+:root[data-app='barber'] .pb-folio .review-text,
+:root[data-app='salon_employee'] .pb-folio .review-text {
+  line-height: var(--leading-relaxed);
+}
+
+/* The provider's answer, quoted off the review by a gold edge rather than a   */
+/* flat accent border.                                                         */
+/*                                                                            */
+/* `background-color: transparent` is what makes this ONE gold rather than     */
+/* two. The base rule fills `.pb-reply` with `--accent-bg`, and laying         */
+/* `--accent-gradient-soft` over it stacks two washes into something a third   */
+/* stronger than anything else on these screens carries — where the whole      */
+/* point of the soft gradient is that it is the one intensity a repeating      */
+/* element gets. Clearing the fill leaves the gradient reading at exactly the  */
+/* weight `.pq-day-total`, `.list-row-icon` and `.pro-appt[data-live]` read at.*/
+:root[data-app='barber'] .pb-folio .pb-reply,
+:root[data-app='salon_employee'] .pb-folio .pb-reply {
+  padding: var(--space-3);
+  border-inline-start-color: var(--accent-line);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  background-color: transparent;
+  background-image: var(--accent-gradient-soft);
+}
+
+:root[data-app='barber'] .pb-folio .pb-reply-head,
+:root[data-app='salon_employee'] .pb-folio .pb-reply-head {
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------------------- */
+/* B11. The wall of pictures                                                  */
+/*                                                                            */
+/* On `.pb-screen`, because GalleryGrid renders on the hub as well as on the   */
+/* portfolio. A tile gets an edge, never an elevation: nine of them in a grid  */
+/* is exactly where a per-tile drop shadow turns into noise and into real      */
+/* paint on a mid-range Android.                                              */
+/*                                                                            */
+/* The frame rides `::after` and NOT the tile's own box-shadow. An inset        */
+/* shadow is painted between an element's background and its content, and       */
+/* `.pb-tile` is a button whose whole box is filled by `<img class=            */
+/* "pb-tile-photo">` — so an inset frame set on the tile is drawn and then      */
+/* covered by the photograph. Nothing catches that: no error, no warning, just  */
+/* a rule that does nothing. (The owner's `.pb-tile` rule above hit the same    */
+/* wall and answers it the same way.)                                          */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-screen .pb-tile,
+:root[data-app='salon_employee'] .pb-screen .pb-tile {
+  border-radius: var(--radius);
+  transition: transform var(--speed-fast) var(--ease);
+}
+
+:root[data-app='barber'] .pb-screen .pb-tile::after,
+:root[data-app='salon_employee'] .pb-screen .pb-tile::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--border-color);
+}
+
+/* R8. The rule above sits a step higher than crew.css's app-wide focus ring,  */
+/* which is a `box-shadow` — and a hover rule below adds one to the tile        */
+/* itself. Both are restated here so a keyboard never loses the indicator.     */
+/*                                                                            */
+/* `--accent-line` and not ui.css's `--focus-ring`: the ring these two roles   */
+/* actually wear is crew.css's `:focus-visible { outline-color: --accent-line }`*/
+/* at (0,3,0), which recolours the base rule for the whole app. Restating the  */
+/* shorthand with the base token — which the first draft did — is a restatement*/
+/* that silently changes the thing it is protecting, and leaves one control in */
+/* the product ringed in a colour nothing else uses.                          */
+:root[data-app='barber'] .pb-screen .pb-tile:focus-visible,
+:root[data-app='salon_employee'] .pb-screen .pb-tile:focus-visible {
+  outline: 2px solid var(--accent-line);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px var(--ring);
+}
+
+/* Drawn on a photograph, so it takes the media ink that does not flip with    */
+/* the mood and the scrim comes off a token rather than off a literal.         */
+:root[data-app='barber'] .pb-screen .pb-tile-cap,
+:root[data-app='salon_employee'] .pb-screen .pb-tile-cap {
+  padding: var(--space-4) var(--space-1) var(--space-1);
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--media-ink);
+  background: linear-gradient(to top, var(--scrim-strong), transparent);
+}
+
+/* The lightbox lives in a portal, outside the screen — BottomSheet renders it */
+/* at the end of <body> — so it cannot use a screen hook and is role-scoped.   */
+/* Same trap as the tile with no pseudo-element available: `.pb-lightbox` IS   */
+/* the `<img>`, and a replaced element paints its content over any inset       */
+/* shadow. So the edge is an outer hairline and only the depth is a shadow.    */
+:root[data-app='barber'] .pb-lightbox,
+:root[data-app='salon_employee'] .pb-lightbox {
+  border-radius: var(--radius-xl);
+  box-shadow: 0 0 0 1px var(--border-color), var(--elev-card);
+}
+
+/* -------------------------------------------------------------------------- */
+/* B12. The week                                                              */
+/*                                                                            */
+/* WeekHoursList renders on a barber's hub, an employee's hub and the owner's  */
+/* shopfront, so this is role-scoped and mirrors what provider-salon.css does  */
+/* for the owner: the day name recedes, the hours are the reading.             */
+/*                                                                            */
+/* Per the project note, an unsaved default week looks exactly like a          */
+/* configured one — and the only thing that says otherwise is the warning       */
+/* Callout ProviderProfilePage puts above this card when                       */
+/* `schedule.source === 'default'`. Nothing here touches `.callout` or any of   */
+/* its tones, so that signal survives untouched (R9).                          */
+/*                                                                            */
+/* The gap moves onto the rows rather than being added to them: seven days     */
+/* must still fit a phone, so the hairline is paid for out of the list's own    */
+/* gap instead of costing 3.5rem of new height.                                */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pb-hours,
+:root[data-app='salon_employee'] .pb-hours {
+  gap: 0;
+}
+
+:root[data-app='barber'] .pb-hours-row,
+:root[data-app='salon_employee'] .pb-hours-row {
+  padding-block: var(--space-1);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='barber'] .pb-hours-row:last-child,
+:root[data-app='salon_employee'] .pb-hours-row:last-child {
+  padding-bottom: 0;
+  background-image: none;
+}
+
+/* No width and no nowrap on either side (R6): a multi-stretch day can be a     */
+/* long string and it is left free to wrap the way it already does.            */
+:root[data-app='barber'] .pb-hours-row span:first-child,
+:root[data-app='salon_employee'] .pb-hours-row span:first-child {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+:root[data-app='barber'] .pb-hours-row span:last-child,
+:root[data-app='salon_employee'] .pb-hours-row span:last-child {
+  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+/* A closed day stays quiet. (0,4,1), because the rule above would otherwise   */
+/* out-specify base.css's `.dim` and light every shut day back up.             */
+:root[data-app='barber'] .pb-hours-row span:last-child.dim,
+:root[data-app='salon_employee'] .pb-hours-row span:last-child.dim {
+  color: var(--text-tertiary);
+  font-weight: 500;
+  letter-spacing: var(--tracking-normal);
+}
+
+/* A day in the hours editor, ruled rather than bordered. The line sits at the */
+/* bottom of the padding box, exactly where the 1px border was, so the sheet   */
+/* does not grow by a pixel. Both sheets that render `.pb-day` are already     */
+/* dressed by crew-sheets.css — this is the one thing left in them.            */
+:root[data-app='barber'] .pb-day,
+:root[data-app='salon_employee'] .pb-day {
+  border-bottom-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='barber'] .pb-day:last-child,
+:root[data-app='salon_employee'] .pb-day:last-child {
+  background-image: none;
+}
+
+/* -------------------------------------------------------------------------- */
+/* B13. Hover and press                                                       */
+/*                                                                            */
+/* R10. A hover state on a counter tablet sticks to whatever was last tapped,  */
+/* so it is behind a fine-pointer query; a press transform is not a transition */
+/* and survives base.css's reduced-motion collapse, so it is turned off by     */
+/* hand. Only the gallery tile and the diary's appointment row take either —   */
+/* both are controls. The transaction rows, the service rows' card and the     */
+/* hours list are articles and list items, and giving one of those a hover     */
+/* would promise a tap that does nothing.                                      */
+/* -------------------------------------------------------------------------- */
+
+@media (hover: hover) and (pointer: fine) {
+  /* `:not(:focus-visible)` rather than source order: this sits at the same    */
+  /* specificity as the tile's focus ring above and would otherwise replace it */
+  /* for anyone whose pointer happens to be over a tile they tabbed to (R8).   */
+  :root[data-app='barber'] .pb-screen .pb-tile:hover:not(:focus-visible),
+  :root[data-app='salon_employee'] .pb-screen .pb-tile:hover:not(:focus-visible) {
+    box-shadow: var(--elev-raised);
+  /* The joined braces are a leftover: an earlier check-scope.mjs could not see
+     a rule nested inside an at-rule. That is fixed, so this may be reformatted
+     normally. */
+  } }
+
+:root[data-app='barber'] .pb-screen .pb-tile:active,
+:root[data-app='salon_employee'] .pb-screen .pb-tile:active {
+  transform: scale(0.985);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-app='barber'] .pb-screen .pb-tile:active,
+  :root[data-app='barber'] .pb-diary .pro-appt:active,
+  :root[data-app='salon_employee'] .pb-screen .pb-tile:active,
+  :root[data-app='salon_employee'] .pb-diary .pro-appt:active {
+    transform: none;
+  } }
+
+/* -------------------------------------------------------------------------- */
+/* B14. Narrow phones                                                         */
+/*                                                                            */
+/* The base file steps two figures down below 360px. Both of those rules are   */
+/* one class deep and every rule above is four, so without restating them the  */
+/* step would silently stop happening — and a 38px net in Bengali numerals on  */
+/* a 320px screen is the one place this redesign could break a real reading.   */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 359px) {
+  :root[data-app='barber'] .pb-ledger .pb-net-value,
+  :root[data-app='salon_employee'] .pb-ledger .pb-net-value {
+    font-size: var(--fs-2xl);
+  }
+  :root[data-app='barber'] .pb-rates .pb-headline .display,
+  :root[data-app='salon_employee'] .pb-rates .pb-headline .display {
+    font-size: var(--fs-xl);
+  }
+  :root[data-app='barber'] .pb-folio .pb-score .display,
+  :root[data-app='salon_employee'] .pb-folio .pb-score .display {
+    font-size: var(--fs-2xl);
+  } }
+
+/* -------------------------------------------------------------------------- */
+/* B15. Bangla companions                                                     */
+/*                                                                            */
+/* Bengali has no case and its conjuncts come apart at wide tracking and       */
+/* collide at negative tracking. base.css narrows `.label` for exactly that    */
+/* reason and every rule above would out-specify it, so each one that          */
+/* introduced a transform or a tracking states its companion here at one step  */
+/* more specificity. `[data-lang]` is written AFTER `[data-app]` so the role   */
+/* scope stays a literal substring of the selector for check-scope.mjs.        */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='barber'][data-lang='bn'] .pb-hub > .pb-profile-head .caption,
+:root[data-app='barber'][data-lang='bn'] .pb-hub .section-head h3,
+:root[data-app='barber'][data-lang='bn'] .pb-hub .pb-locked,
+:root[data-app='barber'][data-lang='bn'] .pb-menu-rail .list-row-sub,
+:root[data-app='barber'][data-lang='bn'] .pb-rates .pb-headline-note,
+:root[data-app='barber'][data-lang='bn'] .pb-rates .pb-service-meta,
+:root[data-app='barber'][data-lang='bn'] .pb-rates .pb-service-off,
+:root[data-app='barber'][data-lang='bn'] .pb-ledger .pb-split-name,
+:root[data-app='barber'][data-lang='bn'] .pb-ledger .pb-txn-method,
+:root[data-app='barber'][data-lang='bn'] .pb-ledger .pb-payout-number,
+:root[data-app='barber'][data-lang='bn'] .pb-screen .pro-chart-col small,
+:root[data-app='barber'][data-lang='bn'] .pb-screen .pb-tile-cap,
+:root[data-app='barber'][data-lang='bn'] .pb-diary .pq-cal-key,
+:root[data-app='barber'][data-lang='bn'] .pb-diary .pq-day-total .caption,
+:root[data-app='barber'][data-lang='bn'] .pb-folio .tab,
+:root[data-app='barber'][data-lang='bn'] .pb-folio .review-meta,
+:root[data-app='barber'][data-lang='bn'] .pb-folio .pb-reply-head,
+:root[data-app='barber'][data-lang='bn'] .pb-hours-row span:first-child,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-hub > .pb-profile-head .caption,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-hub .section-head h3,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-hub .pb-locked,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-menu-rail .list-row-sub,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-rates .pb-headline-note,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-rates .pb-service-meta,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-rates .pb-service-off,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-ledger .pb-split-name,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-ledger .pb-txn-method,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-ledger .pb-payout-number,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-screen .pro-chart-col small,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-screen .pb-tile-cap,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-diary .pq-cal-key,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-diary .pq-day-total .caption,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-folio .tab,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-folio .review-meta,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-folio .pb-reply-head,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-hours-row span:first-child {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* `--tracking-tight` is -0.02em and `--tracking-tighter` -0.035em. Every name */
+/* and figure that took one of them above is returned to 0 here.               */
+:root[data-app='barber'][data-lang='bn'] .pb-hub .pb-profile-name,
+:root[data-app='barber'][data-lang='bn'] .pb-menu-rail .list-row-title,
+:root[data-app='barber'][data-lang='bn'] .pb-menu-rail .price,
+:root[data-app='barber'][data-lang='bn'] .pb-rates .pb-headline .display,
+:root[data-app='barber'][data-lang='bn'] .pb-rates .pro-section-head span,
+:root[data-app='barber'][data-lang='bn'] .pb-diary .pro-section-head span,
+:root[data-app='barber'][data-lang='bn'] .pb-rates .pb-service-name,
+:root[data-app='barber'][data-lang='bn'] .pb-rates .pb-service-meta strong,
+:root[data-app='barber'][data-lang='bn'] .pb-ledger .pb-net-value,
+:root[data-app='barber'][data-lang='bn'] .pb-ledger .pb-split-amount,
+:root[data-app='barber'][data-lang='bn'] .pb-ledger .pb-txn-name,
+:root[data-app='barber'][data-lang='bn'] .pb-ledger .pb-txn-end strong,
+:root[data-app='barber'][data-lang='bn'] .pb-screen .pq-chart-count,
+:root[data-app='barber'][data-lang='bn'] .pb-screen .pro-empty-day strong,
+:root[data-app='barber'][data-lang='bn'] .pb-diary .pq-day-total strong,
+:root[data-app='barber'][data-lang='bn'] .pb-folio .pb-score .display,
+:root[data-app='barber'][data-lang='bn'] .pb-hours-row span:last-child,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-hub .pb-profile-name,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-menu-rail .list-row-title,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-menu-rail .price,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-rates .pb-headline .display,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-rates .pro-section-head span,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-diary .pro-section-head span,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-rates .pb-service-name,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-rates .pb-service-meta strong,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-ledger .pb-net-value,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-ledger .pb-split-amount,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-ledger .pb-txn-name,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-ledger .pb-txn-end strong,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-screen .pq-chart-count,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-screen .pro-empty-day strong,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-diary .pq-day-total strong,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-folio .pb-score .display,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-hours-row span:last-child {
+  letter-spacing: 0;
+}
+
+/* An italic Latin serif has nothing to say about Bengali, which has no italic */
+/* form — the browser would synthesise a slant. */
+:root[data-app='barber'][data-lang='bn'] .pb-hub .pb-tagline,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-hub .pb-tagline {
+  font-style: normal;
+  letter-spacing: 0;
+}
+
+/* Bengali numerals and conjuncts need back the room a micro-caps size takes   */
+/* away, so the two marks that dropped below 13px come up again. The chart     */
+/* label's LEADING is deliberately not touched: B6 pins it to exactly 1rem so  */
+/* the baseline's offset stays a constant rather than a guess.                 */
+:root[data-app='barber'][data-lang='bn'] .pb-menu-rail .list-row-sub,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-menu-rail .list-row-sub {
+  font-size: var(--fs-sm);
+}
+
+:root[data-app='barber'][data-lang='bn'] .pb-screen .pro-chart-col small,
+:root[data-app='salon_employee'][data-lang='bn'] .pb-screen .pro-chart-col small {
+  font-size: var(--fs-xs);
+}

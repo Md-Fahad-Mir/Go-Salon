@@ -1,0 +1,24 @@
+# Virtualenvs & Python caches (image installs its own deps)
+.venv
+venv
+ENV
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+
+# Secrets — never bake these into an image
+.env
+.env.*
+
+# Local AI output (written at runtime, not part of the image)
+reports
+
+# VCS / tooling / docs
+.git
+.gitignore
+.dockerignore
+Dockerfile
+README.md
+*.log
+.DS_Store

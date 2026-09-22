@@ -1,0 +1,28 @@
+@import './styles/theme.css';
+@import './styles/base.css';
+@import './styles/layout.css';
+@import './styles/ui.css';
+@import './styles/auth.css';
+@import './styles/home.css';
+@import './styles/booking.css';
+@import './styles/tryon.css';
+@import './styles/profile.css';
+@import './styles/provider.css';
+@import './styles/provider-queue.css';
+@import './styles/provider-business.css';
+@import './styles/provider-salon.css';
+@import './styles/provider-team.css';
+/* Last, so the customer's scoped overrides layer over every base rule above
+   without any of them being edited. Provider screens never match its
+   selectors — see the header of the file. */
+@import './styles/customer.css';
+/* After customer.css for the same reason customer.css comes after everything
+   else: the owner's scoped rules must out-order the base rules in the provider
+   sheets. Order alone is fragile, so anything load-bearing is also stated at an
+   explicit specificity inside the file. */
+@import './styles/owner.css';
+@import './styles/owner-sheets.css';
+/* The barber and the salon employee. Last, so their scoped rules out-order the
+   base rules in every provider sheet above. */
+@import './styles/crew.css';
+@import './styles/crew-sheets.css';

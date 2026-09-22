@@ -1,0 +1,1016 @@
+/* ==========================================================================
+   provider-team — the personal screens
+
+   The employee's shift and standing, and the women's stylist's client book,
+   colour formulas and lookbook. Everything here is prefixed `.pt-`; anything
+   more than one role needs lives in provider.css.
+
+   TWO REGISTERS, ONE BRAND.
+
+     The employee's shift and performance screens are a WORKING RECORD. An
+     employee does not own a business — they own a chair and a week — so the
+     figures are set the way an instrument panel is set: ONE plate divided by
+     hairline seams rather than four boxes floating apart, tabular, optically
+     aligned, and gold kept for the single cell that is their own money. Their
+     commission split is somebody else's arithmetic about their hands, so it
+     gets one gold rim and nothing louder.
+
+     The stylist's corner is the most EDITORIAL part of the provider app: a
+     lookbook of photographs, a client history, colour formulas. It is the one
+     place in these two roles where generosity beats density, so it carries
+     more of the customer app's photographic register — lifted plates, a
+     specular pass under the hatch, names and captions in the display face,
+     staggered arrivals on the two lists that are read rather than scanned.
+
+   WHAT THIS FILE MAY EDIT. check-scope.mjs lets provider-team.css rewrite
+   anything ANCHORED by one of its own `.pt-*` classes — `.pt-look-tile .art`
+   can only ever match on these two roles' screens, because nothing else
+   renders `.pt-look-tile`. A bare shared class cannot, so it carries a role
+   scope written out longhand; never `:is()`, which defeats the per-part check.
+
+   AND THE CASCADE. index.css imports this file BEFORE crew.css, so a rule here
+   that collides with crew.css at equal specificity loses on order alone. Every
+   override below is therefore anchored AND scoped — `:root[data-app='…']
+   .card.pt-today` is (0,4,0) against crew's (0,3,0) — and where crew.css
+   states something twice (the light-mood card shadow, at (0,4,0)) it is
+   answered twice here too.
+
+   THE RULES THAT FAIL SILENTLY, as they land in this file:
+
+     R4  No display serif on a figure, and never bound by tag. `.pt-today
+         .title` is a TIME RANGE, and `.pt-week-time`, `.pt-band-count`,
+         `.pro-stat strong` and every `.kv-row dd` are sums or counts: all of
+         them keep the UI face and tabular figures. Day names, client names,
+         service names and captions are text, and those take the serif.
+     R6  Nothing here may assume its own width. `.pt-band-name` sits in a fixed
+         5.25rem grid column, so it is the one eyebrow in this file that is NOT
+         uppercased or tracked out — "afternoon" in micro-caps at 0.15em does
+         not fit it, and neither does বিকেল. `.pt-today .between` wraps, and
+         the column beside its pill is given `min-width: 0`. `.pt-week-time`
+         wraps too, because a split shift is two ranges and a comma. And the
+         stats panel, the one surface here that clips, steps its figure down
+         on a 320px phone rather than trusting a sum to fit.
+     R8  `:root[data-app='…'] .x` is (0,3,0) and swallows a (0,2,0) component
+         focus ring whole. crew.css's `:focus-visible` also sets
+         `border-radius: inherit` — and the parent of a plate, a photo or a
+         swatch is a grid or a figure with no radius at all, so taking focus
+         squares the corners off and `overflow: hidden` clips the picture
+         square with them. Restated for the four that have a radius. The
+         second half is the ring itself: an ancestor's `overflow: hidden`
+         clips a descendant's outline and outer shadow, so the rows of
+         `.pt-clients` take their ring on the INSIDE or they take none.
+     R9  `--status-*` pairs are used exactly as the contract intends. The draft
+         flag on a lookbook plate keeps --status-warning-bg / -ink and gains a
+         struck rim in the vivid shade rather than a new colour.
+     R10 Every hover is behind (hover: hover) and (pointer: fine). Nothing here
+         presses with a transform — a plate answers a press by losing its lift,
+         which is a shadow and therefore already inside base.css's duration
+         collapse — so no reduced-motion block is needed to undo one.
+     R11 <Art> writes background-color inline, and that beats any rule in this
+         file. A photographic surface is enriched with background-image (the
+         specular pass paints above the inline colour and below the hatch svg,
+         which is exactly where a light on a photograph belongs) and the frame
+         around it carries the rim and the shadow, because `.art` has
+         overflow: hidden and would clip its own.
+
+   ONE PIECE OF FORMATTING IS LOAD-BEARING, at the end of the file. See §16.
+   ========================================================================== */
+
+/* --- Shift: today's card ---------------------------------------------------- */
+
+.pt-today { display: flex; flex-direction: column; gap: 1rem; }
+/* Bangla renders the time range longer, so the headline is sized to survive
+   wrapping next to the countdown pill rather than shoving it off the row. That
+   size is load-bearing and stays exactly where it was.
+
+   THE FACE IS NOT. This headline is `dayLabel(day)`: a formatted time range,
+   and in Bangla a range set in Bengali numerals. crew.css binds the display
+   serif to `.title` by name, which is right nearly everywhere in the app and
+   wrong here, so the figure is handed back the UI face and marked as one —
+   R4. Stated at (0,4,0), because crew.css's is (0,3,0) and imports later. */
+.pt-today .title { font-size: 1.375rem; line-height: 1.2; }
+:root[data-app='barber'] .pt-today .title,
+:root[data-app='salon_employee'] .pt-today .title {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+}
+/* `flex-wrap` and `min-width: 0` are the whole of R6 on this row: a countdown
+   that grows by two characters must push the headline down, never off. */
+.pt-today .between { align-items: flex-start; flex-wrap: wrap; gap: 0.625rem 0.75rem; }
+.pt-today .between > .stack-xs { min-width: 0; }
+.pt-today .caption { font-size: var(--fs-sm); color: var(--text-tertiary); }
+
+/* The one card in either role lifted past --elev-card: it is the whole working
+   day, and it is the only thing on the screen about this minute.
+
+   crew.css states the card shadow twice — once at (0,3,0) and again at (0,4,0)
+   for the light mood, so that import order alone is not what decides it — and
+   raising one card therefore has to be stated twice too, or the day mood
+   silently keeps the flat card while only the night mood lifts. */
+:root[data-app='barber'] .card.pt-today,
+:root[data-app='salon_employee'] .card.pt-today {
+  padding: var(--space-5);
+  border-radius: var(--radius-2xl);
+  border-color: var(--border-color);
+  background-image: radial-gradient(120% 9rem at 50% -2rem, var(--accent-bg), transparent 68%);
+  background-repeat: no-repeat;
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+:root.light-theme[data-app='barber'] .card.pt-today, :root:not(.dark-theme)[data-app='barber'] .card.pt-today, :root.light-theme[data-app='salon_employee'] .card.pt-today, :root:not(.dark-theme)[data-app='salon_employee'] .card.pt-today {
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+
+/* The countdown inside this pill is computed from a bare `new Date()` at
+   render and nothing re-renders the screen, so the figure is stale the moment
+   it is painted. A pulsing dot over a stale number is a lie told every 1.6
+   seconds, so the dot is stilled here. The staleness itself is behaviour, and
+   is reported rather than fixed in a stylesheet.
+
+   What the pill does NOT get is a rim invented for this one screen. crew.css
+   already strikes every `.pro-pill` with --bevel-hair; this one is sized up
+   and lifted off the hero, because on this card the pill is the thing being
+   read — nothing bespoke where a token does the job. */
+:root[data-app='barber'] .pt-today .pro-pill,
+:root[data-app='salon_employee'] .pt-today .pro-pill {
+  padding: 0.3125rem 0.6875rem;
+  box-shadow: var(--bevel-hair), var(--elev-card);
+}
+.pt-today .pro-pill-live::before { animation: none; }
+
+/* A heading with a sentence under it, rather than beside it: both languages
+   wrap unpredictably and `.pro-section-head` squeezes the title when they do.
+
+   crew.css pitches `.pro-section-head h3` as an 11px micro-caps eyebrow and
+   says why in as many words — one heading voice. `.pt-head h3` is the other
+   half of the same family, and was the last thing on these six screens still
+   shouting at 15px/700 immediately beside it. */
+.pt-head { display: flex; flex-direction: column; gap: 0.1875rem; }
+.pt-head h3 {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+.pt-head p {
+  font-size: 0.8125rem;
+  line-height: var(--leading-snug);
+  color: var(--text-tertiary);
+}
+/* Bangla has no case and its conjuncts come apart at 0.15em; base.css gives it
+   1.6 for its ascenders and descenders, and snug small print is a Latin
+   luxury. Both restated above the rules they answer. */
+:root[data-lang='bn'] .pt-head h3 { font-size: var(--fs-xs); letter-spacing: 0.02em; text-transform: none; }
+:root[data-lang='bn'] .pt-head p { line-height: var(--leading-normal); }
+
+/* ONE PLATE, NOT FOUR BOXES. This is the anchor of the performance screen and
+   it is the single thing on it worth rebuilding: four separately bordered,
+   separately shadowed tiles floating 0.75rem apart read as four unrelated
+   facts, when they are one arithmetic — cuts done, what passed through her
+   hands, what is hers, what was given. Set as an instrument panel they read as
+   one instrument, which is what the brief means by the luxury signal on a
+   working surface being the quality of the edge and not more air.
+
+   HOW THE SEAMS ARE DRAWN. `gap: 1px` over a container whose background IS the
+   rule colour: the four opaque cells cover everything except a one-pixel cross,
+   so the dividers are the plate showing through rather than eight collapsed
+   borders. `overflow: hidden` clips the square cells into the plate's radius —
+   it is a grid, not a scroller, so R2 and R3 are untouched.
+
+   Why the accent cell is not made bigger. owner.css's `.sp-glance` spans its
+   accent tile the full width and steps its figure to --fs-2xl, and that is the
+   house move — but it has three tiles and this has four. Spanning one of four
+   in a two-column grid leaves a hole, and a sum at 30px does not survive a
+   ৳1,24,000 month inside half a phone (R6). So the hierarchy is material:
+   gold wash, gold rim, gold figure, in place, at the same size.
+
+   Stated twice, per the file header: crew.css states the card/stat shadow at
+   (0,3,0) AND again at (0,4,0) for the light mood, so flattening a stat has to
+   answer both or the day mood keeps four drop shadows inside one plate. */
+.pt-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background-color: var(--border-color);
+  box-shadow: var(--elev-card);
+}
+/* The lit lower lip of each seam — and, on the top row, the plate's own. */
+:root[data-app='barber'] .pt-stats .pro-stat,
+:root[data-app='salon_employee'] .pt-stats .pro-stat {
+  border: 0;
+  border-radius: 0;
+  background-image: none;
+  box-shadow: var(--bevel-top);
+}
+:root.light-theme[data-app='barber'] .pt-stats .pro-stat, :root:not(.dark-theme)[data-app='barber'] .pt-stats .pro-stat, :root.light-theme[data-app='salon_employee'] .pt-stats .pro-stat, :root:not(.dark-theme)[data-app='salon_employee'] .pt-stats .pro-stat {
+  box-shadow: var(--bevel-top);
+}
+/* Her money. The one illuminated cell in the panel: written after the rule
+   above because both are (0,4,0) and (0,5,0), and order is what decides. */
+:root[data-app='barber'] .pt-stats .pro-stat-accent,
+:root[data-app='salon_employee'] .pt-stats .pro-stat-accent {
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), inset 0 0 0 1px var(--accent-line);
+}
+:root.light-theme[data-app='barber'] .pt-stats .pro-stat-accent, :root:not(.dark-theme)[data-app='barber'] .pt-stats .pro-stat-accent, :root.light-theme[data-app='salon_employee'] .pt-stats .pro-stat-accent, :root:not(.dark-theme)[data-app='salon_employee'] .pt-stats .pro-stat-accent {
+  box-shadow: var(--bevel-top), inset 0 0 0 1px var(--accent-line);
+}
+/* The rate footnote is the small print on the panel above it — it is what
+   makes the commission cell an honest number rather than a claim — so it is
+   pulled out of the screen's --space-6 section rhythm and set against it. */
+.pt-stats + .caption {
+  margin-top: calc(var(--space-2) - var(--space-6));
+  font-size: var(--fs-xs);
+  line-height: var(--leading-snug);
+  color: var(--text-tertiary);
+}
+:root[data-lang='bn'] .pt-stats + .caption { line-height: var(--leading-normal); }
+
+/* NO RATE ON THE RECORD IS NOT A ZERO, AND IT IS NOT A GUESS EITHER. The screen
+   used to fill this cell from a constant in the page — a made-up 45% — which
+   read as her money at the same weight as the three figures beside it. The
+   figure now comes from her employment or it does not come at all, so the cell
+   keeps its place in the plate (a three-cell two-column grid leaves a hole) and
+   holds a dash in the quiet ink. The gold goes with the number: a lit cell with
+   nothing in it is the panel promising something it cannot say.
+
+   Stated twice, per the file header — crew.css sets the light mood separately,
+   and the accent wash above is itself written twice for that reason. */
+:root[data-app='barber'] .pt-stats .pro-stat-accent[data-unset='true'],
+:root[data-app='salon_employee'] .pt-stats .pro-stat-accent[data-unset='true'] {
+  background-image: none;
+  box-shadow: var(--bevel-top);
+}
+:root.light-theme[data-app='barber'] .pt-stats .pro-stat-accent[data-unset='true'], :root:not(.dark-theme)[data-app='barber'] .pt-stats .pro-stat-accent[data-unset='true'], :root.light-theme[data-app='salon_employee'] .pt-stats .pro-stat-accent[data-unset='true'], :root:not(.dark-theme)[data-app='salon_employee'] .pt-stats .pro-stat-accent[data-unset='true'] {
+  box-shadow: var(--bevel-top);
+}
+.pt-stats .pro-stat[data-unset='true'] strong { color: var(--text-tertiary); }
+
+/* WHICH WEEK, AND WHOSE CLOCK. The period pill says "this week"; every figure
+   under it is bucketed on the salon's own clock in Dhaka, not the phone's, and
+   the window is the trailing seven days rather than a calendar week that resets
+   to almost nothing on a Sunday morning. That is not something a reader can
+   infer from a pill, so it is stated once, in the small print voice the rate
+   footnote above already established, and tucked under it rather than sitting a
+   whole section away. */
+.pt-scope {
+  margin-top: calc(var(--space-1) - var(--space-5));
+  font-size: var(--fs-xs);
+  line-height: var(--leading-snug);
+  color: var(--text-tertiary);
+}
+:root[data-lang='bn'] .pt-scope { line-height: var(--leading-normal); }
+
+/* The wait. Shaped like the plate and the chart that are coming, at their real
+   sizes, so the screen does not jump under the reader when the answer lands —
+   and so a slow connection reads as "loading" rather than as "empty". */
+.pt-skeleton { display: flex; flex-direction: column; gap: var(--space-5); }
+
+/* DEAD, AND LEFT THAT WAY. Nothing renders `.pt-chair` or `.pt-chair-seg` —
+   the chair toggle they were written for is not in ShiftPage, and no other
+   component carries either class. Removing them is a tidy-up rather than a
+   design change, and a stylesheet is not where a dead feature gets decided. */
+
+.pt-chair { display: flex; flex-direction: column; gap: 0.5rem; }
+
+/* Sized, when it was reachable, to be hit without looking — one-handed, and
+   mid-cut. Left at that size in case whatever removed it puts it back. */
+.pt-chair-seg .segmented { padding: 0.3125rem; }
+.pt-chair-seg .segmented button {
+  min-height: 2.875rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  padding-inline: 0.25rem;
+}
+
+/* --- Shift: the week -------------------------------------------------------- */
+
+/* A rota, not a feed: a lifted surface with the house's fading hairline
+   between rows instead of a border butting into the gutter. The rule has to be
+   drawn on the ROW and not on the `li`, because a row with a background of its
+   own paints over anything sitting underneath it — and the row for today has
+   one. Both survive: the tint is a background-COLOR and the rule a
+   background-IMAGE, and the image paints above the colour. */
+.pt-week {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+.pt-week li + li { border-top: 0; }
+
+.pt-week-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.625rem 0.875rem;
+  text-align: start;
+  color: var(--text-primary);
+  background: none;
+  border: 0;
+  transition: background-color var(--speed) var(--ease);
+}
+.pt-week li + li .pt-week-row { background-image: var(--rule-gradient); background-repeat: no-repeat; background-position: top; background-size: 100% 1px; }
+/* Today's bar is a pseudo-element rather than an inset shadow, so it coexists
+   with the row's own background and with the hairline above it. */
+.pt-week-row[data-today='true'] {
+  background-color: var(--accent-bg);
+}
+.pt-week-row[data-today='true']::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background-image: var(--accent-gradient);
+}
+.pt-week-row[data-today='true'] .pt-week-day { color: var(--accent-ink); }
+
+/* A day name is text, not a figure, so it is one of the four things in this
+   file that take the display face. The stack carries Bengali serif fallbacks,
+   so `weekdayLabel` sets correctly in both languages. */
+.pt-week-day {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+/* The hours, on the other hand, are a figure — R4.
+
+   AND NOT A FIXED ONE — R6. `dayLabel` joins a day's intervals with a comma,
+   so a split shift renders "9:00 AM – 1:00 PM, 2:00 PM – 8:00 PM" in a column
+   that shares a phone with a serif day name. Held on one line it ran straight
+   out of a plate that is `overflow: hidden`, and the clip landed on the hours
+   themselves. Allowed to wrap and set to the end instead: a split shift reads
+   as the two stretches it is, and the row grows to hold them. */
+.pt-week-time {
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  text-align: end;
+}
+.pt-week-row > svg { flex-shrink: 0; color: var(--text-tertiary); }
+
+/* --- Shift: the salon, and the day off -------------------------------------- */
+
+/* Read-only facts about somebody else's room. They stay at card elevation —
+   only today's card is raised — and take one warm mark each: the salon's name
+   in the display face, its address glyph in gold. */
+.pt-salon .subtitle {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+.pt-salon .row-xs > svg { flex-shrink: 0; color: var(--accent); }
+.pt-salon .caption { color: var(--text-tertiary); }
+.pt-timeoff .caption { line-height: var(--leading-normal); }
+
+/* --- Performance: hour bands ------------------------------------------------ */
+
+/* DEAD, AND LEFT THAT WAY, like .pt-chair above. PerformancePage no longer
+   renders .pt-band*: the three bands were counted in the browser out of the
+   diary the client had already downloaded, which is `query[:200]` ordered
+   `-starts_at` — the FURTHEST-FUTURE rows, so a busy chair's completed work
+   fell off the end and the bands quietly under-reported it. The report endpoint
+   that replaced every other figure on that screen carries no hour-of-day
+   breakdown, so there is nothing true to draw here. Keeping the rules costs
+   nothing and keeps the decision reversible the day the payload grows an
+   `by_hour`; a stylesheet is not where a dead feature gets decided. */
+
+/* THE ONE EYEBROW IN THIS FILE THAT IS NOT MICRO-CAPS. `.pt-band-name` sits in
+   a fixed 5.25rem grid column — 4.25rem on a narrow phone — and "afternoon" at
+   0.15em tracking does not fit it in either language (R6). It keeps its size
+   and its case; the treatment goes into the track instead, which is recessed
+   and fills with gold. */
+
+.pt-bands { display: flex; flex-direction: column; gap: 1rem; }
+
+.pt-band {
+  display: grid;
+  grid-template-columns: 5.25rem 1fr auto;
+  align-items: center;
+  gap: 0.625rem;
+}
+.pt-band-name { font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); }
+.pt-band-track {
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-deep);
+  box-shadow: var(--owner-well);
+  overflow: hidden;
+}
+/* Flat gold under a lit top edge, and deliberately NOT --accent-gradient.
+   crew.css §7 gilds the peak chart bar and no other, because a gradient reads
+   as varying density along its own length and destroys the comparison a bar
+   exists to make — and 145deg across an 8px-tall, full-width bar is, in
+   geometry, a horizontal gradient. These three bars ARE that comparison: the
+   whole card is "when am I busiest". The material comes from the well they sit
+   in and the light on their upper edge instead. */
+.pt-band-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background-color: var(--accent);
+  box-shadow: var(--bevel-top);
+}
+/* A band with nothing in it draws nothing, not a stub. */
+.pt-band-fill[data-empty='true'] { display: none; }
+.pt-band-count {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+/* A month of daily columns has to fit 390px, so the gap shrinks. */
+.pro-chart[data-dense='true'] { gap: 0.125rem; }
+
+/* --- Performance: the daily chart and the ledger ---------------------------- */
+
+/* crew.css gilds the peak bar and no other, because a gradient reads as
+   varying density along its own length and would destroy the comparison the
+   chart exists to make. The rest of the columns get a flat foot so they sit on
+   a common baseline instead of floating, and the peak's own date label is tied
+   to its bar in gold. */
+.pt-chart .pro-chart-bar { border-radius: var(--radius-xs) var(--radius-xs) 0 0; }
+/* The busiest day is called out in the section head as a date, so the chart
+   has to be able to answer "which column is that" at a glance. crew.css gilds
+   the peak BAR; the column behind it takes the soft wash, which is the second
+   of the house's two gold intensities and the right one here — it is a ground,
+   not a mark. Survives `data-dense`, where a column is eight pixels wide and
+   the wash is simply a gold stripe down the day. */
+.pt-chart .pro-chart-col[data-peak='true'] {
+  border-radius: var(--radius-xs);
+  background-image: var(--accent-gradient-soft);
+}
+.pt-chart .pro-chart-col[data-peak='true'] small { color: var(--accent-ink); font-weight: 700; }
+
+/* A period with nothing finished in it is what a new employee opens on, so it
+   is set as a considered blank rather than a dashed box: a sentence, in the
+   display face, on the softest gold wash. */
+.pt-chart .pro-empty-day {
+  border-style: solid;
+  border-color: var(--border-light);
+  border-radius: var(--radius);
+  background-image: var(--accent-gradient-soft);
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  color: var(--text-tertiary);
+}
+
+/* crew-sheets.css already gives `.kv-row dd` tabular figures and parts the
+   total on a fading gold rule, so what was left is the rhythm — a column of
+   sums is only scannable while it has room to be a column — and the mark that
+   says this card is a document. That is the same fading crown `.pt-treatment`
+   takes, laid at y=1 rather than y=0: crew.css strikes every `.card` with
+   --bevel-top at y=0, an inset shadow paints above the background, and the two
+   cannot share a row. The offset is crew-sheets.css's own move on `.sheet`. */
+:root[data-app='barber'] .card.pt-ledger,
+:root[data-app='salon_employee'] .card.pt-ledger {
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: 0 1px;
+  background-size: 100% 1px;
+}
+.pt-ledger .kv { gap: var(--space-3); }
+.pt-ledger .kv-row dt { font-size: var(--fs-sm); color: var(--text-tertiary); }
+.pt-ledger .kv-row dd { font-variant-numeric: tabular-nums; letter-spacing: var(--tracking-tight); }
+
+/* The lines under the ledger, and there are two of them: a tip is hers in full
+   and carries no commission, and the booking fee the app charges on top is
+   neither the salon's money nor hers. Both qualify the card above them, so they
+   take the rate footnote's voice and are pulled tight to it instead of floating
+   a section gap away. */
+.pt-note {
+  margin-top: calc(var(--space-1) - var(--space-3));
+  font-size: var(--fs-xs);
+  line-height: var(--leading-snug);
+  color: var(--text-tertiary);
+}
+:root[data-lang='bn'] .pt-note { line-height: var(--leading-normal); }
+
+/* --- Performance: where the money came from --------------------------------- */
+
+/* Her own service split, and the one list on this screen that is read rather
+   than scanned. It cannot use the band construction above it: .pt-band-name is
+   a fixed 5.25rem column, and a service name is arbitrary text in two scripts —
+   "Beard trim & hot towel" does not fit it and neither does a Bangla name (R6).
+   So the name takes a full flexible line with its sum opposite, and the bar
+   moves underneath, where it has the width to be a comparison.
+
+   Flat gold in a recessed well, like the bands and for the same reason: a
+   gradient reads as varying density along its own length and destroys the
+   comparison a bar exists to make. */
+.pt-mix { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.pt-mix-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  row-gap: 0.4375rem;
+}
+/* A service name is text, so it takes the serif (R4). The sum beside it is a
+   figure, so it does not. */
+.pt-mix-name {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  overflow-wrap: anywhere;
+}
+.pt-mix-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-tight);
+  white-space: nowrap;
+}
+.pt-mix-track {
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-deep);
+  box-shadow: var(--owner-well);
+  overflow: hidden;
+}
+.pt-mix-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background-color: var(--accent);
+  box-shadow: var(--bevel-top);
+}
+/* A service that took nothing draws nothing, not a stub. */
+.pt-mix-fill[data-empty='true'] { display: none; }
+.pt-mix-count {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+/* Set like the chart's own blank line, so a quiet week reads the same twice
+   over rather than once as a considered sentence and once as a gap. */
+.pt-mix-blank {
+  margin: 0;
+  padding: var(--space-4) 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  color: var(--text-tertiary);
+}
+
+/* --- Clients ---------------------------------------------------------------- */
+
+/* The same rota construction as the week, and for the same reason. What is
+   different is the name: this is a stylist's book of clients, and a name is
+   the one thing on it that is not a figure. */
+.pt-clients {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background-color: var(--bg-secondary);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+.pt-clients li + li { border-top: 0; }
+
+.pt-client-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: 3.25rem;
+  padding: 0.75rem 0.875rem;
+  color: var(--text-primary);
+  transition: background-color var(--speed) var(--ease);
+}
+.pt-clients li + li .pt-client-row { background-image: var(--rule-gradient); background-repeat: no-repeat; background-position: top; background-size: 100% 1px; }
+.pt-client-body { display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; flex: 1; }
+.pt-client-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pt-client-row .caption { font-size: var(--fs-sm); color: var(--text-tertiary); }
+.pt-client-end {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+}
+
+/* R8, in the form that costs an indicator rather than a corner. Every row in
+   this plate is a <Link>, and the plate is `overflow: hidden` so its rows can
+   be clipped into its radius — which clips a descendant's OUTLINE and its
+   outer box-shadow with them. crew.css draws focus as a 2px outline at +2 and
+   a 5px ring outside the element; on a row that is the full width of the plate
+   that is three sides gone and the fourth lying across the neighbour. Drawn
+   inside instead, at (0,4,0) so it out-ranks crew's (0,3,0). Nothing else
+   about the ring changes — same colour, same token. */
+:root[data-app='barber'] .pt-client-row:focus-visible,
+:root[data-app='salon_employee'] .pt-client-row:focus-visible {
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 3px var(--ring);
+}
+
+/* --- Client profile --------------------------------------------------------- */
+
+/* A masthead. The consultation view is the most editorial screen in the
+   provider app and it opens on a name, so the head is parted from the body by
+   the same fading rule the header and the sheets use, and the avatar — flat
+   gold in the base kit — is given the material treatment. */
+.pt-client-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: var(--space-4);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+.pt-client-head .title { font-size: var(--fs-xl); line-height: 1.2; }
+/* R6 in its quiet form: a long name wraps inside its column instead of pushing
+   the avatar out of the row. */
+.pt-client-head .stack-xs { min-width: 0; }
+.pt-client-head .caption { font-size: var(--fs-sm); color: var(--text-tertiary); }
+.pt-client-head .avatar { background-image: var(--accent-gradient); box-shadow: var(--bevel-top), var(--elev-card); }
+
+/* The eyebrows over the two hair facts. This grid is minmax(0, 1fr) in both
+   columns, so micro-caps here cannot overflow anything — unlike `.pt-band`. */
+.pt-hair .grid-2 { gap: var(--space-4); }
+.pt-hair .caption {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+:root[data-lang='bn'] .pt-hair .caption { font-size: var(--fs-xs); letter-spacing: 0.02em; text-transform: none; }
+
+/* Colour history reads as a run of past appointments, newest note first. The
+   mark is a gold disc in a halo of the accent tint, and the thread between two
+   of them fades from the strong hairline to the light one so a long history
+   reads as a thread rather than a fence.
+
+   The geometry is unforgiving, so it is written down: the disc is 9px wide
+   with its leading edge at 0, which puts its centre at 4.5px — the thread is
+   1px at 4px. The disc starts at 8px and ends at 17px, its 3px halo at 20px,
+   so the thread starts at 20px and runs 16px past the bottom to meet the next
+   disc across the list's 1rem gap. */
+.pt-timeline { display: flex; flex-direction: column; gap: 1rem; padding-inline-start: 0.125rem; }
+.pt-timeline li {
+  position: relative;
+  padding-inline-start: 1.5rem;
+  font-size: var(--fs-base);
+  line-height: var(--leading-relaxed);
+  color: var(--text-secondary);
+}
+.pt-timeline li::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.5rem;
+  width: 0.5625rem;
+  height: 0.5625rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+  background-image: var(--accent-gradient);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.pt-timeline li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0.25rem;
+  top: 1.25rem;
+  bottom: -1rem;
+  width: 1px;
+  background-image: linear-gradient(180deg, var(--border-strong), var(--border-light));
+}
+
+/* R11, in both of its forms. The specular pass goes on background-image, which
+   paints above the colour <Art> writes inline and below the hatch svg; the rim
+   and the shadow go on the frame, because `.art` has overflow: hidden and
+   would clip its own. */
+.pt-photos { gap: var(--space-2); }
+.pt-photo {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+  box-shadow: var(--bevel-hair), var(--elev-card);
+  transition: box-shadow var(--speed) var(--ease);
+}
+.pt-photo .art { border-radius: inherit; background-image: var(--sheen); }
+.pt-photo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* One plate, full width, inside a sheet. */
+.pt-photo-full { border-radius: var(--radius-lg); background-image: var(--sheen); box-shadow: var(--bevel-hair), var(--elev-card); }
+
+/* Her own notes: a page with a margin rule down its binding edge. The width
+   and the colour are stated at (0,4,0) because crew.css sets `.card`'s
+   border-colour at (0,3,0) and would otherwise grey the rule out. */
+.pt-note .body { font-size: var(--fs-md); line-height: var(--leading-relaxed); color: var(--text-primary); }
+:root[data-app='barber'] .card.pt-note,
+:root[data-app='salon_employee'] .card.pt-note {
+  border-inline-start-width: 3px;
+  border-inline-start-color: var(--accent-line);
+}
+
+/* --- Treatments -------------------------------------------------------------- */
+
+/* The recipe card: the multi-step work a stylist plans a whole afternoon
+   around. The crown hairline marks it as the considered object on the screen,
+   the name takes the display face, and the steps are threaded together exactly
+   the way the colour history is — same mark, same thread, because they are the
+   same idea twice.
+
+   The thread is `position: absolute`, which is what keeps it out of
+   `.checklist li`'s flex flow. A static pseudo-element inside a flex container
+   becomes a flex item, and would sit between the number and the text. */
+.pt-treatment {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: 0 1px;
+  background-size: 100% 1px;
+}
+.pt-treatment > .pro-pill { align-self: flex-start; }
+.pt-treatment .between { align-items: flex-start; gap: 0.75rem; }
+.pt-treatment .subtitle {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+.pt-treatment .price { font-size: var(--fs-md); letter-spacing: var(--tracking-tight); }
+
+.pt-treatment-times { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+
+.pt-steps { gap: 0.75rem; }
+.pt-steps li { position: relative; font-size: 0.875rem; }
+.pt-steps .num { background-image: var(--accent-gradient-soft); box-shadow: var(--bevel-hair); font-variant-numeric: tabular-nums; }
+.pt-steps li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0.71875rem;
+  top: 1.625rem;
+  bottom: -0.75rem;
+  width: 1px;
+  background-color: var(--border-light);
+}
+
+.pt-simple { display: flex; flex-direction: column; gap: 0.75rem; }
+.pt-simple strong { font-family: var(--font-display); font-size: var(--fs-md); font-weight: 600; letter-spacing: var(--tracking-tight); }
+.pt-simple .caption { font-variant-numeric: tabular-nums; color: var(--text-tertiary); }
+
+/* The step editor inside TreatmentSheet takes the same numbered disc as the
+   card it edits, so the sheet reads as that object opened up. */
+.pt-step-edit { display: flex; flex-direction: column; gap: 0.625rem; }
+.pt-step-edit li { display: flex; align-items: center; gap: 0.5rem; }
+.pt-step-edit .field { flex: 1; min-width: 0; }
+.pt-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background-color: var(--accent-bg-strong);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-hair);
+  color: var(--accent-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.pt-step-tools { display: flex; flex-shrink: 0; }
+/* R10. These were 2rem — a 32px target on a control that reorders a colour
+   formula, one-handed, with a client in the chair. `.icon-btn` already IS
+   --touch-target everywhere else in the product; the shrink was the bespoke
+   thing. The row is a 1.5rem disc, a growing field and two buttons, so 88px of
+   tools still leaves the field two thirds of a 360px sheet. */
+.pt-step-tools .icon-btn { width: var(--touch-target); height: var(--touch-target); }
+
+/* --- Lookbook ---------------------------------------------------------------- */
+
+/* The most generous surface in either role: lifted plates with a specular pass
+   under the hatch, and a caption in the display face — a line a stylist wrote
+   about her own work is editorial copy, not a label. */
+.pt-looks { gap: var(--space-4) var(--space-3); }
+.pt-look { display: flex; flex-direction: column; gap: 0.5rem; margin: 0; }
+
+.pt-look-tile {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+  box-shadow: var(--bevel-hair), var(--elev-card);
+  transition: box-shadow var(--speed) var(--ease);
+}
+.pt-look-tile .art { border-radius: inherit; background-image: var(--sheen); }
+.pt-look-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* R9: the warning pair is kept exactly as the contract intends — the tint as
+   the fill, the -ink shade as the text. What it gains is a struck rim in the
+   vivid shade, the same move crew-sheets.css makes on the danger medallion,
+   which is what lets a translucent chip read as an object on top of a picture
+   without inventing a colour that is not in the palette. */
+.pt-look-draft {
+  position: absolute;
+  top: 0.5rem;
+  inset-inline-start: 0.5rem;
+  padding: 0.1875rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-ink);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  box-shadow: var(--bevel-top), inset 0 0 0 1px var(--status-warning);
+}
+
+.pt-look-cap {
+  font-family: var(--font-display);
+  font-size: var(--fs-base);
+  line-height: var(--leading-snug);
+  color: var(--text-primary);
+}
+:root[data-lang='bn'] .pt-look-cap { line-height: var(--leading-normal); }
+
+/* The count over the grid joins the micro-caps family and is pulled down onto
+   the plates it counts, out of the screen's --space-6 rhythm. */
+.pt-count {
+  margin-bottom: calc(var(--space-3) - var(--space-6));
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+:root[data-lang='bn'] .pt-count { font-size: var(--fs-xs); letter-spacing: 0.02em; text-transform: none; }
+
+/* Six swatches, one chosen: a singular state, so it takes the full gold and
+   the glow rather than the soft wash a repeating state would get. */
+.pt-tones { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.5rem; }
+.pt-tone {
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: none;
+  cursor: pointer;
+  min-height: 2.75rem;
+  box-shadow: var(--bevel-hair);
+  transition: border-color var(--speed) var(--ease), box-shadow var(--speed) var(--ease);
+}
+.pt-tone .art { background-image: var(--sheen); }
+.pt-tone[data-on='true'] { border-color: var(--accent); box-shadow: var(--glow-accent); }
+.pt-tone:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* R8, the half nobody sees coming. crew.css's `:focus-visible` is (0,3,0) and
+   sets `border-radius: inherit`; the parent of a plate, a photo and a swatch
+   is a grid or a figure with no radius at all, so taking focus squares the
+   corners off and `overflow: hidden` clips the picture square with them. The
+   radius is restated at (0,4,0). The ring itself is crew.css's, and is left
+   exactly as it is.
+
+   The fourth is the one that bites hardest, because it happens to an element
+   that HAS a radius of its own: crew.css gives `.card` --radius-lg in §3 and
+   `border-radius: inherit` in §11, both at (0,3,0), and §11 is written second
+   — so a `.card-press` that takes focus un-rounds itself. `.pt-treatment` is
+   the only pressable card on these six screens. */
+:root[data-app='barber'] .pt-look-tile:focus-visible, :root[data-app='salon_employee'] .pt-look-tile:focus-visible { border-radius: var(--radius-lg); }
+:root[data-app='barber'] .pt-photo:focus-visible, :root[data-app='salon_employee'] .pt-photo:focus-visible { border-radius: var(--radius); }
+:root[data-app='barber'] .pt-tone:focus-visible, :root[data-app='salon_employee'] .pt-tone:focus-visible { border-radius: var(--radius-sm); }
+:root[data-app='barber'] .card.pt-treatment:focus-visible, :root[data-app='salon_employee'] .card.pt-treatment:focus-visible { border-radius: var(--radius-lg); }
+
+/* --- Nothing here yet --------------------------------------------------------- */
+
+/* Every one of these six screens is empty for a new user — a stylist with no
+   clients, an employee with no completed cuts, a lookbook with no plates — so
+   the empty state is the experience rather than an afterthought. It is built
+   as a surface in its own right: a card ground, a bloom of the accent tint at
+   the crown, and a struck gold medallion in place of the base kit's grey disc.
+
+   The medallion rule names `.icon-circle-neutral` and not `.icon-circle`, so a
+   future success or danger empty state keeps its own hue — R9. (0,4,0), which
+   is what it takes to out-rank crew-sheets.css's own (0,3,0) treatment. */
+.pt-empty {
+  gap: 0.75rem;
+  padding: var(--space-10) var(--space-5);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-2xl);
+  background-color: var(--bg-secondary);
+  background-image: radial-gradient(130% 11rem at 50% -1rem, var(--accent-bg), transparent 64%);
+  background-repeat: no-repeat;
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+.pt-empty h3 { font-size: var(--fs-lg); }
+.pt-empty p { max-width: 20rem; color: var(--text-tertiary); }
+.pt-empty .btn { margin-top: var(--space-4); }
+:root[data-app='barber'] .pt-empty .icon-circle-neutral,
+:root[data-app='salon_employee'] .pt-empty .icon-circle-neutral {
+  width: 4rem;
+  height: 4rem;
+  color: var(--accent-ink);
+  background-color: var(--accent-bg);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), inset 0 0 0 1px var(--accent-line);
+}
+
+/* The one-line blanks inside a card that is otherwise full: no history yet, no
+   notes yet, no simple services yet. The same voice at the scale of a
+   paragraph. All three are phrases and never figures, so the display face is
+   safe on them — R4. */
+.pt-blank {
+  padding-block: var(--space-4);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  line-height: var(--leading-snug);
+  color: var(--text-tertiary);
+}
+:root[data-lang='bn'] .pt-blank { line-height: var(--leading-normal); }
+
+/* --- Narrow phones ------------------------------------------------------------ */
+
+@media (max-width: 359px) {
+  .pt-chair-seg .segmented button { font-size: 0.8125rem; }
+  .pt-band { grid-template-columns: 4.25rem 1fr auto; }
+  .pt-week-time { font-size: 0.8125rem; }
+  /* R6, on the one surface in this file that now clips. A 320px phone leaves
+     each cell of the panel about 140px; --fs-xl is what a ৳1,24,000 month
+     needs 160 for. The cell gives back a quarter of its padding and the figure
+     steps down one notch, which is the whole of the difference. Scoped, not
+     anchored alone: crew.css sets both at (0,3,0) / (0,3,1). */
+  :root[data-app='barber'] .pt-stats .pro-stat,
+  :root[data-app='salon_employee'] .pt-stats .pro-stat { padding: var(--space-3); }
+  :root[data-app='barber'] .pt-stats .pro-stat strong,
+  :root[data-app='salon_employee'] .pt-stats .pro-stat strong { font-size: var(--fs-lg); }
+}
+
+/* --- §16. Hover, pointers only ------------------------------------------------ */
+
+/* R10. A hover state on a phone sticks to whatever was last tapped, so every
+   one of them sits behind a fine-pointer query.
+
+   The closing brace below used to ride the last rule's line, because an earlier
+   version of check-scope.mjs could not see a rule nested inside an at-rule and
+   read a lone `}` as an unscoped change. That walker was fixed — it now tracks
+   the selector at whatever depth it opens at — so ordinary formatting is safe
+   here and prettier will not break the build check. */
+@media (hover: hover) and (pointer: fine) {
+  .pt-week-row:hover { background-color: var(--hover-bg); }
+  .pt-week-row[data-today='true']:hover { background-color: var(--accent-bg-strong); }
+  .pt-client-row:hover { background-color: var(--accent-bg); }
+  .pt-look-tile:hover { box-shadow: var(--bevel-hair), var(--elev-raised); }
+  .pt-photo:hover { box-shadow: var(--bevel-hair), var(--elev-raised); }
+  .pt-tone:hover { border-color: var(--border-strong); }
+  .pt-tone[data-on='true']:hover { border-color: var(--accent); } }
+
+/* --- Press ------------------------------------------------------------------- */
+
+/* R10, satisfied by not needing it: a plate answers a press by losing its lift
+   rather than by moving. A shadow change is a transition and is already inside
+   base.css's global duration collapse, so there is no :active transform here
+   for a prefers-reduced-motion block to undo.
+
+   Stated AFTER the hover block on purpose. `:hover` and `:active` are both
+   (0,2,0), so on a fine pointer the one written second is the one that paints
+   while a plate is being held down — and a press that does nothing under the
+   cursor is the one state nobody tests on a phone. */
+.pt-look-tile:active, .pt-photo:active { box-shadow: var(--bevel-hair); }

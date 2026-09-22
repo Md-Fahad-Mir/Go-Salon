@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#16130f" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="Eureka Hair App — see the cut before the cut. Try hairstyles on your own photo and book a salon or barber in Dhaka."
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Eureka" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Eureka Hair App</title>
+    <script>
+      // Paint the saved mood before React mounts, so the app never flashes the
+      // wrong ground. Mirrors ThemeProvider; STORAGE_KEYS.theme must match.
+      (function () {
+        try {
+          var saved = JSON.parse(localStorage.getItem('eureka.theme'));
+          var theme =
+            saved === 'light' || saved === 'dark'
+              ? saved
+              : window.matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark';
+          document.documentElement.classList.add(theme + '-theme');
+          document
+            .querySelector('meta[name="theme-color"]')
+            .setAttribute('content', theme === 'dark' ? '#16130f' : '#efe9e0');
+        } catch (error) {
+          document.documentElement.classList.add('dark-theme');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,345 @@
+/* ==========================================================================
+   auth screens — welcome, sign in, OTP, registration wizard
+   ========================================================================== */
+
+/* --- Brand mark ------------------------------------------------------------ */
+
+.auth-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.auth-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  background-color: var(--accent);
+  color: var(--accent-on);
+  font-size: 1.25rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-sm);
+}
+.auth-brand-word { font-size: 1.375rem; }
+.auth-brand-lg .auth-brand-mark { width: 3rem; height: 3rem; border-radius: 0.875rem; font-size: 1.625rem; }
+.auth-brand-lg .auth-brand-word { font-size: 1.75rem; }
+.auth-brand-xl .auth-brand-mark { width: 3.5rem; height: 3.5rem; border-radius: 1rem; font-size: 1.875rem; }
+.auth-brand-xl .auth-brand-word { font-size: 2rem; }
+
+/* --- Welcome --------------------------------------------------------------- */
+
+.auth-welcome {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.auth-welcome-art {
+  flex: 0 0 auto;
+  height: 52dvh;
+  min-height: 15rem;
+  max-height: 34rem;
+}
+
+.auth-welcome-overlay {
+  padding: 1.25rem var(--screen-padding);
+  background: linear-gradient(to top, var(--bg-primary) 0%, color-mix(in srgb, var(--bg-primary) 60%, transparent) 35%, transparent 70%);
+}
+
+.auth-welcome-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0.5rem var(--screen-padding) calc(1rem + var(--safe-bottom));
+}
+
+.auth-welcome-body .display { max-width: 18ch; }
+.auth-welcome-sub { font-size: 1.0625rem; line-height: 1.5; max-width: 32ch; }
+.auth-welcome-foot { margin-top: auto; padding-top: 0.5rem; }
+
+@media (max-height: 40rem) {
+  .auth-welcome-art { height: 40dvh; }
+  .auth-welcome-body { gap: 1rem; }
+}
+
+/* --- Shared page bits ------------------------------------------------------ */
+
+.auth-body { padding-top: 0.5rem; }
+
+.auth-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.auth-intro .auth-brand { margin-bottom: 0.75rem; }
+.auth-intro h2 { font-size: 1.75rem; }
+.auth-intro h2:focus { outline: none; }
+.auth-intro p { font-size: 1rem; line-height: 1.5; }
+
+.auth-edit-number { margin-top: -0.25rem; margin-inline-start: -0.25rem; }
+
+.auth-link {
+  color: var(--accent-ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--accent-bg-strong);
+  text-underline-offset: 0.15em;
+}
+.auth-link-btn { display: inline; font: inherit; }
+
+.auth-terms { line-height: 1.5; }
+
+.auth-social { display: flex; flex-direction: column; gap: 0.625rem; }
+
+.auth-resend { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.25rem; min-height: var(--touch-target); }
+
+/* --- Registration ---------------------------------------------------------- */
+
+.auth-step-host { display: flex; flex-direction: column; }
+
+.auth-avatar-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding-block: 0.25rem;
+}
+.auth-avatar-btn {
+  position: relative;
+  display: block;
+  border-radius: 50%;
+  transition: transform var(--speed) var(--ease-out);
+}
+.auth-avatar-btn:active:not(:disabled) { transform: scale(0.97); }
+.auth-avatar-btn:disabled { cursor: progress; }
+.auth-avatar-btn .avatar { box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--border-strong); }
+.auth-avatar-empty {
+  display: grid;
+  place-items: center;
+  width: 7.5rem;
+  height: 7.5rem;
+  border-radius: 50%;
+  background-color: var(--bg-secondary);
+  border: 1.5px dashed var(--border-strong);
+  color: var(--text-tertiary);
+}
+.auth-avatar-badge {
+  position: absolute;
+  bottom: 0.125rem;
+  inset-inline-end: 0.125rem;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+  color: var(--accent-on);
+  box-shadow: 0 0 0 3px var(--bg-primary);
+}
+.auth-avatar-badge .spinner { border-color: var(--accent-on); border-top-color: transparent; }
+.auth-avatar-remove { min-height: 2.25rem; }
+
+.auth-tile-icon { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: var(--radius-sm); background-color: var(--accent-bg); }
+.tile[aria-pressed='true'] .auth-tile-icon { background-color: var(--accent); color: var(--accent-on); }
+
+.auth-length-grid .tile { min-height: 4.75rem; padding: 0.75rem; gap: 0.25rem; }
+.auth-length-grid .tile-sub { font-size: 0.75rem; }
+
+.auth-geo-status {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+.auth-geo-status[data-tone='success'] { color: var(--status-success-ink); }
+.auth-geo-status[data-tone='danger'] { color: var(--status-danger-ink); }
+.auth-geo-status svg { flex-shrink: 0; }
+
+/* --- Gender picker --------------------------------------------------------- */
+
+.auth-gender {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.auth-gender-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 7rem;
+  padding: 1rem 0.625rem;
+  text-align: center;
+  background-color: var(--bg-secondary);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    color var(--speed) var(--ease);
+}
+
+.auth-gender-option strong { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.auth-gender-option small { font-size: 0.75rem; line-height: 1.35; color: var(--text-tertiary); }
+
+.auth-gender-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 0.25rem;
+  border-radius: 50%;
+  background-color: var(--bg-muted);
+  color: var(--text-tertiary);
+  transition: background-color var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+.auth-gender-option:hover { border-color: var(--border-strong); }
+
+.auth-gender-option[aria-checked='true'] {
+  border-color: var(--accent);
+  background-color: var(--accent-bg);
+}
+.auth-gender-option[aria-checked='true'] strong { color: var(--accent-ink); }
+.auth-gender-option[aria-checked='true'] .auth-gender-icon {
+  background-color: var(--accent);
+  color: var(--accent-on);
+}
+
+/* --- Account type chooser --------------------------------------------------- */
+
+.auth-types {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.auth-type {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-height: 4.5rem;
+  padding: 0.875rem;
+  text-align: start;
+  background-color: var(--bg-secondary);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    transform var(--speed) var(--ease-out);
+}
+
+.auth-type:hover { border-color: var(--accent); background-color: var(--hover-bg); }
+.auth-type:active { transform: scale(0.99); }
+
+.auth-type-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border-radius: var(--radius);
+  background-color: var(--accent-bg);
+  color: var(--accent-ink);
+}
+
+.auth-type:hover .auth-type-icon { background-color: var(--accent); color: var(--accent-on); }
+
+.auth-type-body { display: flex; flex-direction: column; gap: 0.125rem; flex: 1; min-width: 0; }
+.auth-type-body strong { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+.auth-type-body small { font-size: 0.8125rem; line-height: 1.35; color: var(--text-tertiary); }
+.auth-type-end { flex-shrink: 0; color: var(--text-tertiary); }
+
+/* The banner reminding someone which account they are part-way through. */
+.auth-chosen {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  background-color: var(--accent-bg);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+}
+.auth-chosen-text { flex: 1; min-width: 0; color: var(--accent-ink); font-weight: 600; }
+
+.auth-foot-link { min-height: 1.5rem; }
+
+/* --- Password field --------------------------------------------------------- */
+
+.auth-pw-toggle {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+}
+.auth-pw-toggle:hover { color: var(--text-primary); }
+
+.auth-pw-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 0.125rem;
+}
+.auth-pw-bars { display: flex; gap: 0.25rem; flex: 1; }
+.auth-pw-bars span {
+  flex: 1;
+  height: 0.25rem;
+  border-radius: 999px;
+  background-color: var(--border-light);
+  transition: background-color var(--speed) var(--ease);
+}
+.auth-pw-bars span[data-on][data-level='1'] { background-color: var(--status-danger-ink); }
+.auth-pw-bars span[data-on][data-level='2'] { background-color: var(--status-warning-ink); }
+.auth-pw-bars span[data-on][data-level='3'] { background-color: var(--status-success-ink); }
+.auth-pw-level { font-size: 0.75rem; color: var(--text-tertiary); min-width: 4.5rem; text-align: end; }
+
+/* A field that is settled — the number that just passed the code. */
+.auth-verified-field .input { background-color: var(--bg-muted); color: var(--text-secondary); }
+
+/* --- Application sent ------------------------------------------------------- */
+
+.auth-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block: 1.5rem 0.5rem;
+  text-align: center;
+}
+.auth-done h2 { font-size: 1.375rem; font-weight: 800; letter-spacing: -0.01em; }
+.auth-done p { max-width: 34ch; }
+
+.auth-next-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin: 0;
+  /* base.css clears list markers everywhere; a numbered list is the point
+     of this one, so it asks for them back. */
+  list-style: decimal;
+  padding-inline-start: 1.25rem;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.auth-next-list li::marker { color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
+
+/* The employee pointer on the chooser. Deliberately not a tappable row: an
+   employee has no sign-up to be sent to, only a sign-in. */
+.auth-employee-note { flex-direction: row; }
+.auth-employee-note p { margin-bottom: 0.375rem; }
+.auth-employee-note .link-btn { font-size: 0.875rem; }

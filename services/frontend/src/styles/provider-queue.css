@@ -1,0 +1,1463 @@
+/* ==========================================================================
+   provider-queue — the day's work
+
+   The queue, one appointment and the diary. Everything structural already
+   lives in provider.css (`.pro-appt`, `.pro-stats`, `.pro-chart`); this file
+   only adds what those three screens need on top.
+   ========================================================================== */
+
+/* --- Queue header line ----------------------------------------------------- */
+
+.pq-date {
+  margin-top: -0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+}
+
+/* --- Appointment row: the trailing price ------------------------------------ */
+
+.pq-appt-end {
+  flex-shrink: 0;
+  align-self: center;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.pro-appt[data-done='true'] .pq-appt-end { font-weight: 600; color: var(--text-secondary); }
+
+/* Four numbers read better as a 2×2 block than as three-and-a-stray. */
+.pro-stats[data-count='4'] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* --- Now / next hero -------------------------------------------------------- */
+
+/* The single most-looked-at card in the provider app: who is in the chair.
+   It is deliberately louder than anything else on the screen. */
+.pq-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+}
+.pq-hero[data-live='true'] {
+  background-color: var(--accent-bg);
+  border-color: var(--accent);
+}
+
+.pq-hero-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.pq-hero-clock[data-late='true'] { color: var(--status-warning-ink); }
+.pq-hero-clock {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.pq-hero-client {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  color: inherit;
+}
+.pq-hero-name {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+.pq-hero-services {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+}
+.pq-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem 0.625rem;
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+}
+.pq-hero-price {
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-ink);
+}
+
+.pq-hero-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.pq-hero-actions > .btn:first-child { flex: 1; }
+.pq-hero-more { flex: 0 0 auto; width: 3.25rem; padding-inline: 0; }
+
+/* --- Payment sheet ----------------------------------------------------------- */
+
+.pq-due {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.875rem 1rem 1rem;
+  margin-bottom: 1rem;
+  background-color: var(--accent-bg);
+  border-radius: var(--radius);
+}
+.pq-due strong {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-ink);
+}
+
+/* The wallet's own colour, so bKash pink and Nagad orange are recognisable. */
+.pq-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.pq-tip { margin-top: 1rem; }
+
+/* --- Walk-in running total ---------------------------------------------------- */
+
+.pq-running {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  background-color: var(--bg-tertiary, var(--bg-secondary));
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+.pq-running strong {
+  font-size: 1.125rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-ink);
+}
+
+/* --- One appointment ------------------------------------------------------------ */
+
+.pq-detail-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+}
+.pq-detail-hero h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.pq-detail-hero p { margin: 0; }
+
+.pq-client-name {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.pq-contact-row { display: flex; gap: 0.5rem; }
+.pq-contact-row > .btn { flex: 1; }
+
+.pq-hair {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--border-light);
+}
+
+/* --- Diary --------------------------------------------------------------------- */
+
+.pq-cal { display: flex; flex-direction: column; gap: 0.5rem; }
+
+/* A booked day gets the same small dot under the date that <Calendar> already
+   draws for today — so today, which carries that dot anyway, is left alone
+   rather than wearing two of them. */
+.pq-cal .calendar-day[data-booked='true']:not([data-today='true'])::before {
+  content: '';
+  position: absolute;
+  bottom: 0.25rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+}
+.pq-cal .calendar-day[aria-pressed='true'][data-booked='true']::before {
+  background-color: var(--accent-on);
+}
+
+.pq-cal-key {
+  display: flex;
+  align-items: center;
+  gap: 0.4375rem;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+.pq-cal-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background-color: var(--accent);
+}
+
+.pq-chart-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+.pro-chart-col[aria-pressed='true'] {
+  border-radius: var(--radius-sm);
+  background-color: var(--accent-bg);
+}
+.pro-chart-col[aria-pressed='true'] .pro-chart-bar { background-color: var(--accent); }
+.pro-chart-col[aria-pressed='true'] small { color: var(--accent-ink); font-weight: 700; }
+
+.pq-day-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.pq-day-total strong {
+  font-size: 1.25rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-ink);
+}
+
+/* --- Narrow phones ---------------------------------------------------------------- */
+
+@media (max-width: 359px) {
+  /* Three cards will not fit across, so they fall to 2 + a full-width third —
+     which happens to put the day's takings on its own line. */
+  .pro-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pro-stats > .pro-stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .pq-hero-name { font-size: 1.1875rem; }
+  .pq-due strong { font-size: 1.75rem; }
+  .pro-appt { padding: 0.75rem; gap: 0.5rem; }
+  .pro-appt-time { min-width: 2.875rem; }
+}
+
+/* ========================================================================== */
+/* THE SALON OWNER — scoped additions                                         */
+/*                                                                            */
+/* Scoped to `:root[data-app='salon_owner']`, the value AppFrame stamps on     */
+/* <html> for a signed-in owner — on <html> and not on .app-frame, so it also  */
+/* reaches the payment and walk-in sheets, which portal to document.body.      */
+/*                                                                            */
+/* Everything below is an override on a shared primitive. `.pro-chart`,        */
+/* `.pro-stat`, `.ps-rank`, `.ps-split`, `.review`, `.empty` and every `.pq-`  */
+/* class in this file also render on the barber's and the salon employee's     */
+/* screens, so provider.css, provider-salon.css, ui.css and booking.css are    */
+/* left exactly as they are and this scope layers over them.                   */
+/*                                                                            */
+/* Two levels of scope, on purpose:                                           */
+/*                                                                            */
+/*   - `.an-body` is the analytics screen's own <main>. Every `.ps-` and       */
+/*     `.pro-stat` refinement hangs off it, because those same classes carry   */
+/*     the salon profile and the staff roster, and those screens are not this  */
+/*     run's to redesign.                                                      */
+/*   - the rest is owner-wide, because the screen it belongs to — the requests */
+/*     feed, one appointment, the payment sheet — is shared and has no class   */
+/*     of its own to hang from.                                                */
+/*                                                                            */
+/* The owner app's hard rules, restated where they bite here:                 */
+/*                                                                            */
+/*   R4  No display serif on a figure. `.pq-detail-hero h2` is a TIME RANGE   */
+/*       and `.pq-due strong` is a sum; formatBdt writes U+09F3 and Bangla    */
+/*       renders Bengali numerals, neither of which a Latin serif has. The    */
+/*       serif appears exactly once below — on `.pq-client-name`, a person.   */
+/*       `font-variant-numeric: tabular-nums` marks every figure.             */
+/*   R7  Wide tracking pulls a Bengali conjunct apart. Every tracking and     */
+/*       `text-transform` added here carries a `[data-lang='bn']` companion   */
+/*       one step more specific, written attribute-first so the scope is      */
+/*       still literally in the selector for scripts/check-scope.mjs.         */
+/*   R9  `--status-*` pairs and the `--pay-*` brand hues are untouched: the   */
+/*       payment dots keep bKash pink and Nagad orange, and decline keeps     */
+/*       `--status-danger-ink` as its text shade.                             */
+/*   R12 No tap target shrinks. Nothing below sets a height.                  */
+/* ========================================================================== */
+
+/* -------------------------------------------------------------------------- */
+/* O1. Empty states                                                           */
+/*                                                                            */
+/* The first thing a new or quiet salon sees on two of its tabs — analytics    */
+/* and the requests feed. It gains a medallion with a bezel and a real seat    */
+/* under it, and nothing else: there is no number to invent here, and          */
+/* inventing one is the only way to get this wrong.                            */
+/*                                                                            */
+/* `.empty h3` keeps the family owner.css gave it and only its size is set     */
+/* here — both selectors are (0,3,1) and owner.css imports later, so anything  */
+/* more stated here would silently lose.                                       */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .empty .icon-circle {
+  margin-bottom: var(--space-3);
+  box-shadow: 0 0 0 1px var(--border-light), var(--bevel-top), var(--elev-card);
+}
+
+/* The default tone is the gold one already; the neutral tone — which is what  */
+/* both of these screens ask for — becomes champagne, not a grey disc.         */
+/*                                                                             */
+/* This is deliberately narrower than owner-sheets.css's app-wide medallion    */
+/* rules, and settled by specificity rather than by import order so a reshuffle */
+/* cannot flip it. That file sets `.icon-circle-neutral { background-image:     */
+/* none }` at (0,2,0), which is right for a neutral disc sitting in a sheet's   */
+/* list row; this is (0,3,0) and wins only inside `.empty`, where the medallion */
+/* is 3.5rem, alone, and the single object on an otherwise empty screen. The    */
+/* status tones (success / danger / warning) are untouched here for the reason  */
+/* that file gives — R9. Neutral carries no status colour, so it is free.       */
+:root[data-app='salon_owner'] .empty .icon-circle-neutral {
+  background-image: var(--accent-gradient-soft);
+  color: var(--accent-ink);
+}
+
+:root[data-app='salon_owner'] .empty h3 {
+  font-size: var(--fs-lg);
+}
+
+:root[data-app='salon_owner'] .empty p {
+  max-width: 20rem;
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O2. The review block                                                       */
+/*                                                                            */
+/* AnalyticsPage renders the customer app's ReviewCard, which customer.css     */
+/* elevates for the customer and leaves flat here — so the owner reads three   */
+/* flat cards inside a screen of seated ones. This takes the material half of  */
+/* that treatment (the elevation ladder, the owner's --radius-lg, the hairline */
+/* under the head) and leaves the editorial half — serif name at --fs-md,      */
+/* --leading-relaxed, --space-5 padding — to the customer, whose screen is not */
+/* a working list and has the room for it.                                     */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .review {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border-color: var(--border-light);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+:root[data-app='salon_owner'] .review-head {
+  padding-bottom: var(--space-2);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O3. The analytics screen — the headline figures                            */
+/*                                                                            */
+/* Four numbers, two by two. owner.css already sets the card's seat, its       */
+/* --fs-xl tabular figure and the micro-caps caption under it; what is left is */
+/* to let the one that answers "how much money" read as the block's hero.      */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .an-body .pro-stat-accent {
+  background-image: var(--accent-gradient-soft);
+  border-color: var(--border-color);
+}
+
+/* -------------------------------------------------------------------------- */
+/* O3b. The spine                                                             */
+/*                                                                            */
+/* Analytics is six chapters deep — figures, chart, staff, services, takings,  */
+/* satisfaction — and exactly one of their heads was marked. The chart's head  */
+/* is a `.ps-edit-head`, which provider-salon.css already gives the fading      */
+/* gold rule; the other four are a bare `h3.label` and the reviews sub-head is  */
+/* a `.ps-subhead`, so the screen read as one long undifferentiated scroll      */
+/* with a single stray hairline two thirds of the way down.                     */
+/*                                                                            */
+/* This is the workbench answer to "where am I": a mark between chapters, not  */
+/* more air inside them. Same rule, same 0.5rem underside and same token as     */
+/* `.ps-edit-head`, so all six heads line up rather than three idioms arguing.  */
+/* Nothing here touches tracking or case — owner.css already owns the `.label`  */
+/* voice and its Bangla companion — so no `[data-lang]` companion is owed.      */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .an-body .section > .label,
+:root[data-app='salon_owner'] .an-body .ps-subhead {
+  padding-bottom: var(--space-2);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O4. The chart                                                              */
+/*                                                                            */
+/* owner.css gilds the peak bar and nothing else, deliberately: a gradient     */
+/* reads as varying density along its own length, so a column of gilded bars   */
+/* stops being comparable by height — the one thing the chart is for. That     */
+/* principle is kept. What is added is everything around the bars: a scale to  */
+/* read them against, a line to stand them on, and a fix to the geometry.      */
+/*                                                                            */
+/* THE GEOMETRY. `.pro-chart-col` is a flex column holding the bar and its     */
+/* caption, and the bar's inline `height` is a percentage of the whole column, */
+/* caption included. A 100% bar therefore asks for more room than exists and   */
+/* is flex-shrunk back to fit; a 50% bar asks for less, fits, and is not       */
+/* shrunk at all — so half the money was drawing 61% of the peak's height.     */
+/* Making the column a two-row grid resolves that percentage against the 1fr   */
+/* plot track alone, so half the money is half the height again. No markup,    */
+/* no script, no rounding: the same numbers, drawn honestly.                   */
+/*                                                                            */
+/* The caption row is a stated 1rem and not `auto`, which matters more than it */
+/* looks: only every nth column carries a written date and the rest render a   */
+/* single space, which collapses away — an `auto` row would then be 0 high on  */
+/* those columns and hand their bars a taller track than their labelled        */
+/* neighbours got. A fixed band is also what makes the axis arithmetic exact.  */
+/*                                                                            */
+/* All of it hangs off `.an-chart-plot`, a class on this page's chart and      */
+/* nowhere else, so the barber's diary and the stylist's earnings chart — same */
+/* markup, same classes — are untouched.                                       */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .an-body .an-chart-plot .pro-chart-col {
+  display: grid;
+  grid-template-rows: 1fr 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+  justify-items: center;
+}
+
+/* The caption fills its 1rem band exactly, so nothing sits off its baseline. */
+:root[data-app='salon_owner'] .an-body .an-chart-plot small {
+  line-height: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The peak column names itself, so the "best day" legend has something to    */
+/* point at.                                                                  */
+:root[data-app='salon_owner'] .an-body .an-chart-plot .pro-chart-col[data-peak='true'] small {
+  font-weight: 700;
+  color: var(--accent-ink);
+}
+
+/* Two painted layers behind the bars: the gold rule is the baseline they     */
+/* stand on, the four hairlines above it are the scale — quarter, half, three */
+/* quarters and the peak. Both are backgrounds on the plot itself, so there   */
+/* is no new element, no aria-hidden to add, and nothing that can fall out of */
+/* step with the bars. 8rem of plot less 0.5rem of padding-top is 7.5rem of   */
+/* column; less the 1.375rem caption band is the 6.125rem sized below.        */
+:root[data-app='salon_owner'] .an-body .an-chart-plot {
+  background-image:
+    var(--rule-gradient),
+    repeating-linear-gradient(
+      to top,
+      transparent 0 calc(25% - 1px),
+      var(--border-light) calc(25% - 1px) 25%
+    );
+  background-repeat: no-repeat, no-repeat;
+  background-position: bottom 1.375rem left, bottom 1.375rem left;
+  background-size: 100% 1px, 100% 6.125rem;
+}
+
+/* Square feet, soft shoulders: a bar grows out of the baseline rather than   */
+/* floating above it. The gold hairline is what a zero day keeps — the base   */
+/* kit's 0.25rem stub then reads as a tick on the axis, not a broken bar.     */
+/* owner.css states the same radius on the peak bar at (0,5,0) and wins       */
+/* there; the two values agree.                                               */
+:root[data-app='salon_owner'] .an-body .an-chart-plot .pro-chart-bar {
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  box-shadow: var(--bevel-hair);
+}
+
+/* The legend swatch is the peak bar in miniature, so it has to be the same   */
+/* gold; a flat fill beside a gilded bar reads as two different highlights.   */
+:root[data-app='salon_owner'] .an-body .ps-legend::before {
+  background-image: var(--accent-gradient);
+  box-shadow: var(--bevel-hair);
+}
+
+/* -------------------------------------------------------------------------- */
+/* O5. The ranked lists and the takings ledger                                */
+/*                                                                            */
+/* Rows-per-screen is the product, so these keep their heights, their leading  */
+/* and their tap targets. What they gain is the edge: a well for the bar to    */
+/* sit in, gold on the leader only — the same "the peak alone is gilded" rule  */
+/* the chart follows — and a fading rule between entries so a column of        */
+/* figures reads as a ledger. The rule is paid for out of the gap rather than  */
+/* added on top of it.                                                         */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .an-body .ps-bar {
+  background-color: var(--bg-deep);
+}
+
+:root[data-app='salon_owner'] .an-body .ps-rank[data-top='true'] .ps-bar-fill {
+  background-image: var(--accent-gradient);
+}
+
+:root[data-app='salon_owner'] .an-body .ps-ranks {
+  gap: var(--space-2);
+}
+
+/* 0.5rem above the rule and 0.5rem below it, so the rule sits midway between  */
+/* two entries rather than belonging to the one under it — and so the ledger   */
+/* costs 1rem where the base list spent 0.875rem. A --space-3 underside read   */
+/* as a caption rule and quietly bought 0.375rem of scroll per row.            */
+:root[data-app='salon_owner'] .an-body .ps-rank + .ps-rank {
+  padding-top: var(--space-2);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+:root[data-app='salon_owner'] .an-body .ps-split {
+  gap: var(--space-2);
+}
+
+:root[data-app='salon_owner'] .an-body .ps-split-row + .ps-split-row {
+  padding-top: var(--space-2);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O6. Figures                                                                */
+/*                                                                            */
+/* Every headline number on this screen is already on the UI face and stays    */
+/* there (R4). `.ps-score strong` is the one that was not tabular, and a       */
+/* rating that is not tabular walks about as the period changes.               */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .an-body .ps-score strong {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The single largest figure on the screen, and the only one that was left      */
+/* sitting on bare card with nothing under it — a 36px number and five stars    */
+/* floating in the middle of a plate while every smaller figure around it had   */
+/* a seat. It takes the same champagne plate as `.pq-due`, which is the owner   */
+/* app's other "one number, and it is the point" object, so the two read as one */
+/* treatment rather than two. Gold at full strength is reserved for singular    */
+/* states; this is the soft wash, because the score is a standing figure, not   */
+/* a state. The figure itself stays on the UI face and stays tabular (R4): it   */
+/* is a rating, and formatRating writes Bengali numerals under `bn`.            */
+/*                                                                            */
+/* The extra padding is bought here and nowhere else. This is a hero, not a     */
+/* tabular row, so it is not the --space-5 the brief rules out for rows.        */
+:root[data-app='salon_owner'] .an-body .ps-score {
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-radius: var(--radius-lg);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--bevel-hair);
+}
+:root[data-app='salon_owner'] .an-body .ps-score strong {
+  letter-spacing: var(--tracking-tighter);
+  color: var(--accent-ink);
+}
+
+/* The three "no data yet" lines — no staff, no services, no takings — render   */
+/* as a bare grey sentence standing exactly where a card stands in the sections */
+/* on either side, which on a screen of seated surfaces reads as unfinished     */
+/* rather than as empty. They become the ladder's quiet rung: a recessed plate  */
+/* with a hairline and no elevation, holding the same footprint the card would. */
+/* This is the base kit's own `.pro-empty-day` idea in the owner's material, so */
+/* nothing bespoke is invented — and `.muted`'s --text-secondary is left alone, */
+/* because dimming an already-quiet plate is how an empty state stops being     */
+/* legible. `.section > .muted` matches only those three fallbacks: every other */
+/* paragraph on this screen is inside a card.                                   */
+:root[data-app='salon_owner'] .an-body .section > .muted {
+  padding: var(--space-5) var(--space-4);
+  text-align: center;
+  background-color: var(--bg-muted);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--bevel-hair);
+}
+
+/* -------------------------------------------------------------------------- */
+/* O7. One appointment — the owner's booking decision screen                  */
+/*                                                                            */
+/* AppointmentPage is shared with the barber and the salon employee and is not */
+/* this run's to rewrite, so everything here hangs off the `.pq-` classes it   */
+/* already renders.                                                            */
+/* -------------------------------------------------------------------------- */
+
+/* A chapter break between "when" and "who". */
+:root[data-app='salon_owner'] .pq-detail-hero {
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+/* R4, the sharpest case in the app: this h2 is a TIME RANGE. It stays on the */
+/* UI face, stays tabular, and gains tracking and nothing else.               */
+:root[data-app='salon_owner'] .pq-detail-hero h2 {
+  font-weight: 700;
+  letter-spacing: var(--tracking-tighter);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The long date under it becomes the eyebrow the hero never had. */
+:root[data-app='salon_owner'] .pq-detail-hero .caption {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* A person, not a figure — the one place the display serif belongs here. */
+:root[data-app='salon_owner'] .pq-client-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+}
+
+:root[data-app='salon_owner'] .pq-contact-row {
+  gap: var(--space-2);
+}
+
+/* The hair profile's divider joins the same fading-rule family as the header, */
+/* the tab bar and the action sheet.                                           */
+:root[data-app='salon_owner'] .pq-hair {
+  padding-top: var(--space-4);
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* O8. The decision footer                                                    */
+/*                                                                            */
+/* ApprovalFooter is the moment the salon says yes or no to a booking, and it  */
+/* renders a plain `.btn-primary` inside StickyFooter. That component is not   */
+/* this run's either, so the weight is added from here: the lead action is     */
+/* seated on the footer plate with a real shadow under it and the mood's own   */
+/* lit edge along its top, while the refusal steps back to a hairline and      */
+/* keeps only its --status-danger-ink text (R9).                               */
+/*                                                                            */
+/* `--bevel-top` rather than a literal white: in the day mood it is the        */
+/* polished edge a gold surface catches, in the night mood the warm rim-light  */
+/* — which is the whole reason that token is mood-aware.                       */
+/*                                                                            */
+/* owner.css's `.btn-primary:active` (0,5,0) and its `:disabled` (0,4,0, and a */
+/* later import) both still outrank this, so the press and the disabled state  */
+/* are exactly as they were.                                                   */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sticky-footer > .btn-primary {
+  box-shadow: var(--bevel-top), var(--glow-accent), var(--elev-raised);
+}
+
+/* The refusal keeps its `--status-danger-bg` fill and `--status-danger-ink`   */
+/* text — the pair is a contrast contract (R9) and the tint IS the affordance. */
+/* It steps back because the approve button stepped forward, not because this  */
+/* one was emptied out. A transparent ground here also broke the base          */
+/* `.btn-danger-soft:hover { filter: brightness(1.1) }` — with no fill left to */
+/* brighten it only pales the danger ink — and R11 rules out replacing that    */
+/* hover from this file: scripts/check-scope.mjs resets the selector to '' for */
+/* any at-rule, so a `@media (hover: hover)` block cannot be written here.     */
+/* What the refusal takes instead is the hairline every seated owner surface   */
+/* wears, which is the same edge language and costs it nothing.                */
+:root[data-app='salon_owner'] .sticky-footer .btn-danger-soft {
+  box-shadow: var(--bevel-hair);
+}
+
+/* -------------------------------------------------------------------------- */
+/* O9. The money sheets                                                       */
+/*                                                                            */
+/* PaymentSheet and WalkInSheet portal to document.body, which is the reason   */
+/* the owner scope lives on <html> at all.                                     */
+/* -------------------------------------------------------------------------- */
+
+/* The amount due: the largest figure in the owner app. A champagne plate with */
+/* a lit top edge and a gold hairline — and the sum itself untouched, UI face  */
+/* and tabular, exactly as it was (R4).                                        */
+:root[data-app='salon_owner'] .pq-due {
+  border-radius: var(--radius-lg);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--bevel-hair);
+}
+
+:root[data-app='salon_owner'] .pq-due .caption {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* The walk-in's running total sits in the sheet's footer, directly above the  */
+/* submit button, so it takes the edge and not the elevation.                  */
+:root[data-app='salon_owner'] .pq-running {
+  border-radius: var(--radius);
+  border-color: var(--border-color);
+  box-shadow: var(--bevel-hair);
+}
+
+/* -------------------------------------------------------------------------- */
+/* O10. Bangla companions (R7)                                                */
+/*                                                                            */
+/* Bengali has no case and 0.15em pulls a conjunct apart, as does the negative */
+/* tracking the two Latin lines above take. base.css sets 0.02em on `.label`   */
+/* for exactly this reason and every rule above would out-specify it, so each  */
+/* states its own companion one step higher.                                   */
+/* -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'][data-lang='bn'] .pq-detail-hero .caption,
+:root[data-app='salon_owner'][data-lang='bn'] .pq-due .caption {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+:root[data-app='salon_owner'][data-lang='bn'] .pq-detail-hero h2,
+:root[data-app='salon_owner'][data-lang='bn'] .pq-client-name,
+:root[data-app='salon_owner'][data-lang='bn'] .an-body .ps-score strong {
+  letter-spacing: 0;
+}
+
+/* ==========================================================================
+   THE CHAIR — the individual barber and the salon employee
+
+   Scoped to `:root[data-app='barber']` and `:root[data-app='salon_employee']`,
+   the two values AppFrame stamps on <html> for these roles. Written out
+   longhand rather than with `:is()`, because scripts/check-scope.mjs validates
+   each comma-separated part of a selector list and `:is()` defeats it.
+
+   Everything below sits BESIDE the owner block above. Not one line of it is
+   edited, and not one base rule in this file is touched: `.pq-hero`, `.pq-due`,
+   `.pq-running`, `.pq-detail-hero` and `.pro-appt` all render on a salon
+   owner's screens too, and this scope layers over them.
+
+   IMPORT ORDER. index.css imports this file at position 11 and crew.css /
+   crew-sheets.css LAST, so a tie on specificity is won by crew.css, not by
+   this file. Anything here that has to beat a crew rule is stated one step
+   more specific and marked where it happens — and anything that only needs to
+   beat provider.css is deliberately left at (0,3,0) so crew.css's
+   `:focus-visible` (0,3,0) still reaches it.
+
+   The rules that bite on these two screens, restated:
+
+     R4  No display serif on a figure, and never bound by tag.
+         `.pq-detail-hero h2` is a TIME RANGE, `.pq-due strong` is a sum and
+         `.pq-appt-end` is a price; formatBdt writes U+09F3 and Bangla renders
+         Bengali numerals, neither of which a Latin serif has. The serif appears
+         three times below — `.pq-hero-name`, `.pq-client-name` and
+         `.pq-day .pro-empty-day strong` — and every one of the three is a
+         person or a title. `font-variant-numeric: tabular-nums` marks every
+         figure.
+
+     R6  NOTHING HERE MAY ASSUME ITS OWN WIDTH. useTicker rewrites
+         `.pq-hero-clock` every 30 seconds and AppointmentRow inserts a late
+         pill into `.pro-appt-meta` mid-scroll. Not one rule below adds
+         white-space, flex-shrink, a width or uppercase + wide tracking to
+         either of those two boxes or to their parents. Two rules go the other
+         way and let them give: §C2 lets `.pq-hero-head` wrap, which is the
+         only thing on the screen that can change size with nobody touching it.
+
+     R7  `.btn[data-loading='true']::after` in ui.css IS the spinner, and
+         crew.css already excludes the loading state from its specular pass.
+         Nothing below writes a `::after` on a `.btn` at all, and §C8 says why
+         the three loading primaries in these apps — ApprovalFooter's approve,
+         WalkInSheet's submit and the profile save — are left to crew.css
+         entirely rather than reseated here.
+
+     R8  `:root[data-app='…'] .x` is (0,3,0) and swallows crew.css's own
+         `:focus-visible` whole. Every rule below that sets `box-shadow` on a
+         FOCUSABLE control at more than (0,3,0) restates the ring one step
+         higher. There are exactly three, each marked: the refusal in the
+         sticky footer (§C8), and the appearance tile and the sign-out button
+         in settings (§C10). Everything else that takes a box-shadow below is a
+         <section>, a <div> or a <span> — `.pq-hero`, `.pq-due`, `.pq-running`,
+         `.pq-dot`, `.pro-empty-day`, `.icon-circle`, `.list-row-icon` — and
+         displaces nothing. `.pro-appt` is a <Link> and is deliberately given
+         NO box-shadow anywhere below for the same reason.
+
+     R9  `--status-*` pairs and the `--pay-*` brand hues are untouched: the
+         payment dots keep bKash pink and Nagad orange, the late pill keeps
+         --status-warning-ink, and decline keeps --status-danger-bg /
+         --status-danger-ink exactly as ui.css sets them. The one gold wash
+         that could have reached a status-tinted surface — the settings row
+         medallion — carries `:not(.list-row-danger)` for that reason.
+
+     R10 No hover state is added anywhere below: these are phone screens worked
+         standing, and a hover on a counter tablet sticks to whatever was last
+         tapped. The two press transforms — an appointment row and the hero's
+         client link — are both undone under prefers-reduced-motion in §C12.
+         No tap target shrinks; nothing below sets a height on a control.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   C1. The dateline
+
+   The greeting is the Header's title; this is the line under it, and it was
+   a second 14px semibold sentence competing with it. It joins the micro-caps
+   family crew.css gives `.label` and `.pro-section-head h3`, which is what
+   makes the top of the queue read as a masthead rather than as two headings.
+
+   `.pq-date` is a block-level <p> holding "EEEE, d MMMM" — it rewrites itself
+   at midnight and at no other time, and it wraps. Its Bangla companion is in
+   §C11 with the rest.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pq-date,
+:root[data-app='salon_employee'] .pq-date {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+/* --------------------------------------------------------------------------
+   C2. The object at the top of the day
+
+   crew.css already gives `.pq-hero` the 2xl corner, --space-5 of padding, the
+   raised seat and the gold ground for `[data-live='true']`. None of that is
+   restated. What is added is the inside of the card: a name that reads as a
+   person, a foot the two verbs stand on, and the one thing crew.css left for
+   the screen that owns it — the singular state gets a pool of its own light.
+
+   THE HEAD IS THE R6 CASE. `.pq-hero-head` is space-between with `.pro-pill`
+   (white-space: nowrap, so it will not shrink) on one side and a clock that
+   useTicker rewrites every 30 seconds on the other. In Bangla, "এখন চেয়ারে"
+   beside "৪৫ মিনিট দেরি" is wider than a 360px card, and today it overflows.
+   `flex-wrap` lets the clock drop to a line of its own instead, `min-width: 0`
+   lets it wrap inside that line if it is still too long, and the auto margin
+   keeps it end-aligned on the line it lands on — `justify-content:
+   space-between` alone would push it back to the start once it is alone on a
+   row. All three are the opposite of assuming a width, and none of them moves
+   anything while the two fit, which is every other minute of the day.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pq-hero,
+:root[data-app='salon_employee'] .pq-hero {
+  gap: var(--space-4);
+}
+
+:root[data-app='barber'] .pq-hero-head,
+:root[data-app='salon_employee'] .pq-hero-head {
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+:root[data-app='barber'] .pq-hero-clock,
+:root[data-app='salon_employee'] .pq-hero-clock {
+  min-width: 0;
+  margin-inline-start: auto;
+}
+
+/* A person, in the display voice — the first of the three serifs (R4).
+   Deliberately no `font-size`: the base rule is 1.375rem and the block at the
+   top of this file steps it down to 1.1875rem under 360px, both at (0,1,0).
+   Restating the size here at (0,3,0) would swallow that step-down whole and
+   cost a long Bengali name a third line on a 320px phone. The serif, the
+   tracking and the leading are the whole voice; the scale was already right. */
+:root[data-app='barber'] .pq-hero-name,
+:root[data-app='salon_employee'] .pq-hero-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+  overflow-wrap: anywhere;
+}
+
+:root[data-app='barber'] .pq-hero-price,
+:root[data-app='salon_employee'] .pq-hero-price {
+  font-size: var(--fs-md);
+  letter-spacing: var(--tracking-tight);
+}
+
+/* The name, the services and the price are a <Link> to the appointment — the
+   whole middle of the most-looked-at card in either app — and it carried no
+   sign at all that it was one. A press, and only a press: these screens are
+   worked standing with a thumb, and a hover ground sticks to whatever was last
+   tapped on a counter tablet (R10). No box-shadow and no background, so
+   crew.css's focus ring on the link is untouched (R8) and the card's own
+   `[data-live='true']` ground reads straight through. The transform is on
+   `:active` only, so the containing block it creates exists for the length of
+   a tap — and ActionSheet is a SIBLING of this link inside `.pq-hero`, and
+   portals to <body> besides, so nothing fixed is ever inside it (R1). Undone
+   under prefers-reduced-motion in §C12. */
+:root[data-app='barber'] .pq-hero-client,
+:root[data-app='salon_employee'] .pq-hero-client {
+  transition:
+    opacity var(--speed) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+
+:root[data-app='barber'] .pq-hero-client:active,
+:root[data-app='salon_employee'] .pq-hero-client:active {
+  transform: scale(0.99);
+  opacity: 0.82;
+}
+
+/* The foot the day's two verbs stand on. A fading rule rather than a border,
+   the same family as the header, the tab bar and the sheet's own foot — and
+   the reason the card reads as one object with a decision at the bottom of it
+   instead of as a stack of four unrelated lines. */
+:root[data-app='barber'] .pq-hero-actions,
+:root[data-app='salon_employee'] .pq-hero-actions {
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+/* The chair is occupied: the one genuinely singular state on the screen, and
+   the only place in these two apps where a whole surface gets --glow-accent.
+   (0,4,0), so it layers over crew.css's `.pq-hero` seat at (0,3,0) rather than
+   losing to it on import order. crew.css's own `[data-live='true']` rule is
+   (0,4,0) too but sets background-image and border-color, so the two do not
+   meet. `<section>`, not a control — no focus ring is displaced. */
+:root[data-app='barber'] .pq-hero[data-live='true'],
+:root[data-app='salon_employee'] .pq-hero[data-live='true'] {
+  box-shadow: var(--bevel-top), var(--elev-raised), var(--glow-accent);
+}
+
+/* --------------------------------------------------------------------------
+   C3. The empty day
+
+   Both of these roles open the queue to an empty day most mornings, and again
+   at the end of most afternoons. It is a real, frequent, legitimate state —
+   and a dashed grey box reads as a page that failed to load. The same strings,
+   given a frame: a gold rule across the top, a lit ground, the icon in a ring.
+
+   ANCHORED TO `.pq-day`, and this is the whole reason the anchor exists.
+   `.pro-empty-day` is also how the diary and the ledger say "nothing here",
+   and provider-business.css already dresses those two under `.pb-screen` at
+   (0,4,0) — deliberately keeping the DASHED edge there and washing it in gold.
+   A role-wide rule from this file lands at (0,3,0), which does not replace
+   that treatment, it interleaves with it: `border-style: solid` and the crown
+   `::before` would win (nothing over there declares them) while padding,
+   radius and ground would lose. The result is a half-merged surface neither
+   file designed and neither author can verify. PerformancePage is worse
+   still — it renders `<p class="pro-empty-day">` with no svg and no <strong>,
+   so a role-wide rule gives it the plate and the gold crown and nothing to
+   put on them.
+
+   So each file dresses the empty states on the screens it owns, in the same
+   material. This one is the owner's own treatment from provider-salon.css,
+   attribute-substituted, so the roles do not drift.
+
+   `strong` by tag is safe here and only here: every string that reaches it is
+   a title — nothing today, nothing on the floor, no takings yet — and no
+   figure is ever written into it (R4).
+   -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pq-day .pro-empty-day,
+:root[data-app='salon_employee'] .pq-day .pro-empty-day {
+  position: relative;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-5);
+  border-style: solid;
+  border-color: var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+  background-image:
+    radial-gradient(70% 7rem at 50% 0.5rem, var(--accent-bg) 0%, transparent 72%),
+    var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+:root[data-app='barber'] .pq-day .pro-empty-day::before,
+:root[data-app='salon_employee'] .pq-day .pro-empty-day::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: 1px;
+  background-image: var(--rule-gradient);
+}
+
+/* lucide writes width and height as presentation attributes, so padding grows
+   the box around a drawing that stays 26px. A ring, with no element added and
+   no markup touched. `box-sizing: content-box` is not optional: base.css sets
+   border-box on everything, and 0.875rem of padding inside a 26px box would
+   collapse the drawing instead of surrounding it. */
+:root[data-app='barber'] .pq-day .pro-empty-day > svg,
+:root[data-app='salon_employee'] .pq-day .pro-empty-day > svg {
+  box-sizing: content-box;
+  flex-shrink: 0;
+  padding: 0.875rem;
+  border-radius: 50%;
+  color: var(--accent-ink);
+  background-color: var(--accent-bg);
+  box-shadow: var(--bevel-hair);
+}
+
+:root[data-app='barber'] .pq-day .pro-empty-day strong,
+:root[data-app='salon_employee'] .pq-day .pro-empty-day strong {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+
+:root[data-app='barber'] .pq-day .pro-empty-day p,
+:root[data-app='barber'] .pq-day .pro-empty-day > span,
+:root[data-app='salon_employee'] .pq-day .pro-empty-day p,
+:root[data-app='salon_employee'] .pq-day .pro-empty-day > span {
+  max-width: 22rem;
+  color: var(--text-tertiary);
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+:root[data-app='barber'] .pq-day .pro-empty-day .btn,
+:root[data-app='salon_employee'] .pq-day .pro-empty-day .btn {
+  margin-top: var(--space-2);
+}
+
+/* --------------------------------------------------------------------------
+   C4. Nothing waiting
+
+   RequestsPage's own empty state is an `<EmptyState>`, not a `.pro-empty-day`,
+   and it was a grey disc and two sentences floating in the middle of a screen
+   whose every other surface is seated. The medallion gets a bezel and a real
+   seat, and nothing else — there is no number to invent here, and inventing
+   one is the only way to get an empty state wrong.
+
+   `.empty h3` keeps the family crew.css gave it: both selectors are (0,3,1)
+   and crew.css imports later, so only `font-size` — which crew.css does not
+   declare — can be stated from here. Anything more would silently lose.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .empty .icon-circle,
+:root[data-app='salon_employee'] .empty .icon-circle {
+  margin-bottom: var(--space-3);
+  box-shadow: 0 0 0 1px var(--border-light), var(--bevel-top), var(--elev-card);
+}
+
+/* crew-sheets.css sets `.icon-circle-neutral { background-image: none }` at
+   (0,3,0), which is right for a neutral disc in a sheet's list row. This is
+   (0,4,0) and wins only inside `.empty`, where the medallion is alone and is
+   the single object on the screen. The status tones are left alone — R9. */
+:root[data-app='barber'] .empty .icon-circle-neutral,
+:root[data-app='salon_employee'] .empty .icon-circle-neutral {
+  background-image: var(--accent-gradient-soft);
+  color: var(--accent-ink);
+}
+
+:root[data-app='barber'] .empty h3,
+:root[data-app='salon_employee'] .empty h3 {
+  font-size: var(--fs-lg);
+}
+
+:root[data-app='barber'] .empty p,
+:root[data-app='salon_employee'] .empty p {
+  max-width: 20rem;
+  line-height: var(--leading-normal);
+  text-wrap: pretty;
+}
+
+/* Requests is a nav tab, and empty is its ORDINARY state — most taps on that
+   tab land on this. It was a small blob stranded under the header with a
+   screen of nothing below it. `.screen-body` is `flex: 1` inside a
+   `min-height: 100dvh` column whose nav space is already reserved by
+   `.screen[data-nav='true']`, so an auto block margin seats the medallion in
+   the middle of the screen — where `.fullscreen-center` already puts every
+   other lone object in this app. No height is set, nothing gains a scroll
+   container and nothing is made to assume its own width (R2, R3, R6).
+
+   `> .empty`, a child combinator: when there are rows, `<EmptyState>` is not
+   rendered at all, so this can only ever reach the empty screen. */
+:root[data-app='barber'] .pq-requests > .empty,
+:root[data-app='salon_employee'] .pq-requests > .empty {
+  margin-block: auto;
+}
+
+/* --------------------------------------------------------------------------
+   C5. The row, as a booking
+
+   Rows-per-screen is the product, so the padding, the leading and the tap
+   target are all left exactly where provider.css put them. What changes is the
+   edge: a softer corner to match the card family crew.css seats, and a hairline
+   between the time and the booking so the row reads as a ticket with a stub
+   rather than as two columns of a table. The line is paid for out of the gap —
+   0.75rem of gap becomes 0.5rem of gap plus 0.5rem of padding behind the line —
+   so a row costs 4px of width on a 375px phone, 8px on a 320px one where the
+   block at the top of this file has already tightened the gap, and not one
+   pixel of height anywhere.
+
+   All of it is stated at (0,3,0)/(0,4,0) and NOT ONE of these rules sets
+   `box-shadow`: `.pro-appt` is a <Link>, and a box-shadow here at (0,4,0)
+   would swallow crew.css's `:focus-visible` ring whole (R8).
+   -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pro-appt,
+:root[data-app='salon_employee'] .pro-appt {
+  gap: var(--space-2);
+  border-radius: var(--radius-lg);
+}
+
+:root[data-app='barber'] .pro-appt-time,
+:root[data-app='salon_employee'] .pro-appt-time {
+  padding-inline-end: var(--space-2);
+  background-image:
+    linear-gradient(
+      to bottom,
+      transparent,
+      var(--border-light) 20%,
+      var(--border-light) 80%,
+      transparent
+    );
+  background-repeat: no-repeat;
+  background-position: 100% 0;
+  background-size: 1px 100%;
+}
+
+/* The name is the subject of the row; crew.css already tightens it, this gives
+   it the one step of size that separates it from the service line under it. */
+:root[data-app='barber'] .pro-appt-name,
+:root[data-app='salon_employee'] .pro-appt-name {
+  font-size: var(--fs-md);
+  line-height: var(--leading-snug);
+}
+
+/* The price closes the row. UI face, tabular, unchanged in weight — R4. */
+:root[data-app='barber'] .pq-appt-end,
+:root[data-app='salon_employee'] .pq-appt-end {
+  letter-spacing: var(--tracking-tight);
+}
+
+/* The client in the chair, in a list. The soft wash and not the full gradient:
+   this state is singular on the hero, but down a feed it is one row among
+   fifteen, and fifteen glowing rows is a background. (0,4,0), background only —
+   the focus ring is untouched. */
+:root[data-app='barber'] .pro-appt[data-live='true'],
+:root[data-app='salon_employee'] .pro-appt[data-live='true'] {
+  background-image: var(--accent-gradient-soft);
+  border-color: var(--accent-line);
+}
+
+/* --------------------------------------------------------------------------
+   C6. Chapter rhythm
+
+   The queue is five groups deep on a busy morning — just booked, waiting,
+   upcoming, done — and every head was an identical line of text, so the screen
+   read as one undifferentiated scroll. A mark BETWEEN chapters, not more air
+   inside them: rows-per-screen is still the product.
+
+   Hung off the three screens this run owns rather than off `.pro-section-head`
+   itself, because that class also carries the shift editor, the price list, the
+   lookbook and the earnings screens, and those are not this run's to redesign.
+
+   The day labels above a group of rows are `<span class="label">` inside a bare
+   <div>, so they need a block context before a margin under them does anything.
+   `> div >` is what keeps this off RequestsPage's owner branch, which renders a
+   `<button class="ps-appt-open">` in that same position.
+   -------------------------------------------------------------------------- */
+
+/* `> .section >` and not a loose descendant. A chapter mark belongs to a head
+   that OPENS a top-level section, and on AppointmentPage `.pq-hair` — the hair
+   profile inside the client card — carries a `.pro-section-head` of its own.
+   A loose descendant gave that sub-head the same rule, one line below the
+   fading rule §C7 lays across the top of `.pq-hair` itself: two identical gold
+   hairlines a heading apart, which reads as a fault rather than as structure,
+   and flattens a sub-head into a chapter. Every head this is meant for is a
+   direct child of a `.section` that is a direct child of the screen — the
+   queue's five, the requests feed's one, services and notes. */
+:root[data-app='barber'] .pq-day > .section > .pro-section-head,
+:root[data-app='barber'] .pq-requests > .section > .pro-section-head,
+:root[data-app='barber'] .pq-detail > .section > .pro-section-head,
+:root[data-app='salon_employee'] .pq-day > .section > .pro-section-head,
+:root[data-app='salon_employee'] .pq-requests > .section > .pro-section-head,
+:root[data-app='salon_employee'] .pq-detail > .section > .pro-section-head {
+  padding-bottom: var(--space-2);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='barber'] .pq-day .stack-sm > div > .label,
+:root[data-app='barber'] .pq-requests .stack-sm > div > .label,
+:root[data-app='salon_employee'] .pq-day .stack-sm > div > .label,
+:root[data-app='salon_employee'] .pq-requests .stack-sm > div > .label {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+
+/* A press on a row, and the transition that makes it land. crew.css states the
+   transition at (0,3,0) without `transform`, so it is restated here one step
+   higher with box-shadow carried through — dropping it would kill the seat's
+   own fade. Undone under prefers-reduced-motion in §C12. */
+:root[data-app='barber'] .pq-day .pro-appt,
+:root[data-app='barber'] .pq-requests .pro-appt,
+:root[data-app='salon_employee'] .pq-day .pro-appt,
+:root[data-app='salon_employee'] .pq-requests .pro-appt {
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+
+:root[data-app='barber'] .pq-day .pro-appt:active,
+:root[data-app='barber'] .pq-requests .pro-appt:active,
+:root[data-app='salon_employee'] .pq-day .pro-appt:active,
+:root[data-app='salon_employee'] .pq-requests .pro-appt:active {
+  transform: scale(0.99);
+}
+
+/* --------------------------------------------------------------------------
+   C7. One appointment
+
+   AppointmentPage is shared with the owner, who already has the block above
+   for these same classes. This sits beside it in the same material.
+
+   R4 is at its sharpest here: the h2 in `.pq-detail-hero` is a TIME RANGE and
+   never a name. It stays on the UI face, stays tabular, and gains tracking and
+   nothing else. The serif appears once on this screen, on `.pq-client-name`.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pq-detail-hero,
+:root[data-app='salon_employee'] .pq-detail-hero {
+  gap: var(--space-2);
+  padding-bottom: var(--space-4);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='barber'] .pq-detail-hero h2,
+:root[data-app='salon_employee'] .pq-detail-hero h2 {
+  font-weight: 700;
+  letter-spacing: var(--tracking-tighter);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The long date under the time range becomes the eyebrow the hero never had. */
+:root[data-app='barber'] .pq-detail-hero .caption,
+:root[data-app='salon_employee'] .pq-detail-hero .caption {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+:root[data-app='barber'] .pq-client-name,
+:root[data-app='salon_employee'] .pq-client-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+}
+
+:root[data-app='barber'] .pq-contact-row,
+:root[data-app='salon_employee'] .pq-contact-row {
+  gap: var(--space-2);
+}
+
+/* The hair profile's divider joins the same fading-rule family as the header,
+   the tab bar and the sheet foot. */
+:root[data-app='barber'] .pq-hair,
+:root[data-app='salon_employee'] .pq-hair {
+  padding-top: var(--space-4);
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+/* --------------------------------------------------------------------------
+   C8. The decision footer
+
+   ApprovalFooter is the moment a booking is answered — yes or no. The refusal
+   takes the hairline every seated surface in these two apps wears and keeps
+   its --status-danger-bg fill and --status-danger-ink text exactly as ui.css
+   sets them (R9): the tint IS the affordance and it is not emptied out.
+
+   THE LEAD ACTION IS DELIBERATELY NOT TOUCHED, and that is a correction.
+   `box-shadow` is one property, so seating the approve button meant restating
+   crew.css's whole list — and crew.css's `.btn-primary` shadow ends in a
+   HARDCODED `inset 0 1px 0 rgba(255, 255, 255, 0.24)`, a white lit edge chosen
+   because it is sitting on a gold fill. `--bevel-top` is not a substitute for
+   it: in the night mood that token is `rgba(233, 196, 148, 0.13)`, gold at 13%
+   over a gold gradient, which is nothing. Restating the list cost the single
+   most important button in the app its top highlight after dark, to add an
+   --elev-raised drop shadow under a button that already carries --glow-accent.
+   crew.css's primary treatment — accent gradient, glow, sheen, press and
+   disabled — is already the strongest button in the product, and the footer
+   plate above it already carries --elev-sheet. Leaving it alone is both the
+   better-looking answer and one less hand-restated focus ring (R8) and one
+   less way to break the spinner (R7).
+
+   R7: what remains is a box-shadow on the button and NOT a `::after`. ui.css
+   owns that pseudo-element for the spinner and crew.css already excludes the
+   loading state from its specular pass, so a busy approve button still spins.
+
+   R8: the refusal rule is (0,4,0) and crew.css states `:focus-visible` at
+   (0,3,0), so without the restatement below decline would silently lose the
+   gold ring and keep only base.css's 2px outline.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .sticky-footer .btn-danger-soft,
+:root[data-app='salon_employee'] .sticky-footer .btn-danger-soft {
+  box-shadow: var(--bevel-hair);
+}
+
+:root[data-app='barber'] .sticky-footer .btn-danger-soft:focus-visible,
+:root[data-app='salon_employee'] .sticky-footer .btn-danger-soft:focus-visible {
+  box-shadow: var(--bevel-hair), 0 0 0 5px var(--ring);
+}
+
+/* --------------------------------------------------------------------------
+   C9. The money sheets
+
+   PaymentSheet and WalkInSheet portal to document.body, which is the reason
+   these scopes live on <html> and not on .app-frame. crew-sheets.css already
+   dresses the drawer, the fields, the option rows and the foot; these three are
+   the objects inside it that belong to this screen.
+
+   The sum itself is untouched: UI face, tabular, exactly as it was (R4). The
+   payment dot keeps the wallet's own hue: PaymentSheet writes it as an inline
+   `background-color`, which beats any stylesheet rule, and R9 wants bKash pink
+   and Nagad orange recognisable — so the dot gains an edge and no colour.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='barber'] .pq-due,
+:root[data-app='salon_employee'] .pq-due {
+  border-radius: var(--radius-lg);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--bevel-hair);
+}
+
+:root[data-app='barber'] .pq-due .caption,
+:root[data-app='salon_employee'] .pq-due .caption {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+:root[data-app='barber'] .pq-dot,
+:root[data-app='salon_employee'] .pq-dot {
+  box-shadow: var(--bevel-top);
+}
+
+/* The walk-in's running total sits in the sheet foot directly above submit, so
+   it takes the edge and not the elevation. */
+:root[data-app='barber'] .pq-running,
+:root[data-app='salon_employee'] .pq-running {
+  border-radius: var(--radius);
+  border-color: var(--border-color);
+  box-shadow: var(--bevel-hair);
+}
+
+/* --------------------------------------------------------------------------
+   C10. Settings — moved
+
+   This screen's rules used to live here, hung off `.pq-settings`, because
+   profile.css was shared with the customer's signed-off account screen and
+   could not be edited. That constraint no longer applies the same way:
+   ProSettingsPage now renders the customer's own Settings markup, and the
+   customer's rules are mirrored onto all three professional scopes in
+   profile.css, beside the originals they mirror.
+
+   One screen, one design, one place to change it. `.pq-settings` is gone from
+   the markup, so what was here was dead.
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   C11. Bangla companions
+
+   Bengali has no case, and 0.15em pulls a conjunct apart — as does the
+   negative tracking the two serif lines take. base.css sets 0.02em on `.label`
+   and 1.35 on a Bangla heading for exactly this reason, and every rule above
+   would out-specify it, so each states its own companion one step higher,
+   attribute-first so the role scope is still literally in the selector for
+   scripts/check-scope.mjs.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='barber'][data-lang='bn'] .pq-date,
+:root[data-app='barber'][data-lang='bn'] .pq-detail-hero .caption,
+:root[data-app='barber'][data-lang='bn'] .pq-due .caption,
+:root[data-app='salon_employee'][data-lang='bn'] .pq-date,
+:root[data-app='salon_employee'][data-lang='bn'] .pq-detail-hero .caption,
+:root[data-app='salon_employee'][data-lang='bn'] .pq-due .caption {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+:root[data-app='barber'][data-lang='bn'] .pq-detail-hero h2,
+:root[data-app='salon_employee'][data-lang='bn'] .pq-detail-hero h2 {
+  letter-spacing: 0;
+}
+
+/* The two serifs also take back the leading base.css gives a Bangla heading:
+   1.12 clips an ascender and a matra together. */
+:root[data-app='barber'][data-lang='bn'] .pq-hero-name,
+:root[data-app='barber'][data-lang='bn'] .pq-client-name,
+:root[data-app='barber'][data-lang='bn'] .pq-day .pro-empty-day strong,
+:root[data-app='salon_employee'][data-lang='bn'] .pq-hero-name,
+:root[data-app='salon_employee'][data-lang='bn'] .pq-client-name,
+:root[data-app='salon_employee'][data-lang='bn'] .pq-day .pro-empty-day strong {
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+/* --------------------------------------------------------------------------
+   C12. Motion
+
+   base.css collapses transition durations, but a transform set on :active is
+   not a transition and survives that.
+
+   The braces joined on the last rule's line are a leftover: an earlier
+   check-scope.mjs could not see a rule nested inside an at-rule and read a lone
+   `}` as an unscoped change. The walker now tracks the selector at whatever
+   depth it opens at, so this may be reformatted normally.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-app='barber'] .pq-day .pro-appt:active,
+  :root[data-app='barber'] .pq-requests .pro-appt:active,
+  :root[data-app='barber'] .pq-hero-client:active,
+  :root[data-app='salon_employee'] .pq-day .pro-appt:active,
+  :root[data-app='salon_employee'] .pq-requests .pro-appt:active,
+  :root[data-app='salon_employee'] .pq-hero-client:active { transform: none; } }

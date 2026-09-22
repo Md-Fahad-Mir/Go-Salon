@@ -1,0 +1,424 @@
+/* ==========================================================================
+   Eureka Hair App — design tokens
+
+   Two moods around one gold. The palette is warm the whole way through: even
+   the darks and the shadows carry the accent's hue, so the gold belongs to the
+   surface rather than sitting on top of it.
+
+     Day    Warm cashmere and champagne gold — alabaster ground, satin cards,
+            espresso ink, jewellery-finish accents.
+     Night  Obsidian and radiant gold — warm charcoal ground, espresso-slate
+            cards, pearl ink, gold-tinted hairlines.
+
+   Every colour in the app resolves through one of these variables, so a single
+   class swap on <html> repaints the whole app. Never hardcode a colour.
+
+   Contrast: every text pair clears WCAG AA on the surfaces it lands on — 4.5:1
+   for body text, 3:1 for large. Vivid `--status-*` values are for fills, dots
+   and icons; the matching `--status-*-ink` values are the legible text shades.
+
+   One group deliberately does NOT flip: `--media-*` and `--scrim-*` colour
+   things drawn on top of a photo. A photograph is dark-ish in both moods, so
+   that ink stays light and those scrims stay dark whatever the app is wearing.
+   ========================================================================== */
+
+:root,
+:root.light-theme {
+  color-scheme: light;
+
+  /* --- Surfaces ---------------------------------------------------------
+     A four-step ladder from cashmere ground up to pure white, so a card
+     lifts off the page without needing a heavy border. */
+  --bg-primary: #f4efe8;
+  --bg-secondary: #fcfbf8;
+  --bg-elevated: #ffffff;
+  --bg-muted: #f8f5ef;
+  --bg-deep: #eae2d6;
+  --bg-inverse: #1c1917;
+  --text-inverse: #f7f4ee;
+  /* Frosted: the blur lives in layout.css, so this stays translucent. */
+  --bg-nav: rgba(252, 251, 248, 0.82);
+
+  /* --- Type ------------------------------------------------------------- */
+  --text-primary: #1c1917;
+  --text-secondary: #4a443d;
+  --text-tertiary: #665f56;
+  --text-dim: #6f665c;
+
+  /* --- Lines ------------------------------------------------------------
+     Hairlines rather than rules: translucent, so they sit correctly on the
+     ground, on a card and on an elevated surface alike. */
+  --border-color: rgba(184, 165, 138, 0.44);
+  --border-light: rgba(195, 178, 155, 0.3);
+  --border-strong: rgba(160, 138, 106, 0.56);
+
+  /* --- Accent -----------------------------------------------------------
+     `--accent` fills; `--accent-ink` is the deeper gold that has to survive
+     as text on a light ground; `--accent-on` is the ink that sits on a gold
+     fill. Keeping them separate is what lets the gold stay bright while the
+     writing stays readable. */
+  --accent: #b88646;
+  --accent-hover: #c89658;
+  --accent-active: #9e7038;
+  --accent-ink: #7a531a;
+  --accent-on: #26200f;
+  --accent-bg: rgba(184, 134, 70, 0.16);
+  --accent-bg-strong: rgba(184, 134, 70, 0.26);
+
+  /* Secondary hues: terracotta for secondary calls to action, botanical sage
+     for availability. Both are muted so the gold stays the loudest thing. */
+  --coral: #c9663a;
+  --coral-ink: #8e3f18;
+  --coral-bg: rgba(201, 102, 58, 0.13);
+  --sage: #7d9068;
+  --sage-ink: #46583a;
+  --sage-bg: rgba(125, 144, 104, 0.16);
+  --cream: #f7f4ee;
+
+  /* Solid destructive button: white sits on this, so it stays deep. */
+  --danger-solid: #a8332f;
+
+  /* --- Controls --------------------------------------------------------- */
+  --input-bg: #ffffff;
+  --input-border: rgba(184, 165, 138, 0.5);
+  --input-focus: var(--accent);
+  --hover-bg: #f1ebe1;
+  --active-bg: #e9e1d4;
+  --ring: rgba(184, 134, 70, 0.3);
+  --focus-ring: #7a531a;
+
+  /* --- Status -----------------------------------------------------------
+     Botanical rather than traffic-light: sage, honey, wine. */
+  --status-success: #5c8a5a;
+  --status-warning: #c9832e;
+  --status-danger: #b4453f;
+  --status-info: #3d6e96;
+  --status-neutral: #665f56;
+
+  --status-success-ink: #2d5a2b;
+  --status-warning-ink: #855210;
+  --status-danger-ink: #99302c;
+  --status-info-ink: #295574;
+  --status-neutral-ink: #544e46;
+
+  --status-success-bg: rgba(92, 138, 90, 0.15);
+  --status-warning-bg: rgba(201, 131, 46, 0.16);
+  --status-danger-bg: rgba(180, 69, 63, 0.13);
+  --status-info-bg: rgba(61, 110, 150, 0.13);
+  --status-neutral-bg: rgba(102, 95, 86, 0.14);
+
+  /* --- Payment brands ---------------------------------------------------
+     Deepened from the brands' own neon so they sit beside the gold without
+     shouting over it. Still unmistakably each brand. */
+  --pay-bkash: #c2185b;
+  --pay-nagad: #c1571b;
+  --pay-rocket: #6d3bb5;
+  --pay-card: #0f6e85;
+
+  /* --- Art (image placeholders) -----------------------------------------
+     Photos are stand-ins: a hatched warm block, exactly as the kit draws
+     them. Tones 0-5 step the hue so a grid does not read as one slab. */
+  --art-bg: #e6dccc;
+  --art-line: #cfc0a6;
+  --art-bg-1: #e9dec7; --art-line-1: #d3c29c;
+  --art-bg-2: #e4ded1; --art-line-2: #cbc2ae;
+  --art-bg-3: #ebdbd0; --art-line-3: #d5bdac;
+  --art-bg-4: #e2e3d5; --art-line-4: #c6c9b2;
+  --art-bg-5: #ebdfc5; --art-line-5: #d6c49a;
+
+  /* --- Depth ------------------------------------------------------------
+     Two layers each: a tight contact shadow that anchors the edge, and a
+     wide ambient one that lifts the whole surface. Brown-black rather than
+     neutral, so they warm what they fall on instead of greying it. */
+  --shadow-sm:
+    0 1px 2px rgba(44, 34, 22, 0.05),
+    0 2px 8px rgba(44, 34, 22, 0.05);
+  --shadow-md:
+    0 2px 6px rgba(44, 34, 22, 0.06),
+    0 8px 20px rgba(44, 34, 22, 0.07);
+  --shadow-lg:
+    0 4px 12px rgba(44, 34, 22, 0.07),
+    0 16px 40px rgba(44, 34, 22, 0.1);
+  --shadow-up:
+    0 -1px 3px rgba(44, 34, 22, 0.04),
+    0 -12px 32px rgba(44, 34, 22, 0.08);
+  --overlay: rgba(40, 32, 22, 0.42);
+
+  /* --- Elevation ladder (customer app) ----------------------------------
+     Named by intent rather than by size, and three layers each: a contact
+     shadow at the edge, an ambient one underneath, and a warm spread that
+     tints what it falls on. `--bevel-top` is the lit edge a raised surface
+     catches; together they are what makes a flat div read as a material.
+     Additive — the provider app keeps using --shadow-sm/md/lg. */
+  --elev-card:
+    0 1px 2px rgba(44, 34, 22, 0.05),
+    0 4px 14px -4px rgba(44, 34, 22, 0.08),
+    0 12px 32px -12px rgba(120, 88, 48, 0.14);
+  --elev-raised:
+    0 2px 5px rgba(44, 34, 22, 0.06),
+    0 10px 28px -8px rgba(44, 34, 22, 0.1),
+    0 24px 56px -20px rgba(120, 88, 48, 0.18);
+  --elev-sheet:
+    0 -1px 3px rgba(44, 34, 22, 0.05),
+    0 -16px 44px -12px rgba(44, 34, 22, 0.14);
+  --elev-modal:
+    0 8px 20px rgba(44, 34, 22, 0.1),
+    0 32px 80px -16px rgba(44, 34, 22, 0.22);
+  --bevel-top: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --bevel-hair: inset 0 0 0 1px rgba(184, 134, 70, 0.1);
+  --glow-accent: 0 6px 20px -6px rgba(184, 134, 70, 0.5);
+
+  /* --- Gold as a material ------------------------------------------------
+     Real gold is never one flat colour: a highlight, a body and a shadow.
+     `--sheen` is the diagonal specular pass laid over a filled surface. */
+  --accent-gradient: linear-gradient(145deg, #d2a468 0%, #b88646 52%, #9c6e36 100%);
+  --accent-gradient-soft: linear-gradient(145deg, rgba(210, 164, 104, 0.2), rgba(156, 110, 54, 0.1));
+  --sheen: linear-gradient(105deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 42%);
+  /* A hairline that fades out at both ends instead of butting into the gutter. */
+  --rule-gradient: linear-gradient(90deg, transparent, rgba(184, 134, 70, 0.34) 18%, rgba(184, 134, 70, 0.34) 82%, transparent);
+  /* Deeper than --accent so a 1px line or a thin bar clears 3:1 on the
+     ground; --accent stays the brighter fill colour. */
+  --accent-line: #9e7038;
+
+  /* --- Glass ------------------------------------------------------------- */
+  --glass-tint: rgba(252, 251, 248, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --scrim-glass: rgba(40, 32, 22, 0.34);
+}
+
+.dark-theme {
+  color-scheme: dark;
+
+  /* Obsidian with a warm brown undertone — never a cold black. */
+  --bg-primary: #12100e;
+  --bg-secondary: #1e1a16;
+  --bg-elevated: #27221c;
+  --bg-muted: #191612;
+  --bg-deep: #0b0a08;
+  --bg-inverse: #f4efea;
+  --text-inverse: #12100e;
+  --bg-nav: rgba(18, 16, 14, 0.74);
+
+  --text-primary: #f4efea;
+  --text-secondary: #afa59b;
+  --text-tertiary: #9a9086;
+  --text-dim: #968d7e;
+
+  /* Gold-tinted hairlines: the border is the accent at low opacity, which is
+     what gives the dark surfaces their rim of warm light. */
+  --border-color: rgba(224, 176, 120, 0.15);
+  --border-light: rgba(224, 176, 120, 0.09);
+  --border-strong: rgba(224, 176, 120, 0.28);
+
+  --accent: #e0b078;
+  --accent-hover: #ecc08c;
+  --accent-active: #ce9e66;
+  --accent-ink: #e8be8e;
+  --accent-on: #1a1509;
+  --accent-bg: rgba(224, 176, 120, 0.14);
+  --accent-bg-strong: rgba(224, 176, 120, 0.24);
+
+  --coral: #e0865a;
+  --coral-ink: #efa985;
+  --coral-bg: rgba(224, 134, 90, 0.16);
+  --sage: #9fb088;
+  --sage-ink: #b4c49e;
+  --sage-bg: rgba(159, 176, 136, 0.16);
+  --cream: #f4efea;
+
+  --danger-solid: #a8332f;
+
+  --input-bg: #191612;
+  --input-border: rgba(224, 176, 120, 0.18);
+  --input-focus: var(--accent);
+  --hover-bg: #241f1a;
+  --active-bg: #2e2820;
+  --ring: rgba(224, 176, 120, 0.34);
+  --focus-ring: #ecc08c;
+
+  --status-success: #6fa46b;
+  --status-warning: #d9a455;
+  --status-danger: #d4645e;
+  --status-info: #5c93bf;
+  --status-neutral: #9a9086;
+
+  --status-success-ink: #8fc98a;
+  --status-warning-ink: #edbe74;
+  --status-danger-ink: #f0908b;
+  --status-info-ink: #84b6dc;
+  --status-neutral-ink: #b3a99e;
+
+  --status-success-bg: rgba(111, 164, 107, 0.17);
+  --status-warning-bg: rgba(217, 164, 85, 0.17);
+  --status-danger-bg: rgba(212, 100, 94, 0.17);
+  --status-info-bg: rgba(92, 147, 191, 0.17);
+  --status-neutral-bg: rgba(154, 144, 134, 0.16);
+
+  --pay-bkash: #e8548a;
+  --pay-nagad: #e08340;
+  --pay-rocket: #a87be8;
+  --pay-card: #3fa8c4;
+
+  --art-bg: #241d17;
+  --art-line: #3b2f23;
+  --art-bg-1: #281f15; --art-line-1: #43351d;
+  --art-bg-2: #211e18; --art-line-2: #363125;
+  --art-bg-3: #261b18; --art-line-3: #402c27;
+  --art-bg-4: #1e1f1a; --art-line-4: #313428;
+  --art-bg-5: #271f14; --art-line-5: #46381d;
+
+  /* Velvety rather than heavy: a deep ambient layer plus a tight contact
+     shadow, so an elevated surface reads as lit from above. */
+  --shadow-sm:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md:
+    0 2px 6px rgba(0, 0, 0, 0.45),
+    0 8px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg:
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    0 16px 40px rgba(0, 0, 0, 0.5);
+  --shadow-up:
+    0 -1px 3px rgba(0, 0, 0, 0.35),
+    0 -12px 32px rgba(0, 0, 0, 0.45);
+  --overlay: rgba(8, 7, 6, 0.76);
+
+  /* Dark elevation. The base kit gives dark cards no drop shadow at all,
+     which is why the night mood reads as one flat sheet — every surface at
+     the same height. Here a raised surface gets a real ambient shadow in
+     warm brown-black *and* a gold rim-light along its top edge, so it reads
+     as lit from above rather than merely a paler grey. */
+  --elev-card:
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 6px 18px -4px rgba(0, 0, 0, 0.5),
+    0 16px 40px -16px rgba(0, 0, 0, 0.6);
+  --elev-raised:
+    0 2px 6px rgba(0, 0, 0, 0.55),
+    0 12px 32px -8px rgba(0, 0, 0, 0.55),
+    0 30px 64px -24px rgba(0, 0, 0, 0.7);
+  --elev-sheet:
+    0 -1px 3px rgba(0, 0, 0, 0.45),
+    0 -18px 48px -12px rgba(0, 0, 0, 0.6);
+  --elev-modal:
+    0 10px 24px rgba(0, 0, 0, 0.6),
+    0 40px 90px -16px rgba(0, 0, 0, 0.75);
+  --bevel-top: inset 0 1px 0 rgba(233, 196, 148, 0.13);
+  --bevel-hair: inset 0 0 0 1px rgba(224, 176, 120, 0.09);
+  --glow-accent: 0 6px 22px -6px rgba(224, 176, 120, 0.4);
+
+  --accent-gradient: linear-gradient(145deg, #f0cfa0 0%, #dcae76 52%, #bb8b4e 100%);
+  --accent-gradient-soft: linear-gradient(145deg, rgba(240, 207, 160, 0.16), rgba(187, 139, 78, 0.08));
+  --sheen: linear-gradient(105deg, rgba(255, 244, 226, 0.14) 0%, rgba(255, 244, 226, 0) 42%);
+  --rule-gradient: linear-gradient(90deg, transparent, rgba(224, 176, 120, 0.3) 18%, rgba(224, 176, 120, 0.3) 82%, transparent);
+  /* In the dark mood the bright gold is already the high-contrast one, so
+     the line colour does not need deepening — it needs holding. */
+  --accent-line: #d8ab6c;
+
+  --glass-tint: rgba(24, 21, 18, 0.7);
+  --glass-border: rgba(224, 176, 120, 0.12);
+  --scrim-glass: rgba(8, 7, 6, 0.55);
+}
+
+/* --------------------------------------------------------------------------
+   Media tokens — identical in both moods.
+
+   Anything drawn over a photo: the gradient under a caption, a chip in the
+   corner of a cover, the camera's face guide. A photo does not change with the
+   theme, so neither do these.
+   -------------------------------------------------------------------------- */
+
+:root {
+  --media-ink: #f7f3ec;
+  --media-ink-dim: #d5cec4;
+  --scrim-strong: rgba(15, 13, 11, 0.85);
+  --scrim-mid: rgba(15, 13, 11, 0.6);
+  --scrim-soft: rgba(15, 13, 11, 0.2);
+  --scrim-chip: rgba(15, 13, 11, 0.72);
+  --media-dot: rgba(247, 243, 236, 0.45);
+
+  /* --- Motion ----------------------------------------------------------- */
+  --speed: 0.2s;
+  --speed-slow: 0.32s;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  /* Expensive motion is slower and more decelerated than app-default: a
+     hover answers instantly, a sheet takes its time arriving. `--stagger` is
+     the step between one list item's entrance and the next. */
+  --speed-fast: 0.12s;
+  --speed-slower: 0.46s;
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --stagger: 42ms;
+
+  /* --- Type -------------------------------------------------------------
+     Two voices. `--font-ui` is the system stack the whole app already used;
+     `--font-display` is an old-style serif for headings and the word-mark.
+     Both are system faces — no webfont, no network, so the app still draws
+     correctly offline. The Bengali fallbacks are repeated in the display
+     stack: Latin picks up the serif, Bengali keeps its own face.
+
+     Scale is a major third (1.25) off 1rem, tightening its tracking as it
+     grows the way metal type does. */
+  --font-ui: inherit;
+  --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Hoefler Text',
+    Georgia, 'Noto Serif Bengali', 'Kalpurush', 'SolaimanLipi', serif;
+
+  --fs-2xs: 0.6875rem;   /* 11 */
+  --fs-xs: 0.75rem;      /* 12 */
+  --fs-sm: 0.8125rem;    /* 13 */
+  --fs-base: 0.9375rem;  /* 15 */
+  --fs-md: 1.0625rem;    /* 17 */
+  --fs-lg: 1.25rem;      /* 20 */
+  --fs-xl: 1.5rem;       /* 24 */
+  --fs-2xl: 1.875rem;    /* 30 */
+  --fs-3xl: 2.375rem;    /* 38 */
+
+  --leading-tight: 1.12;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.68;
+
+  --tracking-tighter: -0.035em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.06em;
+  /* The micro-caps eyebrow. The clearest typographic signal a luxury
+     interface has, and the base kit's .label sits at only 0.04em. */
+  --tracking-widest: 0.15em;
+
+  /* --- Space ------------------------------------------------------------
+     A 4px base. Luxury reads as air, and air needs a scale to be consistent
+     rather than a pile of one-off gaps. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* --- Radii ------------------------------------------------------------ */
+  --radius-xs: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  /* Large surfaces — hero cards, the try-on canvas, bottom sheets. A soft
+     corner at this size reads as considered; the same 0.75rem used on a
+     button reads as neither soft nor crisp. */
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --radius-pill: 999px;
+
+  /* --- Metrics ---------------------------------------------------------- */
+  --frame-width: 30rem;         /* 480px — the app column on wide screens */
+  --header-height: 3.5rem;      /* 56px */
+  --nav-height: 3.75rem;        /* 60px */
+  --control-height: 3rem;       /* 48px */
+  --touch-target: 2.75rem;      /* 44px */
+  --screen-padding: 1rem;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}

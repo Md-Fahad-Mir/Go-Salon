@@ -1,0 +1,691 @@
+/* ==========================================================================
+   The chair — sheets, dialogs and form chrome
+
+   The barber and the salon employee open twenty-three portalled surfaces
+   between them — walk-ins, payments, hours, services, payouts, treatments,
+   lookbook entries, client notes and five destructive confirmations — and until
+   now every one rendered in bare ui.css while both signed-off roles had a
+   dressed drawer. That is the largest single quality gap in these two apps, and
+   it closes in one file.
+
+   It mirrors owner-sheets.css rule for rule, by attribute substitution, so the
+   four roles cannot drift apart on the one primitive they all live inside.
+   Every selector here is a shared primitive, so every rule is scoped — there is
+   no rule in this file that could have been written in place.
+
+   Constraints carried over from owner-sheets.css, all still load-bearing:
+
+     - The `:root[data-app='…']` block declares custom properties and nothing
+       else. useLockBodyScroll sets overflow: hidden on <body>, and that only
+       reaches the viewport while <html> stays `visible`.
+     - ConfirmDialog passes `icon` into `.modal-head` as a bare <svg>, so the
+       medallion has to build on `.modal-head > svg` itself.
+     - `:root[data-app='…'] .x` is (0,3,0) and swallows ui.css's own (0,2,0)
+       component focus rings whole. Any one-class rule added here must restate
+       the focus ring it displaces, or the control silently loses its indicator.
+
+   And one specific to these two roles: `.btn[data-loading='true']::after` in
+   ui.css IS the spinner. Anything decorating a primary button here must exclude
+   the loading state, or a spinner is replaced by a static highlight —
+   ApprovalFooter's approve, WalkInSheet's submit and the profile's save are all
+   loading primaries, and all three live in this file's surfaces.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. Two shared values
+
+   Custom properties only — see R5. `--owner-well` is the recess a control is
+   sunk into; it is the one thing in this file that has to be stated per mood,
+   because a well is a shadow and a shadow is not a palette colour.
+
+   `--owner-ring` sits between ui.css's 3px control ring and owner.css's 5px
+   `:focus-visible` ring. 5px would be the more consistent number, but the
+   hours editor puts two time inputs in a `1fr 1fr auto` grid at a 0.5rem gap,
+   and two 5px rings meet in the middle of it.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'],
+:root[data-app='salon_employee']{
+  --owner-well: inset 0 1px 2px rgba(44, 34, 22, 0.07);
+  --owner-ring: 0 0 0 4px var(--ring);
+}
+:root[data-app='barber'].dark-theme,
+:root[data-app='salon_employee'].dark-theme{
+  --owner-well: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   1. The drawer
+
+   A lit top edge: the white (light) / gold (dark) bevel owner.css already puts
+   on `.sheet` sits at y=0, and a warm hairline is laid immediately under it at
+   y=1. An inset box-shadow paints above the background, so the two cannot
+   share a row — hence the 1px offset rather than `background-position: top`.
+   The corner radius clips both ends of the line, which is exactly where
+   --rule-gradient is transparent anyway.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .sheet,
+:root[data-app='salon_employee'] .sheet{
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: 0 1px;
+  background-size: 100% 1px;
+}
+
+/* Machined rather than moulded: a warm fill under a lit top edge. Decorative
+   (aria-hidden, no drag handler), so it is not a tap target. */
+:root[data-app='barber'] .sheet-handle,
+:root[data-app='salon_employee'] .sheet-handle{
+  width: 2.75rem;
+  background-color: var(--border-strong);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top);
+}
+
+/* The head separates from the body with a hairline that fades out at both
+   ends instead of butting into the gutter — the same move owner.css makes on
+   the header, the tab bar and consecutive action rows. */
+:root[data-app='barber'] .sheet-head,
+:root[data-app='salon_employee'] .sheet-head{
+  padding-block: var(--space-4) var(--space-3);
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+/* By explicit selector, never by tag — R4. Every sheet title in the owner app
+   is a phrase; the only variable one is a customer's name on the queue's
+   action sheet. */
+:root[data-app='barber'] .sheet-head h2,
+:root[data-app='barber'] .modal-head h2,
+:root[data-app='salon_employee'] .sheet-head h2,
+:root[data-app='salon_employee'] .modal-head h2{
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+
+/* base.css gives Bangla headings 1.35/0 for its conjuncts and ascenders, at a
+   specificity the rule above would out-rank. Restated so it does not. */
+:root[data-lang='bn'][data-app='barber'] .sheet-head h2,
+:root[data-lang='bn'][data-app='barber'] .modal-head h2,
+:root[data-lang='bn'][data-app='salon_employee'] .sheet-head h2,
+:root[data-lang='bn'][data-app='salon_employee'] .modal-head h2{
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+/* The standfirst under a title. Snug small print is a Latin luxury; base.css
+   gives Bangla 1.6 for its ascenders and descenders and gets it back below. */
+:root[data-app='barber'] .sheet-head p,
+:root[data-app='barber'] .modal-head p,
+:root[data-app='salon_employee'] .sheet-head p,
+:root[data-app='salon_employee'] .modal-head p{
+  line-height: var(--leading-snug);
+}
+:root[data-lang='bn'][data-app='barber'] .sheet-head p,
+:root[data-lang='bn'][data-app='barber'] .modal-head p,
+:root[data-lang='bn'][data-app='salon_employee'] .sheet-head p,
+:root[data-lang='bn'][data-app='salon_employee'] .modal-head p{
+  line-height: var(--leading-normal);
+}
+:root[data-app='barber'] .sheet-body,
+:root[data-app='salon_employee'] .sheet-body{
+  padding-top: var(--space-4);
+}
+
+/* Air between the things an owner fills in, bought vertically — the one place
+   in this app where --space-5 is right, because a form field is a section and
+   not a tabular row. Scoped to the sheet's own stack so no screen moves. */
+:root[data-app='barber'] .sheet-body > .stack,
+:root[data-app='salon_employee'] .sheet-body > .stack{
+  gap: var(--space-5);
+}
+
+/* The foot is a ledge, not a border. Its primary action already carries the
+   gold from owner.css. */
+:root[data-app='barber'] .sheet-foot,
+:root[data-app='salon_employee'] .sheet-foot{
+  gap: var(--space-3);
+  padding-block: var(--space-4);
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+/* --------------------------------------------------------------------------
+   2. The dialog, and its medallion
+
+   ConfirmDialog passes `icon` straight into `.modal-head` as a bare <svg> —
+   there is no wrapper element and none may be added, so the medallion is built
+   out of the icon itself. `box-sizing: content-box` is required: base.css sets
+   border-box on everything, and lucide writes width/height as attributes, so
+   padding would otherwise eat the glyph instead of surrounding it.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .modal-head,
+:root[data-app='salon_employee'] .modal-head{
+  gap: var(--space-3);
+}
+:root[data-app='barber'] .modal-head > svg,
+:root[data-app='salon_employee'] .modal-head > svg{
+  box-sizing: content-box;
+  flex-shrink: 0;
+  padding: 0.8125rem;
+  margin-bottom: var(--space-1);
+  border-radius: 50%;
+  color: var(--accent-ink);
+  background-color: var(--accent-bg);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--bevel-hair);
+}
+
+/* --------------------------------------------------------------------------
+   3. The destructive moment
+
+   Deactivating a stylist or removing a service is worth a pause. The dialog
+   gets a deeper pool of shadow and a tinted wash at the crown; the medallion
+   re-tints and takes a struck rim in the vivid danger.
+
+   The button stays FILLED. An earlier pass softened it to
+   --status-danger-bg + --status-danger-ink, which is — declaration for
+   declaration — ui.css's `.btn-danger-soft`. Collapsing the two variants costs
+   the design system a distinction it deliberately ships, and it inverts the
+   dialog's own hierarchy: the confirm sits directly above a `.btn-ghost`
+   cancel, and a wash cannot outweigh a ghost. So the destructive verb gets the
+   same treatment owner.css gives `.btn-primary` — a fill, a specular pass and
+   a coloured pool — in its own hue rather than gold.
+
+   The sheen rides `background-image`, NOT a `::after`. `.btn[data-loading]`
+   already owns this button's ::after for its spinner.
+
+   `:has()` is what tells a danger dialog from an ordinary one without touching
+   ConfirmDialog. Where it is unsupported the two `:has()` rules are dropped and
+   the dialog reads as an ordinary one — which is why the button treatment
+   below does NOT depend on it, and why they are never grouped with anything
+   load-bearing.
+
+   --status-danger is the fill / line shade and --status-danger-ink the legible
+   text shade; each is used exactly as R9's contract intends, and --danger-solid
+   is identical in both moods, which is why its ink can be.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .modal:has(.btn-danger),
+:root[data-app='salon_employee'] .modal:has(.btn-danger){
+  background-image: radial-gradient(120% 7rem at 50% -1.5rem, var(--status-danger-bg), transparent 72%);
+  background-repeat: no-repeat;
+  box-shadow: var(--bevel-top), var(--elev-modal), var(--elev-raised);
+}
+
+/* Struck, not tinted: the vivid shade as a 1px rim is what makes the disc read
+   as an object rather than a smudge. */
+:root[data-app='barber'] .modal:has(.btn-danger) .modal-head > svg,
+:root[data-app='salon_employee'] .modal:has(.btn-danger) .modal-head > svg{
+  color: var(--status-danger-ink);
+  background-color: var(--status-danger-bg);
+  background-image: none;
+  box-shadow: var(--bevel-top), inset 0 0 0 1px var(--status-danger);
+}
+
+/* --danger-solid stays the fill (ui.css). The specular literal is the one
+   owner.css lays on `.btn-primary`; the pool is the danger-hue answer to
+   --glow-accent.
+
+   --glow-accent carries its softness in the alpha (0.5) because it is written
+   in theme.css where a literal is allowed. Here the colour has to be the token,
+   and --status-danger is opaque — so the softness is carried by the geometry
+   instead: a -10px spread shrinks the shadow rect well inside the button before
+   an 18px blur diffuses it, which lands in the same place without inventing a
+   red that is not in the palette. */
+:root[data-app='barber'] .modal-foot .btn-danger,
+:root[data-app='salon_employee'] .modal-foot .btn-danger{
+  background-image: var(--sheen);
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 6px 18px -10px var(--status-danger);
+}
+
+/* ui.css spins the loader in --accent-on, which is near-black in both moods
+   and all but invisible on the red fill. #fff is not a new colour: it is the
+   ink ui.css already declares on this very button. */
+:root[data-app='barber'] .modal-foot .btn-danger[data-loading='true']::after,
+:root[data-app='salon_employee'] .modal-foot .btn-danger[data-loading='true']::after{
+  color: #fff;
+}
+
+/* The rule above is (0,4,0) and owner.css states :focus-visible at (0,3,0), so
+   without this the confirm button silently loses the owner's ring and keeps
+   only base.css's 2px outline. */
+:root[data-app='barber'] .modal-foot .btn-danger:focus-visible,
+:root[data-app='salon_employee'] .modal-foot .btn-danger:focus-visible{
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    0 0 0 5px var(--ring);
+}
+:root[data-app='barber'] .modal-foot .btn-danger:active:not(:disabled),
+:root[data-app='salon_employee'] .modal-foot .btn-danger:active:not(:disabled){
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+/* --------------------------------------------------------------------------
+   4. Field chrome
+
+   The micro-caps eyebrow, the same family owner.css gives `.label`, pitched
+   one step larger than the section eyebrow because this one is read while
+   typing. Colour is deliberately NOT set: provider-business.css marks the
+   buffer field out by recolouring its label, and a colour here would silently
+   erase that.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .field-label,
+:root[data-app='salon_employee'] .field-label{
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* Bangla has no case and its conjuncts come apart when tracked out — and at
+   12px they need the width back too. */
+:root[data-lang='bn'][data-app='barber'] .field-label,
+:root[data-lang='bn'][data-app='salon_employee'] .field-label{
+  font-size: var(--fs-sm);
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* All three messages under a control take the same measure, so a field does
+   not change height when a hint becomes an error. No colour is set here
+   either: `.field-error` and `.field-success` carry the --status-*-ink shades
+   R9 reserves for legible text, and those are left exactly as they are. */
+:root[data-app='barber'] .field-hint,
+:root[data-app='barber'] .field-error,
+:root[data-app='barber'] .field-success,
+:root[data-app='salon_employee'] .field-hint,
+:root[data-app='salon_employee'] .field-error,
+:root[data-app='salon_employee'] .field-success{
+  line-height: var(--leading-snug);
+}
+
+/* base.css gives Bangla 1.6 for its ascenders and descenders; snug small print
+   is a Latin luxury. */
+:root[data-lang='bn'][data-app='barber'] .field-hint,
+:root[data-lang='bn'][data-app='barber'] .field-error,
+:root[data-lang='bn'][data-app='barber'] .field-success,
+:root[data-lang='bn'][data-app='salon_employee'] .field-hint,
+:root[data-lang='bn'][data-app='salon_employee'] .field-error,
+:root[data-lang='bn'][data-app='salon_employee'] .field-success{
+  line-height: var(--leading-normal);
+}
+
+/* --------------------------------------------------------------------------
+   5. The well — a recessed, lit-edge control
+
+   THE FOCUS RINGS BELOW ARE NOT DECORATION. ui.css states them at (0,2,0) and
+   the rule immediately above is (0,3,0), so without them every text control in
+   the owner app loses its focus indicator and nothing reports it.
+
+   No border-radius here on purpose: `.search .input` is a pill at (0,2,0) and
+   a radius on `.input` at (0,3,0) would square it off.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .input,
+:root[data-app='barber'] .textarea,
+:root[data-app='barber'] .select,
+:root[data-app='barber'] .input-group,
+:root[data-app='salon_employee'] .input,
+:root[data-app='salon_employee'] .textarea,
+:root[data-app='salon_employee'] .select,
+:root[data-app='salon_employee'] .input-group{
+  box-shadow: var(--owner-well), var(--bevel-hair);
+}
+:root[data-app='barber'] .input,
+:root[data-app='barber'] .textarea,
+:root[data-app='salon_employee'] .input,
+:root[data-app='salon_employee'] .textarea{
+  caret-color: var(--accent);
+}
+
+/* Restates ui.css:196 and ui.css:253 at (0,4,0). */
+:root[data-app='barber'] .input:focus,
+:root[data-app='barber'] .textarea:focus,
+:root[data-app='barber'] .select:focus,
+:root[data-app='barber'] .input-group:focus-within,
+:root[data-app='salon_employee'] .input:focus,
+:root[data-app='salon_employee'] .textarea:focus,
+:root[data-app='salon_employee'] .select:focus,
+:root[data-app='salon_employee'] .input-group:focus-within{
+  box-shadow: var(--owner-well), var(--owner-ring);
+}
+
+/* Restates ui.css:202. --status-danger-bg, not --ring: an invalid field must
+   not answer focus in the same gold as a valid one. */
+:root[data-app='barber'] .input[aria-invalid='true']:focus,
+:root[data-app='barber'] .textarea[aria-invalid='true']:focus,
+:root[data-app='salon_employee'] .input[aria-invalid='true']:focus,
+:root[data-app='salon_employee'] .textarea[aria-invalid='true']:focus{
+  box-shadow: var(--owner-well), 0 0 0 4px var(--status-danger-bg);
+}
+
+/* The phone field is one control in two boxes: the group carries the well, the
+   input inside it must stay flat or the recess is drawn twice. Restates
+   ui.css:269 and ui.css:274. */
+:root[data-app='barber'] .input-group .input,
+:root[data-app='barber'] .input-group .input:focus,
+:root[data-app='salon_employee'] .input-group .input,
+:root[data-app='salon_employee'] .input-group .input:focus{
+  box-shadow: none;
+}
+
+/* The +880 box answers with the field. --accent-ink is the deeper gold that
+   survives as text on a light ground, which is the whole reason it exists. */
+:root[data-app='barber'] .input-group:focus-within .input-prefix,
+:root[data-app='salon_employee'] .input-group:focus-within .input-prefix{
+  color: var(--accent-ink);
+}
+
+/* The chevron on a `.select` is the one control affordance in the owner app
+   still drawn in body ink. It IS a background-image — two linear-gradients in
+   `currentColor` — so it cannot be recoloured, only restated. Geometry lives in
+   background-position / -size / -repeat, which are separate properties and stay
+   ui.css's; only the two gradients are repeated here, in gold.
+
+   This is the single deliberate duplication in the file: if ui.css ever moves
+   the chevron, the shape here goes with it and only the colour diverges. */
+:root[data-app='barber'] .select,
+:root[data-app='salon_employee'] .select{
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--accent-ink) 50%),
+    linear-gradient(135deg, var(--accent-ink) 50%, transparent 50%);
+}
+
+/* --------------------------------------------------------------------------
+   6. The switch as a jewelled control
+
+   An unlit well that fills with gold, rather than a grey pill that turns
+   flat-colour. No glow: WeekHoursSheet stacks seven of these in a column, and
+   owner.css's doctrine is that a state which repeats down a list takes the
+   soft treatment — fifteen glowing rows is a background, not a highlight.
+
+   Written against `input + .switch-track` rather than `.switch input` on
+   purpose: HoursSheet's compact "closed today" toggle is a `.ps-closed-toggle`
+   label with no `.switch` on it, and it deserves the same control.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .switch-track,
+:root[data-app='salon_employee'] .switch-track{
+  background-color: var(--bg-deep);
+  box-shadow: var(--owner-well), inset 0 0 0 1px var(--border-color);
+}
+:root[data-app='barber'] input:checked + .switch-track,
+:root[data-app='salon_employee'] input:checked + .switch-track{
+  background-color: var(--accent);
+  background-image: var(--accent-gradient);
+  box-shadow: var(--bevel-top), inset 0 0 0 1px var(--accent-active);
+}
+
+/* Restates ui.css:407 and provider-salon.css:257, both (0,3,1), at (0,4,1).
+   The well and the bevel are carried through: a control that pops out of its
+   recess the instant it takes focus reads as a rendering fault, not a state. */
+:root[data-app='barber'] input:focus-visible + .switch-track,
+:root[data-app='salon_employee'] input:focus-visible + .switch-track{
+  box-shadow: var(--owner-ring), var(--owner-well), inset 0 0 0 1px var(--border-color);
+}
+:root[data-app='barber'] input:checked:focus-visible + .switch-track,
+:root[data-app='salon_employee'] input:checked:focus-visible + .switch-track{
+  box-shadow: var(--owner-ring), var(--bevel-top), inset 0 0 0 1px var(--accent-active);
+}
+
+/* The knob keeps its colour in both moods — it is the lit part of the jewel. */
+:root[data-app='barber'] .switch-track::after,
+:root[data-app='salon_employee'] .switch-track::after{
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 -1px 0 rgba(0, 0, 0, 0.06);
+}
+
+/* --------------------------------------------------------------------------
+   7. The tick
+
+   PickList puts a column of these in a sheet, so the chosen state is the same
+   gold as every other "this one is chosen" in the app but takes no shadow of
+   its own.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .check-box,
+:root[data-app='salon_employee'] .check-box{
+  box-shadow: var(--owner-well);
+}
+:root[data-app='barber'] input:checked + .check-box,
+:root[data-app='salon_employee'] input:checked + .check-box{
+  background-color: var(--accent);
+  background-image: var(--accent-gradient);
+  border-color: var(--accent);
+  box-shadow: var(--bevel-top);
+}
+
+/* Restates ui.css:369 at (0,4,1), keeping the recess / the lit edge for the
+   same reason the switch does. */
+:root[data-app='barber'] input:focus-visible + .check-box,
+:root[data-app='salon_employee'] input:focus-visible + .check-box{
+  box-shadow: var(--owner-ring), var(--owner-well);
+}
+:root[data-app='barber'] input:checked:focus-visible + .check-box,
+:root[data-app='salon_employee'] input:checked:focus-visible + .check-box{
+  box-shadow: var(--owner-ring), var(--bevel-top);
+}
+
+/* --------------------------------------------------------------------------
+   8. Option rows
+
+   Lifted off the sheet ground onto the elevated surface with a warm rim, so a
+   list of payout methods or walk-in services reads as a set of objects rather
+   than as stripes. The chosen one takes the soft gold wash, not the full
+   gradient — same reasoning as the switch.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .option,
+:root[data-app='salon_employee'] .option{
+  background-color: var(--bg-elevated);
+  /* The edge is an inset ring rather than a border-colour, so ui.css's
+     `.option:hover` at (0,2,0) and the selected `border-color: var(--accent)`
+     both keep working under this rule's (0,3,0). */
+  box-shadow: var(--bevel-top), inset 0 0 0 1px var(--border-color);
+  transition:
+    background-color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+
+/* The rule above is (0,3,0) and ui.css's selected background is (0,2,0), so
+   without this the gold selection would be painted over by the lift. */
+:root[data-app='barber'] .option[aria-checked='true'],
+:root[data-app='barber'] .option[aria-pressed='true'],
+:root[data-app='barber'] .option[data-selected='true'],
+:root[data-app='salon_employee'] .option[aria-checked='true'],
+:root[data-app='salon_employee'] .option[aria-pressed='true'],
+:root[data-app='salon_employee'] .option[data-selected='true']{
+  background-color: var(--accent-bg);
+  background-image: var(--accent-gradient-soft);
+  border-color: var(--accent);
+  box-shadow: var(--bevel-top);
+}
+
+/* THE RING ABOVE ALL. `.option` at (0,3,0) is imported after owner.css's
+   `:root[data-app='barber'] :focus-visible`, which is (0,3,0) too — so the
+   lift wins on order alone and every option row in the owner app silently loses
+   the gold ring, keeping only base.css's 2px outline. Restated at (0,4,0), and
+   stated AFTER the selected rule so a focused chosen row still shows it.
+   5px here, not --owner-ring: an option is a full-width row with nothing beside
+   it, so it takes the same ring as the rest of the owner app. */
+:root[data-app='barber'] .option:focus-visible,
+:root[data-app='salon_employee'] .option:focus-visible{
+  box-shadow: var(--bevel-top), 0 0 0 5px var(--ring);
+}
+
+/* The same tightening owner.css gives `.pro-appt-name` — a title in a list is
+   a name, and names set tighter. */
+:root[data-app='barber'] .option-title,
+:root[data-app='salon_employee'] .option-title{
+  letter-spacing: var(--tracking-tight);
+}
+:root[data-app='barber'] .option:active:not(:disabled),
+:root[data-app='salon_employee'] .option:active:not(:disabled){
+  transform: scale(0.99);
+}
+:root[data-app='barber'] .radio-mark,
+:root[data-app='salon_employee'] .radio-mark{
+  background-color: var(--input-bg);
+  box-shadow: var(--owner-well);
+}
+:root[data-app='barber'] .radio-mark::after,
+:root[data-app='salon_employee'] .radio-mark::after{
+  background-image: var(--accent-gradient);
+}
+
+/* --------------------------------------------------------------------------
+   9. Segmented control
+
+   owner.css fills the pressed segment with --accent-gradient but ui.css leaves
+   its ink at --text-primary, which is pearl at night: 1.8:1 on bright gold.
+   --accent-on is the ink that belongs on a gold fill — 9.1:1 at night, 5.0:1
+   by day — and `.count` / `.dim` inside it already inherit.
+
+   `transition: all` is replaced for the same reason customer.css replaces it
+   on chips: it animates the gradient owner.css just added.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .segmented,
+:root[data-app='salon_employee'] .segmented{
+  box-shadow: var(--owner-well);
+}
+:root[data-app='barber'] .segmented button,
+:root[data-app='salon_employee'] .segmented button{
+  font-size: var(--fs-sm);
+  letter-spacing: var(--tracking-tight);
+  transition:
+    background-color var(--speed) var(--ease),
+    color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease);
+}
+:root[data-app='barber'] .segmented button[aria-pressed='true'],
+:root[data-app='salon_employee'] .segmented button[aria-pressed='true']{
+  color: var(--accent-on);
+}
+
+/* --------------------------------------------------------------------------
+   10. Receipts
+
+   A column of sums is only scannable while the digits line up, and the total
+   parts from the lines above with the same fading rule the rest of the app
+   uses. No serif anywhere near it — R4.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .kv-row dd,
+:root[data-app='salon_employee'] .kv-row dd{
+  font-variant-numeric: tabular-nums;
+}
+:root[data-app='barber'] .kv-total,
+:root[data-app='salon_employee'] .kv-total{
+  padding-top: var(--space-4);
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+:root[data-app='barber'] .kv-total dd,
+:root[data-app='salon_employee'] .kv-total dd{
+  letter-spacing: var(--tracking-tight);
+}
+
+/* --------------------------------------------------------------------------
+   11. Icon medallions
+
+   The accent one takes the gold wash and a lit edge. The status-toned variants
+   explicitly do not: harmonising a danger or success medallion toward gold
+   would break the colour's job — R9.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .icon-circle,
+:root[data-app='salon_employee'] .icon-circle{
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--bevel-hair);
+}
+:root[data-app='barber'] .icon-circle-success,
+:root[data-app='barber'] .icon-circle-danger,
+:root[data-app='barber'] .icon-circle-warning,
+:root[data-app='barber'] .icon-circle-neutral,
+:root[data-app='salon_employee'] .icon-circle-success,
+:root[data-app='salon_employee'] .icon-circle-danger,
+:root[data-app='salon_employee'] .icon-circle-warning,
+:root[data-app='salon_employee'] .icon-circle-neutral{
+  background-image: none;
+}
+
+/* --------------------------------------------------------------------------
+   12. The action sheet's medallions
+
+   The queue's row menu is the overlay an owner opens most often in a shift —
+   start, reassign, complete, no-show — and until now its icons were four bare
+   grey glyphs against a fading rule. ActionSheet hands each `icon` straight
+   into the row with no wrapper (exactly like ConfirmDialog), so the disc is
+   built out of the glyph itself with the same content-box trick, at the same
+   two gold intensities owner.css sets out: this is a state that REPEATS down a
+   list, so it takes --accent-gradient-soft and never --glow-accent.
+
+   `> svg` and not ` svg`, so a future nested icon cannot be caught. `color` is
+   set on the generic rule and restated for the danger row — the shorthand rules
+   are both (0,3,1), so the danger one is placed second on purpose rather than
+   relying on ui.css's `.action-item-danger svg` at (0,1,1), which this would
+   otherwise out-rank and erase.
+
+   Every ActionSheet an owner can reach passes an icon on every action, so no
+   row is left with a hole where a disc should be. `.action-item` keeps its
+   3.25rem row height (R12): a 20px glyph in 0.5rem of padding is a 36px disc.
+   -------------------------------------------------------------------------- */
+:root[data-app='barber'] .action-item > svg,
+:root[data-app='salon_employee'] .action-item > svg{
+  box-sizing: content-box;
+  flex-shrink: 0;
+  padding: var(--space-2);
+  border-radius: 50%;
+  color: var(--accent-ink);
+  background-color: var(--accent-bg);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-hair);
+}
+
+/* R9: a destructive row is not harmonised toward gold. The pair is used as the
+   contract intends — the tint as the fill, the ink as the glyph. */
+:root[data-app='barber'] .action-item-danger > svg,
+:root[data-app='salon_employee'] .action-item-danger > svg{
+  color: var(--status-danger-ink);
+  background-color: var(--status-danger-bg);
+  background-image: none;
+}
+
+/* --------------------------------------------------------------------------
+   13. Hover — pointers only
+
+   A hover state on a counter tablet sticks to whatever was last tapped, so
+   every hover in this file is behind a fine-pointer query. ui.css's
+   `.btn-danger:hover` brightness is left to do its own work on the fill; only
+   the pool deepens, which is what makes the button feel like it lifts.
+   -------------------------------------------------------------------------- */
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='barber'] .modal-foot .btn-danger:hover:not(:disabled),
+  :root[data-app='salon_employee'] .modal-foot .btn-danger:hover:not(:disabled){
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      0 10px 26px -12px var(--status-danger);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   14. Reduced motion
+
+   base.css collapses transition durations, but a transform set on :active is
+   not a transition and survives it.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-app='barber'] .option:active:not(:disabled),
+  :root[data-app='salon_employee'] .option:active:not(:disabled){
+    transform: none;
+  }
+}

@@ -1,0 +1,965 @@
+/* ==========================================================================
+   provider-salon — the salon owner's screens.
+
+   The floor, the roster, the menu, the shopfront and the numbers. Everything
+   here is prefixed `.ps-`; anything shared with other provider roles lives in
+   provider.css and is used as-is.
+   ========================================================================== */
+
+/* --- Chair strip ----------------------------------------------------------
+   One compact card per active chair, swipeable on a phone. Tapping filters
+   the feed below, so it behaves like a toggle and says so. */
+
+/* Room underneath for the chosen card's glow. `.hscroll` sets overflow-x,
+   which computes overflow-y to `auto`, so anything painted past the padding
+   box is clipped rather than shown. */
+.ps-chairs {
+  padding-block: 0.25rem 0.875rem;
+}
+
+.ps-chair {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 9.25rem;
+  min-height: 44px;
+  padding: 0.75rem;
+  text-align: start;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  /* Edge, not elevation. A drop shadow here would be clipped by the scroller
+     and would cost a repaint on every frame of a swipe. */
+  box-shadow: var(--bevel-top), var(--bevel-hair);
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+.ps-chair:active { border-color: var(--border-strong); transform: scale(0.985); }
+
+/* Which chair is singular state — one at a time, and the filter for everything
+   below it — so it answers in full gold, the same language owner.css gives
+   `.chip`, `.slot` and `.calendar-day`. The white specular is the literal
+   owner.css uses on `.btn-primary`: a gold fill wants a highlight, not the
+   0.72 white `--bevel-top` carries for an unfilled surface. */
+.ps-chair[aria-pressed='true'] {
+  border-color: var(--accent);
+  background-color: var(--accent-bg);
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+.ps-chair[aria-pressed='true'] .ps-chair-name,
+.ps-chair[aria-pressed='true'] .ps-chair-now { color: var(--accent-on); }
+/* --accent-on is the one legible ink on a gold fill in both moods, so the
+   second line keeps its rank by weight and opacity rather than by colour. */
+.ps-chair[aria-pressed='true'] .ps-chair-now { opacity: 0.82; }
+
+.ps-chair-head { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
+.ps-chair-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ps-chair-now {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--text-tertiary);
+  /* Two lines maximum: a long Bangla name must not stretch the strip. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ps-chair:hover { border-color: var(--border-strong); }
+  .ps-chair[aria-pressed='true']:hover { border-color: var(--accent); }
+}
+
+/* An :active transform is not a transition and survives the global duration
+   collapse, so it is neutralised by hand. */
+@media (prefers-reduced-motion: reduce) {
+  .ps-chair:active { transform: none; }
+}
+
+/* --- Day strip ------------------------------------------------------------ */
+
+.ps-days {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 0.375rem;
+}
+
+.ps-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  min-height: 44px;
+  padding: 0.4375rem 0.125rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--bevel-top);
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+.ps-day:active { transform: scale(0.96); }
+.ps-day small {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+/* Bangla has no case and its conjuncts come apart at wide tracking. */
+:root[data-lang='bn'] .ps-day small { letter-spacing: 0.02em; text-transform: none; }
+.ps-day strong {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  /* A date is a figure: UI face, tabular, never the display serif. */
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+/* Stated before the chosen day below: both are (0,2,0), so the chosen border
+   wins on order and a hover cannot pull the gold off it. */
+@media (hover: hover) and (pointer: fine) {
+  .ps-day:hover { border-color: var(--border-strong); }
+}
+
+/* An :active transform is not a transition and survives the global duration
+   collapse, so it is neutralised by hand. */
+@media (prefers-reduced-motion: reduce) {
+  .ps-day:active { transform: none; }
+}
+
+/* Which day, like which chair, is singular state. */
+.ps-day[aria-pressed='true'] {
+  border-color: var(--accent);
+  background-color: var(--accent-bg);
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+.ps-day[aria-pressed='true'] strong { color: var(--accent-on); }
+.ps-day[aria-pressed='true'] small { color: var(--accent-on); opacity: 0.86; }
+
+/* --- The master feed ------------------------------------------------------ */
+
+/* The stylist's name is what makes the owner's feed different from a
+   stylist's, so it gets its own line rather than hiding in the meta row. */
+.ps-stylist {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 0;
+}
+.ps-stylist svg { flex-shrink: 0; margin-top: 0.125rem; color: var(--accent-ink); }
+.ps-stylist span { min-width: 0; }
+/* --status-warning-ink is the legible text shade of the pair; the icon joins
+   it rather than staying gold, so the warning reads as one object. */
+.ps-stylist[data-none='true'] { color: var(--status-warning-ink); }
+.ps-stylist[data-none='true'] svg { color: currentColor; }
+
+.ps-appt-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.375rem;
+  flex-shrink: 0;
+}
+
+/* --- Roster --------------------------------------------------------------- */
+
+.ps-staff {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+/* --radius-lg, one elevation step, and nothing more. Eight of these sit in a
+   column: a second shadow per row is noise, and it costs real paint on a
+   mid-range Android. */
+.ps-staff-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  padding: 0.875rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--bevel-top), var(--elev-card);
+  transition: border-color var(--speed) var(--ease), box-shadow var(--speed) var(--ease);
+}
+/* A paused chair steps off the ladder rather than taking a new colour: it is
+   still on the roster, it is simply not taking anyone today. */
+.ps-staff-card[data-inactive='true'] { background-color: var(--bg-muted); box-shadow: var(--bevel-hair); }
+.ps-staff-card[data-inactive='true'] .ps-staff-open { opacity: 0.6; }
+
+@media (hover: hover) and (pointer: fine) {
+  .ps-staff-card:hover { border-color: var(--border-strong); }
+}
+
+.ps-staff-open {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 44px;
+  text-align: start;
+}
+.ps-staff-body { display: flex; flex-direction: column; gap: 0.1875rem; min-width: 0; flex: 1; }
+.ps-staff-name { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+/* Name first, and larger, on the two screens that are *about* a person.
+   Explicit selectors, because `.ps-staff-name` is also a service's name on the
+   menu screen and that card leads with its price. */
+.ps-staff-open .ps-staff-name { font-size: var(--fs-md); }
+h2.ps-staff-name { font-size: var(--fs-lg); }
+/* The job, under the name: the micro-caps eyebrow the rest of the owner app
+   uses for a label, so the two lines cannot be mistaken for one another. */
+.ps-staff-title {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+/* Tracking and case only, exactly like every other Bangla companion in this
+   app: owner.css keeps `.label` and `.pro-stat span` at --fs-2xs in both
+   languages, and a second size here would make one eyebrow taller than the
+   rest of the family on the same screen. */
+:root[data-lang='bn'] .ps-staff-title { letter-spacing: 0.02em; text-transform: none; }
+.ps-staff-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+/* The third fact on a roster card, and the only commercial one. */
+.ps-staff-rate {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-ink);
+}
+
+/* The same fading rule the rest of the app uses for a chapter break, at the
+   same height the 1px border took. */
+.ps-staff-foot {
+  padding-top: 0.6875rem;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+/* The person at the head of their own page — a masthead, not the first of
+   eight cards. The light falls from the top inside corner, matching the frame
+   atmosphere owner.css paints behind the whole column.
+
+   Block padding only. The inline gutter stays at `.card-pad`'s 1rem, because
+   at 360px this card carries a 4.5rem avatar beside a name, a job, a rating
+   and possibly a pill — the width belongs to that column, and the air this
+   screen is short of is vertical. */
+.ps-member-head.card-pad {
+  position: relative;
+  padding-block: var(--space-5);
+  background-image: radial-gradient(120% 9rem at 0% 0%, var(--accent-bg) 0%, transparent 64%);
+}
+.ps-member-head::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: var(--space-4);
+  height: 1px;
+  background-image: var(--rule-gradient);
+}
+/* The portrait gets a frame: a gold hairline at the alpha `--accent-bg-strong`
+   already carries, and one elevation step, so the face reads as the subject of
+   the page rather than another list avatar. `.avatar` is `overflow: hidden`
+   with a 50% radius, so the ring has to be an outer shadow, not a border. */
+.ps-member-head .avatar {
+  box-shadow:
+    0 0 0 1px var(--accent-bg-strong),
+    var(--elev-card);
+}
+
+/* A paused chair is the only warning these two screens carry, and it was the
+   one object saying something serious in plain coloured text while the
+   `<Callout tone="warning">` two sections below said the same kind of thing on
+   a tinted ground. It joins that idiom at its own, smaller scale: the `-bg`
+   tint of its own pair for the ground, `-ink` kept as the legible text. The
+   --status-* pair is used exactly as it was cut — tint fills, ink reads. */
+.ps-inactive-note {
+  display: flex;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--status-warning-bg);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--status-warning-ink);
+}
+.ps-inactive-note svg { flex-shrink: 0; margin-top: 0.125rem; }
+
+/* --- Sheets: checklists and pickers --------------------------------------- */
+
+/* A long roster or menu inside a sheet scrolls on its own so the footer
+   button stays reachable with a thumb. */
+.ps-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 15rem;
+  overflow-y: auto;
+  padding: 0.625rem 0.75rem;
+  background-color: var(--bg-muted);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  /* A recessed well: the gold inner hairline is what says "this list has its
+     own edge" without a second border. */
+  box-shadow: var(--bevel-hair);
+}
+
+.ps-pick {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.625rem 0.75rem;
+  text-align: start;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+}
+.ps-pick[aria-disabled='true'] { opacity: 0.55; }
+.ps-pick-body { display: flex; flex-direction: column; gap: 0.125rem; min-width: 0; flex: 1; }
+.ps-pick-name { font-size: 0.9375rem; font-weight: 600; color: var(--text-primary); }
+.ps-pick-sub { font-size: 0.8125rem; color: var(--text-tertiary); }
+
+/* Suffix inside a number field: the % on a commission rate. */
+.ps-suffix { font-size: 0.875rem; font-weight: 600; color: var(--text-tertiary); }
+
+/* --- Opening-hours editor -------------------------------------------------- */
+
+.ps-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.ps-hour-day {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+}
+.ps-hour-day[data-closed='true'] { background-color: var(--bg-muted); }
+
+.ps-hour-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.ps-hour-name { font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); }
+
+.ps-hour-times {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.ps-hour-times .field { gap: 0.25rem; }
+.ps-hour-times .field-label { font-size: 0.75rem; }
+
+/* A compact switch for "closed today", so seven of them do not shout. */
+.ps-closed-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding-inline: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.ps-closed-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ps-closed-toggle .switch-track { flex-shrink: 0; }
+.ps-closed-toggle input:checked + .switch-track { background-color: var(--accent); }
+.ps-closed-toggle input:checked + .switch-track::after { transform: translateX(1.25rem); }
+.ps-closed-toggle input:focus-visible + .switch-track { box-shadow: 0 0 0 3px var(--ring); }
+
+/* Read-only list on the profile screen. */
+.ps-hour-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9375rem;
+}
+.ps-hour-row dt { color: var(--text-secondary); }
+.ps-hour-row dd { font-variant-numeric: tabular-nums; color: var(--text-primary); font-weight: 500; }
+.ps-hour-row[data-today='true'] dt,
+.ps-hour-row[data-today='true'] dd { color: var(--accent-ink); font-weight: 700; }
+.ps-hour-row[data-closed='true'] dd { color: var(--text-tertiary); font-weight: 500; }
+
+/* --- Analytics ------------------------------------------------------------- */
+
+/* The headline figures and the one line that finishes their arithmetic. They
+   are grouped so the fee note sits with the revenue it qualifies rather than
+   floating a screen-body gap away from it. */
+.ps-headline { display: flex; flex-direction: column; gap: 0.625rem; }
+
+/* A quiet caption under a figure or a ranking: the platform's cut, the rate a
+   commission was worked out at, the takings with no chair against them. It is
+   the smallest voice on the screen on purpose — each one qualifies a number
+   rather than being one. */
+.ps-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-tertiary);
+}
+
+.ps-ranks { display: flex; flex-direction: column; gap: 0.875rem; list-style: none; margin: 0; padding: 0; }
+
+.ps-rank { display: flex; flex-direction: column; gap: 0.375rem; }
+.ps-rank-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.ps-rank-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ps-rank-value {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.ps-rank-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.625rem;
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+}
+
+.ps-bar {
+  display: block;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--bg-muted);
+  overflow: hidden;
+}
+.ps-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background-color: var(--accent-bg-strong);
+}
+.ps-rank[data-top='true'] .ps-bar-fill { background-color: var(--accent); }
+
+/* Rating breakdown, 5 down to 1. */
+.ps-dist { display: flex; flex-direction: column; gap: 0.5rem; }
+.ps-dist-row {
+  display: grid;
+  grid-template-columns: 3.25rem 1fr 2.25rem;
+  align-items: center;
+  gap: 0.625rem;
+}
+.ps-dist-row small {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.ps-dist-row small:last-child { text-align: end; }
+
+.ps-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.25rem 0.75rem 0.5rem;
+}
+.ps-score strong {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+
+/* --- Takings split --------------------------------------------------------- */
+
+.ps-split { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.ps-split-row {
+  display: grid;
+  grid-template-columns: 0.625rem 1fr auto;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.9375rem;
+}
+.ps-split-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+/* No method was recorded, so there is no brand hue to show. An outline reads
+   as the absence of an answer; a filled dot would make it look like one more
+   way of paying — and the only filled dot it could borrow is cash's. */
+.ps-split-dot[data-unrecorded='true'] {
+  background-color: transparent;
+  border: 1px dashed var(--text-tertiary);
+}
+.ps-split-name { color: var(--text-secondary); min-width: 0; }
+.ps-split-value {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+.ps-split-share {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-align: end;
+}
+
+/* --- Cover --------------------------------------------------------------- */
+
+.ps-cover {
+  position: relative;
+  /* Full bleed under the header, inside a normally padded screen body. */
+  margin-inline: calc(-1 * var(--screen-padding));
+  margin-top: calc(-1 * var(--screen-padding));
+}
+.ps-cover .art { border-radius: 0; }
+
+.ps-cover-badges {
+  position: absolute;
+  inset-block-end: 0.625rem;
+  inset-inline-start: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+
+/* --- Section headings ------------------------------------------------------
+   The owner's screens use the same quiet uppercase label the profile screens
+   use, so a reused <LanguageSection /> sits beside a salon section without
+   two heading styles arguing. This adds the edit affordance to that label. */
+
+.ps-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+/* Chapter rhythm. The densest owner screen is a run of eight short sections,
+   and what it needs is a mark between them — not more air inside their rows.
+   `.ps-chapter` is the same mark for a section head that carries no button. */
+.ps-edit-head,
+.ps-chapter {
+  padding-bottom: 0.5rem;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+.ps-edit-head button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: var(--touch-target);
+  padding-inline: var(--space-2);
+  /* Cancels the padding it just gained, so the label still lines up with the
+     inline edge of the card underneath. `.ps-edit-head` is a direct child of
+     `.section`, so the half-rem overhang lands inside the screen's own 1rem
+     gutter and nothing can scroll sideways. Logical, so it survives an RTL
+     language if one is ever added. */
+  margin-inline-end: calc(var(--space-2) * -1);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  color: var(--accent-ink);
+  white-space: nowrap;
+  /* The affordance an owner taps five times on a staff member and four on the
+     shopfront, given the material of a control instead of floating as gold
+     text. The 44px target above is untouched; the padding only grows it. */
+  border-radius: var(--radius);
+  background-color: var(--accent-bg);
+  box-shadow: var(--bevel-hair);
+  transition:
+    background-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease);
+}
+@media (hover: hover) and (pointer: fine) {
+  .ps-edit-head button:hover { background-color: var(--accent-bg-strong); }
+}
+
+.ps-subhead h4 { font-size: 0.9375rem; font-weight: 700; }
+
+/* Four headline numbers read better two-by-two than three-then-one. */
+.ps-stats-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Legend for the revenue chart's highlighted column. */
+.ps-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+.ps-legend::before {
+  content: '';
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: var(--radius-xs);
+  background-color: var(--accent);
+}
+
+/* --- Narrow phones --------------------------------------------------------- */
+
+@media (max-width: 359px) {
+  .ps-chair { width: 8.25rem; }
+  .ps-hour-times { grid-template-columns: minmax(0, 1fr); }
+  .ps-dist-row { grid-template-columns: 2.75rem 1fr 2rem; }
+}
+
+/* A real shopfront photograph fills the same frame the placeholder art does. */
+.ps-cover-photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* A booking waiting for an answer opens the appointment it belongs to. */
+.ps-appt-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.ps-appt-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-lg); }
+/* The day a booking falls on, above the row it belongs to. */
+.ps-appt-open > .label { display: block; margin-bottom: 0.25rem; }
+
+/* The salon's own picture beside its name — the signboard, not the room.
+   It overlaps the cover slightly so the two read as one masthead. */
+.sp-identity {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.875rem;
+  margin-top: -2.25rem;
+  position: relative;
+  z-index: 1;
+}
+.sp-identity > .avatar { flex: none; box-shadow: 0 2px 12px rgb(0 0 0 / 0.18); }
+.sp-identity .grow { padding-bottom: 0.125rem; }
+
+/* ==========================================================================
+ * :root[data-app='salon_owner'] — the shared chassis, re-dressed
+ *
+ * `.pro-empty-day`, `.pro-appt*`, `.pro-stat`, `.pro-section-head`, `.pb-day`
+ * and `.pb-hours-row` all render on a barber's or a salon employee's screens
+ * too, and the pickers above are rendered by WalkInSheet, which those two
+ * roles open from their own queue. None of them is edited in place: their base
+ * rules — above, and in provider.css / provider-business.css — stay exactly as
+ * they are, and this block layers over them, scoped to the attribute AppFrame
+ * stamps on <html> for a signed-in owner.
+ *
+ * Order matters here. index.css imports owner.css *after* this file, so a rule
+ * that has to beat one of owner.css's own is stated at a higher specificity
+ * rather than trusting import order — each one is marked where it happens.
+ *
+ * Every comment in this block is `*`-prefixed on purpose: check-scope.mjs
+ * accumulates a multi-line selector list by appending any line that is not so
+ * prefixed, and a comma in prose then reads as a second, unscoped selector.
+ * ========================================================================== */
+
+/* --------------------------------------------------------------------------
+ * The empty floor
+ *
+ * The salon floor is the owner's Today screen and it is empty for most of the
+ * morning. That is a real, frequent, legitimate state — and a dashed grey box
+ * reads as a page that failed to load. The same three strings, given a frame:
+ * a gold rule across the top, a lit ground, and the icon in a ring.
+ * -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .pro-empty-day {
+  position: relative;
+  gap: var(--space-2);
+  padding: var(--space-8) var(--space-5);
+  border-style: solid;
+  border-color: var(--border-light);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+  background-image:
+    radial-gradient(70% 7rem at 50% 0.5rem, var(--accent-bg) 0%, transparent 72%),
+    var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+:root[data-app='salon_owner'] .pro-empty-day::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  height: 1px;
+  background-image: var(--rule-gradient);
+}
+
+/* lucide writes width and height as presentation attributes, so padding grows
+ * the box around a drawing that stays 22px. A ring, with no element added and
+ * no markup touched. `box-sizing: content-box` is not optional: base.css sets
+ * border-box on everything, and 0.875rem of padding inside a 22px box would
+ * collapse the drawing to nothing at all. */
+:root[data-app='salon_owner'] .pro-empty-day > svg {
+  box-sizing: content-box;
+  padding: 0.875rem;
+  border-radius: 50%;
+  color: var(--accent-ink);
+  background-color: var(--accent-bg);
+  box-shadow: var(--bevel-hair);
+}
+
+/* An explicit selector, never `strong` by tag — rule 4 in owner.css. Every
+ * string that reaches this one is a title: nothing on the floor, nobody in
+ * that chair, none today. No figure ever lands here. */
+:root[data-app='salon_owner'] .pro-empty-day strong {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--text-primary);
+}
+
+:root[data-app='salon_owner'] .pro-empty-day p,
+:root[data-app='salon_owner'] .pro-empty-day > span {
+  max-width: 26rem;
+  color: var(--text-tertiary);
+  line-height: var(--leading-normal);
+}
+
+:root[data-app='salon_owner'] .pro-empty-day .btn { margin-top: var(--space-2); }
+
+/* --------------------------------------------------------------------------
+ * The feed
+ *
+ * Row height, padding and leading are untouched. Rows-per-screen is the
+ * product on this screen — it is opened twenty times a shift to find one
+ * booking — so what changes is the quality of the edges.
+ * -------------------------------------------------------------------------- */
+
+/* A ledger rule between the clock and the booking, fading out at both ends.
+ * It rides a pseudo-element parked in the row's own 0.75rem gutter rather than
+ * a background on the time column, for two reasons. `.pro-appt-time` is
+ * `flex-shrink: 0` with a 3.25rem floor that provider-queue.css drops to
+ * 2.875rem under 380px, so inline padding there would have come straight out
+ * of the client's name; and `inset-inline-end` is a logical property, which
+ * `background-position` has no form of. */
+:root[data-app='salon_owner'] .pro-appt-time {
+  position: relative;
+}
+
+:root[data-app='salon_owner'] .pro-appt-time::after {
+  content: '';
+  position: absolute;
+  inset-block: 0.125rem;
+  inset-inline-end: -0.375rem;
+  width: 1px;
+  background-image: linear-gradient(180deg, transparent, var(--border-color) 22%, var(--border-color) 78%, transparent);
+}
+
+/* The client in the chair, given a gold edge on the accent ground provider.css
+ * already paints. (0,4,0) so it out-specifies owner.css's own `.pro-appt`
+ * box-shadow, which this replaces rather than joins. An inset shadow rather
+ * than a border so the row does not shift by 2px when it goes live. */
+:root[data-app='salon_owner'] .pro-appt[data-live='true'] {
+  background-image: var(--accent-gradient-soft);
+  box-shadow: inset 3px 0 0 var(--accent), var(--bevel-top);
+}
+
+/* A booking waiting on an answer is a way in, so the row it wraps answers to
+ * the pointer as one object. */
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='salon_owner'] .ps-appt-open:hover .pro-appt {
+    border-color: var(--border-strong);
+  }
+}
+
+/* The number beside a section head is a count. */
+:root[data-app='salon_owner'] .pro-section-head span {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+ * The masthead
+ *
+ * One rung up the ladder, and only here. owner.css puts every `.card` on
+ * `--bevel-top, --elev-card`; the one card that is a person rather than a
+ * section takes `--elev-raised`, which is how the screen says *this is what
+ * the page is about* without spending a single row of scroll on saying it.
+ *
+ * (0,5,0) on purpose. owner.css restates `.card`'s box-shadow at (0,3,0) for
+ * the day mood — because ui.css's own light-mode card rule is (0,2,0) and it
+ * refused to win on import order — and owner.css is imported after this file,
+ * so anything at (0,3,0) here would tie and lose.
+ * -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .card.card-pad.ps-member-head {
+  box-shadow: var(--bevel-top), var(--elev-raised);
+}
+
+/* --------------------------------------------------------------------------
+ * Headline numbers
+ *
+ * (0,4,0): owner.css sets `border-color` on `.pro-stat` at (0,3,0) and is
+ * imported after this file, so the one tile that carries the answer has to
+ * out-specify it rather than tie with it.
+ * -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .pro-stat.pro-stat-accent {
+  border-color: var(--accent-bg-strong);
+  background-image: var(--accent-gradient-soft);
+}
+
+/* --------------------------------------------------------------------------
+ * The pickers
+ *
+ * The base rules near the top of this file are WalkInSheet's as much as the
+ * owner's, and WalkInSheet opens on the barber's and the employee's queue.
+ * They stay; the owner gets these.
+ * -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .ps-pick {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--bevel-top), var(--bevel-hair);
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease);
+}
+
+/* The chosen row: gold border, gold glow, and the *soft* wash rather than the
+ * full gradient the chair strip and the day strip take.
+ *
+ * This is not a softening for its own sake. WalkInSheet, ReassignSheet and
+ * PaymentSheet each mark their chosen row with a lucide <Check> carrying an
+ * INLINE `style={{ color: 'var(--accent-ink)' }}`, and an inline style beats
+ * every stylesheet rule that is not !important. On a full `--accent-gradient`
+ * fill that tick is #7a531a on #b88646 in the day mood and #e8be8e on #dcae76
+ * in the night one — the confirmation glyph would disappear into its own
+ * background, in the night mood almost completely. On the soft wash the same
+ * ink stays the legible gold the token was cut to be, so the row's name and
+ * its tick read as one object. The strips keep the full gold: their contents
+ * are plain text this file owns, and they flip to `--accent-on`.
+ *
+ * `[aria-checked]` joins `[aria-pressed]` because PaymentSheet's list is a
+ * radiogroup and WalkInSheet's is a toggle group — the same picker, the same
+ * chosen state, two ARIA spellings. */
+:root[data-app='salon_owner'] .ps-pick[aria-pressed='true'],
+:root[data-app='salon_owner'] .ps-pick[aria-checked='true'] {
+  border-color: var(--accent);
+  background-image: var(--accent-gradient-soft);
+  box-shadow: var(--bevel-top), var(--glow-accent);
+}
+
+:root[data-app='salon_owner'] .ps-pick[aria-pressed='true'] .ps-pick-name,
+:root[data-app='salon_owner'] .ps-pick[aria-checked='true'] .ps-pick-name {
+  color: var(--accent-ink);
+}
+
+/* Already here is a state, not a failure — it keeps the wash, so it reads as
+ * *present*, and loses the gold border and the glow, which are reserved for
+ * the row a tap would actually choose. Reassignment is the only place that
+ * attribute is ever set. */
+:root[data-app='salon_owner'] .ps-pick[aria-disabled='true'] {
+  opacity: 0.78;
+  box-shadow: var(--bevel-hair);
+  background-image: var(--accent-gradient-soft);
+}
+
+/* `[aria-checked]` has to be excluded alongside `[aria-pressed]`: this
+ * selector is (0,6,0) and the chosen rule above is (0,4,0), so without it
+ * hovering the chosen payment method would quietly pull the gold border off
+ * the row the owner just picked. */
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='salon_owner']
+    .ps-pick:not([aria-disabled='true']):not([aria-pressed='true']):not([aria-checked='true']):hover {
+    border-color: var(--border-strong);
+    background-color: var(--hover-bg);
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * The week, read-only
+ *
+ * WeekHoursList renders on a barber's and an employee's own hours too, so the
+ * ledger contrast is scoped. Nothing here adds a pixel of height: seven rows
+ * on the densest owner screen.
+ * -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .pb-hours-row span:first-child {
+  color: var(--text-tertiary);
+}
+
+:root[data-app='salon_owner'] .pb-hours-row span:last-child {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* A closed day stays quiet. (0,5,1), because the rule above would otherwise
+ * out-specify base.css's `.dim`. */
+:root[data-app='salon_owner'] .pb-hours-row span:last-child.dim {
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+/* A day in the hours editor, ruled rather than bordered. The line sits at the
+ * bottom of the padding box, exactly where the 1px border was. */
+:root[data-app='salon_owner'] .pb-day {
+  border-bottom-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='salon_owner'] .pb-day:last-child {
+  background-image: none;
+}

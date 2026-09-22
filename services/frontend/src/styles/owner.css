@@ -1,0 +1,524 @@
+/* ==========================================================================
+   The salon owner's app — "Atelier, at the counter"
+
+   Scoped to `:root[data-app='salon_owner']`, the value AppFrame stamps on
+   <html> for a signed-in owner. The barber and the salon employee share almost
+   every primitive on these screens — `.pro-pill`, `.pro-stat`, `.pro-appt`,
+   `.pro-chart`, the whole of provider.css — so none of them is edited in place.
+   Their base rules stay exactly as they are and this file layers over them.
+
+   The customer app's four hard rules apply here verbatim, and for the same
+   silent-failure reasons (see the header of customer.css):
+
+     1. No filter / backdrop-filter / transform / contain / will-change on
+        .app-frame — .bottom-nav and .toaster are position: fixed.
+     2. No overflow: hidden on .app-frame or .screen — .header, .sticky-footer
+        and .offline-banner are position: sticky.
+     3. The document is the scroll container.
+     4. No display serif on a figure. formatBdt writes ৳ (U+09F3) and Bangla
+        renders Bengali numerals; a Latin serif has neither. That bites harder
+        here than in the customer app, because almost everything an owner reads
+        is a number — and the customer app's tag-form `h1, h2` rule is actively
+        wrong here: `.pq-detail-hero h2` is a TIME RANGE and `.ps-staff-name` is
+        an h2 at 16px. The serif is bound by explicit selector below, never by
+        tag. `font-variant-numeric: tabular-nums` is the reliable marker of
+        "this is a figure" throughout the provider stylesheets.
+
+   Two more, specific to this app:
+
+     5. The `:root[data-app='salon_owner']` block may declare custom properties
+        and nothing else. `useLockBodyScroll` sets `overflow: hidden` on <body>
+        for all thirteen owner sheets plus ConfirmDialog and ActionSheet, and
+        that only reaches the viewport while <html>'s own overflow is `visible`.
+        Contain a bleed on the bleeding element, never on the root.
+     6. Never touch `.carousel-track` or its children. Carousel derives its
+        index from `scrollLeft / clientWidth` and sets `aria-hidden` per slide,
+        so any padding, gap or border there desyncs the dots and hides the slide
+        the owner is looking at. `.carousel`, `.carousel-dots` and
+        `.carousel-counter` are fair game — SalonProfilePage's cover is the only
+        carousel in the owner app.
+
+   WHERE THIS DELIBERATELY DIVERGES FROM customer.css
+
+   A shop window and a workbench should not be laid out the same way. The
+   customer app is spacious, photographic and editorial because someone is
+   browsing; an owner is working a floor, and rows-per-screen is the product.
+   So this file takes the brand — palette, voice, elevation, gold, focus,
+   chrome — and refuses four things:
+
+     - the 1.25rem gutter (kept at 1rem: a seven-across day strip and a
+       three-across slot grid are already tight at 360px). Air is bought
+       vertically instead, between sections rather than inside rows.
+     - --radius-xl on cards (--radius-lg: eight staff cards in a column at
+       1.25rem eat their own rhythm).
+     - --leading-relaxed and --space-5 padding on tabular rows, which would
+       cost ~40px of scroll on the analytics screen and weaken the vertical
+       alignment that makes a column of figures scannable.
+     - a drop shadow per appointment row. Fifteen shadowed cards in a column is
+       noise, and it costs real paint on a mid-range Android.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Metrics — air between sections, not inside rows
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .screen-body {
+  gap: var(--space-6);
+}
+:root[data-app='salon_owner'] .section {
+  gap: var(--space-4);
+}
+
+/* --------------------------------------------------------------------------
+   2. Voice
+
+   The display serif goes on headings only. Never on `.pro-stat strong`,
+   `.ps-score`, `.ps-rank-value`, `.pq-appt-end` or anything else carrying
+   `font-variant-numeric: tabular-nums` — see rule 4 above.
+   -------------------------------------------------------------------------- */
+
+/* By explicit selector, never by tag — see rule 4. An owner's h2 is as likely
+   to be a time range or a sum as it is to be a name. */
+:root[data-app='salon_owner'] h1,
+:root[data-app='salon_owner'] .display,
+:root[data-app='salon_owner'] .title,
+:root[data-app='salon_owner'] .empty h3,
+:root[data-app='salon_owner'] .sp-identity h2,
+:root[data-app='salon_owner'] .ps-staff-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+
+:root[data-app='salon_owner'] .header-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+/* One heading voice across all six screens. The owner app already leads five
+   of them with `.label`; `.pro-section-head h3` and `.ps-subhead h4` are the
+   two that shout instead, so they join the same micro-caps family. */
+:root[data-app='salon_owner'] .label,
+:root[data-app='salon_owner'] .pro-section-head h3,
+:root[data-app='salon_owner'] .ps-subhead h4 {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+:root[data-app='salon_owner'] .pro-section-head span {
+  font-size: var(--fs-xs);
+  color: var(--text-tertiary);
+}
+
+/* Bangla has no case and its conjuncts come apart at 0.15em. base.css narrows
+   `.label` for exactly this reason, and the rule above would out-specify it. */
+:root[data-lang='bn'][data-app='salon_owner'] .label,
+:root[data-lang='bn'][data-app='salon_owner'] .pro-section-head h3,
+:root[data-lang='bn'][data-app='salon_owner'] .ps-subhead h4 {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   3. Surfaces
+
+   The base kit gives a dark card no drop shadow at all, which is why the night
+   mood reads as one flat sheet. This is the change that fixes it.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .card,
+:root[data-app='salon_owner'] .list-card,
+:root[data-app='salon_owner'] .pro-stat {
+  border-radius: var(--radius-lg);
+  border-color: var(--border-light);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+/* ui.css's light-mode card rule is two selectors at (0,2,0); the rule above is
+   (0,2,0) too and would win only on import order. Restated at (0,3,0) so a
+   reshuffle cannot undo it. */
+:root.light-theme[data-app='salon_owner'] .card,
+:root:not(.dark-theme)[data-app='salon_owner'] .card,
+:root.light-theme[data-app='salon_owner'] .list-card,
+:root:not(.dark-theme)[data-app='salon_owner'] .list-card,
+:root.light-theme[data-app='salon_owner'] .pro-stat,
+:root:not(.dark-theme)[data-app='salon_owner'] .pro-stat {
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+/* The headline numbers: the most-looked-at object on four of six screens. */
+:root[data-app='salon_owner'] .pro-stat {
+  padding: var(--space-4);
+  gap: var(--space-1);
+}
+:root[data-app='salon_owner'] .pro-stat strong {
+  font-size: var(--fs-xl);
+  letter-spacing: var(--tracking-tight);
+  /* UI face, tabular — this is a count or a sum, not a headline. */
+  font-variant-numeric: tabular-nums;
+}
+:root[data-app='salon_owner'] .pro-stat span {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+:root[data-lang='bn'][data-app='salon_owner'] .pro-stat span {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   3b. The shopfront — the salon's mark on its own cover
+
+   The same treatment the customer's professional page gets, because it is the
+   same object seen from the other side: the cover is the room, the logo is the
+   business, and the logo sits ON the cover rather than under it.
+
+   Two things were stopping that. provider-salon.css replaces the ring that
+   `ring` asks for with a bare drop shadow, which leaves a dark logo with no
+   edge at all against a dark photograph; and the overlap is a flat -2.25rem
+   that predates .screen-body's gap, so the gap pushed the mark back down until
+   only a sixth of it reached the cover.
+   -------------------------------------------------------------------------- */
+
+/* The row sits flush under the cover — only the screen body's own gap is taken
+   back. Raising the whole row would carry the salon's name up onto the
+   photograph with it, which is what the customer page avoids by stacking. */
+:root[data-app='salon_owner'] .sp-identity {
+  margin-top: calc(-1 * var(--space-6));
+  align-items: flex-start;
+}
+
+/* The mark alone rises, by half its own height. `align-self` keeps its margin
+   box anchored to the top of the row, so the negative margin lifts the border
+   box onto the cover and nothing else in the row moves. */
+:root[data-app='salon_owner'] .sp-identity > .avatar {
+  align-self: flex-start;
+  margin-top: -2.25rem;
+  box-shadow: 0 0 0 3px var(--bg-primary), 0 6px 16px rgb(0 0 0 / 0.3);
+}
+
+/* Bottom-aligned to the mark rather than to the row, so the name keeps sitting
+   beside the logo the way it did before. */
+:root[data-app='salon_owner'] .sp-identity > .grow {
+  padding-top: var(--space-1);
+}
+
+/* The badges sit on the photograph, so they need their own ground rather than
+   the theme's — a bright cover would otherwise swallow them. Media tokens do
+   not flip with the mood, which is the point: a photograph does not either. */
+:root[data-app='salon_owner'] .ps-cover-badges {
+  padding: var(--space-2) var(--space-3) var(--space-2) 0;
+}
+
+/* --------------------------------------------------------------------------
+   4. Gold as a material
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .btn {
+  border-radius: var(--radius);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+  /* Named properties, not `all`: the moment a gradient background-image is
+     added, `all` animates it on every state change. */
+  transition:
+    background-color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+
+:root[data-app='salon_owner'] .btn-primary {
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+/* The sheen rides a pseudo-element so it never touches the button's own
+   background and never animates layout. */
+:root[data-app='salon_owner'] .btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--sheen);
+  pointer-events: none;
+}
+:root[data-app='salon_owner'] .btn-primary:active:not(:disabled) {
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.22);
+}
+:root[data-app='salon_owner'] .btn-primary:disabled {
+  box-shadow: none;
+}
+:root[data-app='salon_owner'] .btn-secondary,
+:root[data-app='salon_owner'] .btn-outline {
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+/* --------------------------------------------------------------------------
+   5. Chosen things
+
+   Two intensities, on purpose. Full gold where the state is singular — which
+   chair, which day, which tab. The soft wash where it repeats down a list,
+   because fifteen glowing rows is not a highlight, it is a background.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .chip[aria-pressed='true'],
+:root[data-app='salon_owner'] .slot[aria-pressed='true'],
+:root[data-app='salon_owner'] .calendar-day[aria-pressed='true'],
+:root[data-app='salon_owner'] .segmented button[aria-pressed='true'],
+:root[data-app='salon_owner'] .badge-solid {
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent);
+}
+
+:root[data-app='salon_owner'] .chip,
+:root[data-app='salon_owner'] .slot {
+  transition:
+    background-color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease),
+    color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease);
+}
+
+/* The status pill joins the micro-caps family rather than sitting as the one
+   lowercase small-type object on the screen. The --status-* colour pairs are a
+   contrast contract (vivid for fills, -ink for text) and are left alone. */
+:root[data-app='salon_owner'] .pro-pill {
+  font-size: var(--fs-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  box-shadow: var(--bevel-hair);
+}
+:root[data-lang='bn'][data-app='salon_owner'] .pro-pill {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   6. Dense rows — material, not dimensional
+
+   An appointment row gets a lit hairline and a gold live-state, and keeps its
+   height, its padding and its leading. The luxury signal on a working list is
+   the quality of the edge, not the amount of air.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .pro-appt {
+  box-shadow: var(--bevel-hair);
+  transition:
+    border-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease);
+}
+:root[data-app='salon_owner'] .pro-appt-name {
+  letter-spacing: var(--tracking-tight);
+}
+
+/* --------------------------------------------------------------------------
+   7. Charts
+
+   Only the peak bar takes the gradient. Gilding every bar would destroy the
+   one thing the chart is for: a gradient reads as varying density along its
+   length, so a column of them stops being comparable by height.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .pro-chart-col[data-peak='true'] .pro-chart-bar {
+  background-image: var(--accent-gradient);
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   8. Chrome
+
+   The blur and the hairlines go on the bars themselves. Never on .app-frame —
+   see rule 1 at the top of this file.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .header {
+  border-bottom-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='salon_owner'] .bottom-nav {
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+/* The lit tab joins the gold language. */
+:root[data-app='salon_owner'] .nav-item[aria-current='page']::before {
+  background-image: var(--accent-gradient);
+}
+
+/* Today is the hero tab, and layout.css paints every hero icon in --accent
+   whatever screen you are on — so one icon in the bar sat gold while the other
+   four were grey, on every screen except the one it points at. The lit bar over
+   the current tab already says "you are here". `inherit` hands the icon back to
+   .nav-item's own colour, so Today behaves like Requests, Staff, Salon and
+   Settings: tertiary at rest, --accent-ink when it is the current tab. */
+:root[data-app='salon_owner'] .nav-item[data-hero='true'] svg {
+  color: inherit;
+}
+
+:root[data-app='salon_owner'] .sticky-footer {
+  box-shadow: var(--elev-sheet);
+}
+:root[data-app='salon_owner'] .footer-meta strong {
+  letter-spacing: var(--tracking-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------------------
+   9. Overlays
+
+   The highest-leverage rule in the file. The owner app is sheet-driven in a way
+   the customer app is not — walk-ins, payments, reassignment, staff, services,
+   hours and the salon's own details all arrive through this one primitive — and
+   all of it portals to document.body, which is why the scope sits on <html>.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sheet {
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  box-shadow: var(--bevel-top), var(--elev-sheet);
+  animation-duration: var(--speed-slower);
+  animation-timing-function: var(--ease-emphasized);
+}
+
+:root[data-app='salon_owner'] .modal {
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--bevel-top), var(--elev-modal);
+  animation-duration: var(--speed-slower);
+  animation-timing-function: var(--ease-emphasized);
+}
+
+:root[data-app='salon_owner'] .sheet-scrim,
+:root[data-app='salon_owner'] .modal-scrim {
+  background-color: var(--scrim-glass);
+  backdrop-filter: blur(3px) saturate(110%);
+}
+
+/* An owner's action sheet carries six choices where a customer's carries two,
+   so the rows keep their height and gain a fading rule instead. */
+:root[data-app='salon_owner'] .action-item + .action-item {
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+:root[data-app='salon_owner'] .toast {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-raised);
+}
+
+/* --------------------------------------------------------------------------
+   10. The frame
+
+   Atmosphere on a pseudo-element, so .app-frame never becomes a containing
+   block for the fixed tab bar.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .app-frame::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(110% 30rem at 50% -4rem, var(--accent-bg) 0%, transparent 58%),
+    radial-gradient(140% 38rem at 50% 108%, var(--scrim-soft) 0%, transparent 60%);
+}
+
+:root[data-app='salon_owner'] .screen,
+:root[data-app='salon_owner'] .offline-banner {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 30rem) {
+  :root[data-app='salon_owner'] .app-frame {
+    border-inline-color: var(--border-color);
+    box-shadow: var(--elev-raised);
+  }
+}
+
+/* A wider step than the customer's 34rem. An owner is the role most likely to
+   be at a counter tablet or a desk all day, and at 36rem the four-across stats
+   grid and the seven-column day strip both stop being cramped. */
+@media (min-width: 75rem) {
+  :root[data-app='salon_owner'] {
+    --frame-width: 36rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   11. Motion
+
+   Route changes settle a little faster than the customer's 0.46s: an owner
+   moves Today → Requests → Staff → Today dozens of times a shift, and a
+   deliberate arrival becomes a wait when you have seen it forty times.
+
+   `.stagger` is deliberately NOT applied globally here. It belongs on the
+   editorial lists — the roster, the salon's own sections, the analytics ranks —
+   and not on the queue or the requests feed, which are the screens someone
+   opens twenty times a shift to find one row.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .screen {
+  animation-duration: var(--speed-slow);
+  animation-timing-function: var(--ease-emphasized);
+}
+
+/* `backwards`, never `both`. `both` includes `forwards`, which keeps the last
+   keyframe applied for the element's life — and an animation outranks a normal
+   declaration, so a screen-in ending on `transform: none` would silently pin
+   every staggered child and kill its hover and press. */
+:root[data-app='salon_owner'] .stagger > * {
+  animation: screen-in var(--speed-slow) var(--ease-out) backwards;
+}
+:root[data-app='salon_owner'] .stagger > :nth-child(1) { animation-delay: calc(var(--stagger) * 0); }
+:root[data-app='salon_owner'] .stagger > :nth-child(2) { animation-delay: calc(var(--stagger) * 1); }
+:root[data-app='salon_owner'] .stagger > :nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
+:root[data-app='salon_owner'] .stagger > :nth-child(4) { animation-delay: calc(var(--stagger) * 3); }
+:root[data-app='salon_owner'] .stagger > :nth-child(5) { animation-delay: calc(var(--stagger) * 4); }
+:root[data-app='salon_owner'] .stagger > :nth-child(6) { animation-delay: calc(var(--stagger) * 5); }
+:root[data-app='salon_owner'] .stagger > :nth-child(n + 7) { animation-delay: calc(var(--stagger) * 6); }
+
+/* A gold hairline that fades at both ends rather than butting into the gutter. */
+:root[data-app='salon_owner'] .rule-gold {
+  height: 1px;
+  border: 0;
+  background-image: var(--rule-gradient);
+}
+
+/* --------------------------------------------------------------------------
+   12. Focus
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] :focus-visible {
+  outline-color: var(--accent-line);
+  border-radius: inherit;
+  box-shadow: 0 0 0 5px var(--ring);
+}
+
+/* --------------------------------------------------------------------------
+   13. Reduced motion
+
+   base.css collapses transition durations, but a `transform` set on :active is
+   not a transition and survives that.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-app='salon_owner'] .stagger > * { animation-delay: 0s !important; }
+  :root[data-app='salon_owner'] .btn:active:not(:disabled),
+  :root[data-app='salon_owner'] .chip:active,
+  :root[data-app='salon_owner'] .slot:active { transform: none; }
+}

@@ -1,0 +1,401 @@
+/* ==========================================================================
+   The customer's app — "Atelier"
+
+   Everything in this file is scoped to `:root[data-app='customer']`, the
+   attribute AppFrame stamps on <html> for a signed-in customer and nobody
+   else. The four professional apps share every primitive this file re-dresses
+   — .btn, .card, .sheet, .header, .bottom-nav — so none of them is edited in
+   place. The base rules in ui.css and layout.css stay exactly as they are and
+   this file layers over them.
+
+   Why the attribute lives on <html> rather than on .app-frame:
+
+     - Modal and BottomSheet createPortal into document.body, so every dialog
+       and sheet renders outside .app-frame. Only a hook on the root reaches
+       them.
+     - <html> also carries .dark-theme / .light-theme, so a customer token
+       override declared here composes with the mood instead of shadowing it.
+     - html and body paint the desktop gutter, which no attribute on a
+       descendant could ever reach.
+
+   Four things must never be done to .app-frame or .screen, because each fails
+   silently and only on some viewports:
+
+     1. No `filter`, `backdrop-filter`, `transform`, `perspective`, `contain`
+        or `will-change: transform|filter` on .app-frame. Any of them makes it
+        a containing block, and .bottom-nav and .toaster are `position: fixed`
+        — at desktop width the tab bar would jump off-centre with the column.
+        Atmosphere goes on a pseudo-element instead; the pixels are identical.
+     2. No `overflow: hidden` on .app-frame or .screen. .header,
+        .sticky-footer and .offline-banner are `position: sticky` and would
+        stop sticking everywhere, with no error.
+     3. The document is the scroll container. ScrollToTop saves and restores
+        window.scrollY per history entry, so the frame must never become its
+        own scroller.
+     4. Prices stay on the UI face. formatBdt writes ৳ (U+09F3) and Bangla
+        renders digits in Bengali numerals, neither of which a Latin serif
+        has — a display face would split every price across two faces.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Metrics — air is the cheapest luxury there is
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] {
+  --screen-padding: 1.25rem;
+}
+
+/* --------------------------------------------------------------------------
+   2. Voice — two faces
+
+   The display serif is a system face, so it costs no request and survives an
+   offline launch. Bengali fallbacks are repeated inside --font-display, so
+   Latin picks up the serif and Bangla keeps its platform face rather than
+   falling back to something arbitrary.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] h1,
+:root[data-app='customer'] h2,
+:root[data-app='customer'] .display,
+:root[data-app='customer'] .title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+
+/* h3/h4 stay on the UI face: at 18px and below a high-contrast serif loses
+   its thin strokes and reads as blur rather than as refinement. */
+:root[data-app='customer'] h3 {
+  letter-spacing: var(--tracking-tight);
+}
+
+:root[data-app='customer'] p,
+:root[data-app='customer'] .body {
+  line-height: var(--leading-relaxed);
+}
+
+/* The micro-caps eyebrow. Wide tracking on small uppercase type is the most
+   recognisable typographic signal a luxury interface has. */
+:root[data-app='customer'] .label {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-widest);
+  color: var(--text-tertiary);
+}
+
+/* Bangla has no case and its glyphs carry their own side bearings; wide
+   tracking pulls a conjunct apart. base.css sets 0.02em for exactly this
+   reason and the rule above would otherwise out-specify it. */
+:root[data-lang='bn'][data-app='customer'] .label {
+  letter-spacing: 0.02em;
+}
+
+:root[data-app='customer'] .caption {
+  color: var(--text-tertiary);
+  line-height: var(--leading-normal);
+}
+
+/* --------------------------------------------------------------------------
+   3. Surfaces — a real elevation ladder, and a night mood that is lit
+
+   The base kit gives a dark card no drop shadow at all, which is why the dark
+   app reads as one flat sheet. Here every raised surface gets an ambient
+   shadow plus a rim-light along its top edge, so it reads as lit from above.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .card,
+:root[data-app='customer'] .list-card,
+:root[data-app='customer'] .review {
+  border-radius: var(--radius-xl);
+  border-color: var(--border-light);
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+/* The base kit's light-mode card rule is `:root.light-theme .card,
+   :root:not(.dark-theme) .card` — two selectors, specificity (0,2,0). The
+   customer rule above is (0,2,0) too and only wins on order, which is fragile.
+   Stated explicitly at (0,3,0) so it cannot be undone by an import reshuffle. */
+:root.light-theme[data-app='customer'] .card,
+:root:not(.dark-theme)[data-app='customer'] .card,
+:root.light-theme[data-app='customer'] .list-card,
+:root:not(.dark-theme)[data-app='customer'] .list-card {
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+:root[data-app='customer'] .card-pad {
+  padding: var(--space-5);
+}
+
+/* --------------------------------------------------------------------------
+   4. Gold as a material
+
+   Real gold is a highlight, a body and a shadow — never one flat fill. The
+   sheen is a diagonal specular pass on a pseudo-element, so it never touches
+   the button's own background and never animates layout.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .btn {
+  border-radius: var(--radius-lg);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight);
+  transition:
+    background-color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease),
+    transform var(--speed-fast) var(--ease);
+}
+
+:root[data-app='customer'] .btn-primary {
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+:root[data-app='customer'] .btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--sheen);
+  pointer-events: none;
+}
+:root[data-app='customer'] .btn-primary:active:not(:disabled) {
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.22);
+}
+:root[data-app='customer'] .btn-primary:disabled {
+  box-shadow: none;
+}
+
+:root[data-app='customer'] .btn-secondary,
+:root[data-app='customer'] .btn-outline {
+  box-shadow: var(--bevel-top), var(--elev-card);
+}
+
+/* --------------------------------------------------------------------------
+   5. Chosen things
+
+   Every "this one is selected" affordance in the app answers in the same gold,
+   so a customer learns the language once: chips, time slots, calendar days,
+   segmented controls and solid badges.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .chip[aria-pressed='true'],
+:root[data-app='customer'] .slot[aria-pressed='true'],
+:root[data-app='customer'] .calendar-day[aria-pressed='true'],
+:root[data-app='customer'] .segmented button[aria-pressed='true'],
+:root[data-app='customer'] .badge-solid {
+  background-image: var(--accent-gradient);
+  box-shadow: var(--glow-accent);
+}
+
+/* `transition: all` on these is a jank source the moment a gradient or a
+   shadow is added to them — it animates the background-image too. */
+:root[data-app='customer'] .chip,
+:root[data-app='customer'] .slot {
+  transition:
+    background-color var(--speed) var(--ease),
+    border-color var(--speed) var(--ease),
+    color var(--speed) var(--ease),
+    box-shadow var(--speed) var(--ease);
+}
+
+:root[data-app='customer'] .slot {
+  border-radius: var(--radius);
+}
+
+/* --------------------------------------------------------------------------
+   6. Controls — a recessed well with a lit edge
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .input,
+:root[data-app='customer'] .textarea,
+:root[data-app='customer'] .select,
+:root[data-app='customer'] .input-group {
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 2px rgba(44, 34, 22, 0.05);
+}
+:root.dark-theme[data-app='customer'] .input,
+:root.dark-theme[data-app='customer'] .textarea,
+:root.dark-theme[data-app='customer'] .select,
+:root.dark-theme[data-app='customer'] .input-group {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   7. Chrome — header, tab bar, sticky footer
+
+   All three are glass. The blur goes on the element itself and not on
+   .app-frame, which is the difference between a frosted bar and a tab bar
+   that has silently jumped 240px off-centre on a desktop screen.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .header {
+  border-bottom-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: bottom;
+  background-size: 100% 1px;
+}
+
+:root[data-app='customer'] .header-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+}
+
+:root[data-app='customer'] .bottom-nav {
+  border-top-color: transparent;
+  background-image: var(--rule-gradient);
+  background-repeat: no-repeat;
+  background-position: top;
+  background-size: 100% 1px;
+}
+
+:root[data-app='customer'] .sticky-footer {
+  box-shadow: var(--elev-sheet);
+}
+
+/* --------------------------------------------------------------------------
+   8. Overlays
+
+   These are the portalled ones — the whole reason the scope sits on <html>.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .sheet {
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  box-shadow: var(--bevel-top), var(--elev-sheet);
+  animation-duration: var(--speed-slower);
+  animation-timing-function: var(--ease-emphasized);
+}
+
+:root[data-app='customer'] .modal {
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--bevel-top), var(--elev-modal);
+  animation-duration: var(--speed-slower);
+  animation-timing-function: var(--ease-emphasized);
+}
+
+/* The sheet scrim is brought up to the modal's depth of field. Both stay
+   behind the toaster in paint order — #root is `isolation: isolate`, so a
+   toast raised from inside a sheet still lands on top. */
+:root[data-app='customer'] .sheet-scrim,
+:root[data-app='customer'] .modal-scrim {
+  background-color: var(--scrim-glass);
+  backdrop-filter: blur(3px) saturate(110%);
+}
+
+:root[data-app='customer'] .toast {
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elev-raised);
+}
+
+/* --------------------------------------------------------------------------
+   9. The frame as an object
+
+   Light falls on the column from above and the ground darkens away from it.
+   Both layers are pseudo-elements: .app-frame itself gains no property that
+   would make it a containing block for the fixed tab bar.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .app-frame::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(110% 32rem at 50% -4rem, var(--accent-bg) 0%, transparent 60%),
+    radial-gradient(140% 40rem at 50% 108%, var(--scrim-soft) 0%, transparent 62%);
+}
+
+/* Everything the customer actually reads sits above the atmosphere. */
+:root[data-app='customer'] .screen,
+:root[data-app='customer'] .offline-banner {
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 30rem) {
+  :root[data-app='customer'] .app-frame {
+    border-inline-color: var(--border-color);
+    box-shadow: var(--elev-raised);
+  }
+}
+
+/* A wider column once there is genuinely room for one. A modest step rather
+   than a desktop layout: the navigation, the routes and the flows are the
+   same product at every width, and a 480px column on a 1440px screen is the
+   one thing that reads as unfinished rather than as considered. */
+@media (min-width: 75rem) {
+  :root[data-app='customer'] {
+    --frame-width: 34rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   10. Motion — entrances that land
+
+   `--stagger` steps each item in a list a little after the one above it. The
+   cap matters: past the tenth child a long list would appear to crawl, so the
+   delay stops growing and the rest arrive together.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] .screen {
+  animation-duration: var(--speed-slower);
+  animation-timing-function: var(--ease-emphasized);
+}
+
+/* `backwards`, never `both`. `both` includes `forwards`, which keeps the final
+   keyframe applied for the element's whole life — and an animation's value
+   outranks a normal author declaration. Since screen-in ends on
+   `transform: none`, `both` silently pinned every staggered child's transform
+   forever, killing the hover lift and the press on every card in a staggered
+   list. `backwards` holds the opening frame through the delay, which is the
+   only part the stagger actually needs, and lets go once it has arrived. */
+:root[data-app='customer'] .stagger > * {
+  animation: screen-in var(--speed-slow) var(--ease-out) backwards;
+}
+:root[data-app='customer'] .stagger > :nth-child(1) { animation-delay: calc(var(--stagger) * 0); }
+:root[data-app='customer'] .stagger > :nth-child(2) { animation-delay: calc(var(--stagger) * 1); }
+:root[data-app='customer'] .stagger > :nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
+:root[data-app='customer'] .stagger > :nth-child(4) { animation-delay: calc(var(--stagger) * 3); }
+:root[data-app='customer'] .stagger > :nth-child(5) { animation-delay: calc(var(--stagger) * 4); }
+:root[data-app='customer'] .stagger > :nth-child(6) { animation-delay: calc(var(--stagger) * 5); }
+:root[data-app='customer'] .stagger > :nth-child(7) { animation-delay: calc(var(--stagger) * 6); }
+:root[data-app='customer'] .stagger > :nth-child(8) { animation-delay: calc(var(--stagger) * 7); }
+:root[data-app='customer'] .stagger > :nth-child(n + 9) { animation-delay: calc(var(--stagger) * 8); }
+
+/* A gold hairline that fades out at both ends instead of butting into the
+   gutter. Used as a section rule wherever a page wants a chapter break. */
+:root[data-app='customer'] .rule-gold {
+  height: 1px;
+  border: 0;
+  background-image: var(--rule-gradient);
+}
+
+/* --------------------------------------------------------------------------
+   11. Focus
+
+   One treatment everywhere: a crisp line plus a soft halo, following the
+   element's own corner rather than the global 6px the base rule imposes.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='customer'] :focus-visible {
+  outline-color: var(--accent-line);
+  border-radius: inherit;
+  box-shadow: 0 0 0 5px var(--ring);
+}
+
+/* --------------------------------------------------------------------------
+   12. Reduced motion
+
+   base.css already collapses durations, but a `transform` set on :active is
+   not a transition and survives that. Anything this file or the customer
+   pages add on press is neutralised here too.
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-app='customer'] .stagger > * { animation-delay: 0s !important; }
+  :root[data-app='customer'] .btn:active:not(:disabled),
+  :root[data-app='customer'] .chip:active,
+  :root[data-app='customer'] .slot:active { transform: none; }
+}
