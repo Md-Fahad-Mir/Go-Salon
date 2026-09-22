@@ -45,7 +45,7 @@ from collections import defaultdict
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.db.models import F, Q
+from django.db.models import Count, F, Q
 
 from Apps.bookings.models import Appointment
 from Apps.portfolio.models import GalleryImage
@@ -124,11 +124,14 @@ class Command(BaseCommand):
 
         taken = set(Tenant.objects.values_list('slug', flat=True))
         salon_plan = self._classify_salons(taken)
-        barber_plan, excluded, manual_profiles = self._classify_barbers(taken)
+        barber_plan, excluded, manual_profiles, via_ownerless = (
+            self._classify_barbers(taken)
+        )
         ownerless = self._ownerless_owners()
 
         self._report_classification(
-            salon_plan, barber_plan, excluded, manual_profiles, ownerless
+            salon_plan, barber_plan, excluded, manual_profiles, ownerless,
+            via_ownerless,
         )
 
         if report_only:
@@ -178,26 +181,55 @@ class Command(BaseCommand):
 
     # -- step 2: independent barbers --------------------------------------
 
-    def _classify_barbers(self, taken: set[str]) -> tuple[list[dict], int, list]:
+    def _classify_barbers(self, taken: set[str]) -> tuple[list[dict], int, list, int]:
         """Independent barbers only.
 
+        Two accounts count as one. The plain case is a profile whose role is
+        still `barber`. The other is a `salon_owner` **who owns no salon** —
+        an account that registered as an owner, never finished setting a shop
+        up, and has been trading off its barber profile ever since. It is an
+        independent trade in everything but the role field, and leaving it in
+        manual review would leave a working business with no tenant.
+
+        The "owns no salon" half is the whole of the rule. An owner who *does*
+        have a salon and also holds a barber profile is a different thing — a
+        proprietor who also cuts hair — and their profile is a personal record
+        beside the salon's tenant, not a second business. Those stay in manual
+        review.
+
         Returns the plan, how many profiles were skipped because they belong
-        to hired staff, and the profiles whose role is something else again.
+        to hired staff, the profiles still needing a person to look at them,
+        and how many of the plan arrived by the ownerless-owner route.
         """
         plan: list[dict] = []
         excluded = 0
         manual: list[BarberProfile] = []
+        ownerless_owner_tenants = 0
 
-        for profile in BarberProfile.objects.select_related('user').order_by('pk'):
+        profiles = (
+            BarberProfile.objects.select_related('user')
+            # One query rather than one per profile: how many salons the
+            # account behind this profile owns.
+            .annotate(owned_salons=Count('user__salons', distinct=True))
+            .order_by('pk')
+        )
+
+        for profile in profiles:
             role = profile.user.role
 
             if role == Role.SALON_EMPLOYEE:
                 # A hired stylist's trade record. Not a business; never a tenant.
                 excluded += 1
                 continue
-            if role != Role.BARBER:
+
+            by_ownerless_owner = (
+                role == Role.SALON_OWNER and profile.owned_salons == 0
+            )
+            if not (role == Role.BARBER or by_ownerless_owner):
                 manual.append(profile)
                 continue
+            if by_ownerless_owner:
+                ownerless_owner_tenants += 1
 
             existing = Tenant.objects.filter(barber_profile=profile).first()
             if existing is not None:
@@ -210,13 +242,23 @@ class Command(BaseCommand):
             )
             plan.append({'kind': 'barber', 'obj': profile, 'slug': slug,
                          'note': note, 'existing': None})
-        return plan, excluded, manual
+        return plan, excluded, manual, ownerless_owner_tenants
 
     # -- step 3: owners with no salon --------------------------------------
 
     def _ownerless_owners(self) -> list[User]:
+        """Owner accounts with no salon *and* no barber profile to fall back on.
+
+        An ownerless owner who holds a barber profile is not reported here:
+        step 2 has already given them a tenant through that profile, and
+        listing them as needing review would be asking for a decision that has
+        been made. What is left is an owner account with no business of any
+        kind — nothing to attach a tenant to, and nothing this command is
+        willing to invent.
+        """
         return list(
             User.objects.filter(role=Role.SALON_OWNER, salons__isnull=True)
+            .filter(barber_profile__isnull=True)
             .order_by('pk')
         )
 
@@ -378,7 +420,8 @@ class Command(BaseCommand):
     # -- reporting ---------------------------------------------------------
 
     def _report_classification(self, salon_plan, barber_plan, excluded,
-                               manual_profiles, ownerless) -> None:
+                               manual_profiles, ownerless,
+                               via_ownerless: int = 0) -> None:
         self._heading('1. SALONS -> TENANTS')
         fresh = [e for e in salon_plan if e['note'] != 'already']
         already = len(salon_plan) - len(fresh)
@@ -391,8 +434,12 @@ class Command(BaseCommand):
         fresh_b = [e for e in barber_plan if e['note'] != 'already']
         already_b = len(barber_plan) - len(fresh_b)
         total_profiles = BarberProfile.objects.count()
+        plain = len(barber_plan) - via_ownerless
         self.stdout.write(f'  barber profiles total:            {total_profiles}')
-        self.stdout.write(f'  independent (role=barber):        {len(barber_plan)}')
+        self.stdout.write(f'  independent, role=barber:         {plain}')
+        self.stdout.write(f'  independent, ownerless owner:     {via_ownerless}   '
+                          f'<- role=salon_owner with zero salons')
+        self.stdout.write(f'  independent TOTAL:                {len(barber_plan)}')
         self.stdout.write(f'  EXCLUDED (role=salon_employee):   {excluded}   '
                           f'<- hired staff, never a tenant')
         self.stdout.write(f'  manual review (other roles):      {len(manual_profiles)}')
@@ -416,7 +463,13 @@ class Command(BaseCommand):
                               'business or a personal record.')
 
         self._heading('3. MANUAL REVIEW: OWNERLESS OWNERS')
-        self.stdout.write(f'  salon_owner accounts with no salon: {len(ownerless)}')
+        self.stdout.write('  salon_owner accounts with no salon AND no barber '
+                          f'profile: {len(ownerless)}')
+        if via_ownerless:
+            self.stdout.write(
+                f'  ({via_ownerless} further ownerless owner(s) do hold a barber '
+                f'profile and were given a tenant through it in step 2.)'
+            )
         for user in ownerless:
             self.stdout.write(
                 f'    User #{user.pk}  {user.phone}  name={user.name!r}  '
