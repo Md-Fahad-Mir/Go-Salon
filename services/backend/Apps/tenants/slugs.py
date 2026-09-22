@@ -1,9 +1,15 @@
-"""Turning a business name into a subdomain label.
+"""Turning a business name into a readable handle.
 
-A slug here is not decoration: it is the hostname a customer types, so it has
-to satisfy DNS before it satisfies anybody's taste. That means lowercase ASCII
-letters, digits and hyphens, no leading or trailing hyphen, and 63 characters
-at the outside — the limit the protocol sets for one label.
+A tenant's slug is a label for people: it may end up in a shareable profile
+link, and it is what makes a row recognisable in a log or an admin list.
+**It is not a hostname — this system has no subdomains** — and nothing about
+routing or authorisation reads it (see `Apps/tenants/models.py`).
+
+It is still held to URL-safe label rules, because something that may appear in
+a link should not need escaping to get there: lowercase ASCII letters, digits
+and hyphens, no leading or trailing hyphen, and 63 characters at the outside.
+That last number is inherited from the DNS label rules these conventions come
+from, not from any intention to use one.
 
 Salon names in this database are frequently Bengali, and `django.utils.text.
 slugify` drops non-ASCII entirely, so `সেলুন রাজ` comes back as the empty
@@ -27,18 +33,21 @@ from __future__ import annotations
 import re
 import unicodedata
 
-#: Labels that must never belong to a tenant: infrastructure hosts, the
-#: platform's own subdomains, and the join path. A name that lands on one of
-#: these is suffixed rather than refused — a shop really called "Help" is not
-#: an error, it just cannot have that hostname.
+#: Words a slug must not be, so that a tenant handle can never collide with a
+#: path segment the app already uses — `join`, `admin`, `api` and the rest of
+#: the vocabulary a future profile URL would sit beside. A name that lands on
+#: one of these is suffixed rather than refused: a shop really called "Help"
+#: is not an error, it just cannot have that exact handle.
 RESERVED_SLUGS = frozenset({
     'www', 'api', 'admin', 'app', 'join', 'static', 'assets', 'cdn',
     'mail', 'smtp', 'ftp', 'blog', 'help', 'support', 'status',
     'dev', 'staging', 'test',
 })
 
-#: One DNS label: 1-63 characters, alphanumeric at both ends, hyphens inside.
-DNS_LABEL = re.compile(r'^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$')
+#: The shape a handle has to have: 1-63 characters, alphanumeric at both ends,
+#: hyphens inside. Borrowed from DNS label rules because they are a well-worn
+#: definition of "safe in a URL without escaping", not because of any hostname.
+SAFE_LABEL = re.compile(r'^[a-z0-9]([a-z0-9-]{1,61}[a-z0-9])?$')
 
 MAX_LABEL = 63
 
@@ -62,7 +71,7 @@ _BENGALI = {
     # the source file already decomposed — a consonant plus a nukta, two code
     # points — and a two-character key can never match a single-character
     # lookup. `_NUKTA` below composes the input to exactly these.
-    'ড়': 'r', 'ঢ়': 'rh', 'য়': 'y', 'ৎ': 't',
+    '\u09dc': 'r', '\u09dd': 'rh', '\u09df': 'y', '\u09ce': 't',
     # vowel signs (matras)
     'া': 'a', 'ি': 'i', 'ী': 'i', 'ু': 'u', 'ূ': 'u', 'ৃ': 'ri',
     'ে': 'e', 'ৈ': 'oi', 'ো': 'o', 'ৌ': 'ou',
@@ -80,9 +89,9 @@ _BENGALI = {
 #: back as `j` instead of `y` — which is how `হেয়ার` romanised as `hejar`.
 #: They are recomposed by hand, before the map, because no normal form does it.
 _NUKTA = (
-    ('য়', 'য়'),  # য + ়  ->  য়
-    ('ড়', 'ড়'),  # ড + ়  ->  ড়
-    ('ঢ়', 'ঢ়'),  # ঢ + ়  ->  ঢ়
+    ('\u09af\u09bc', '\u09df'),  # ya   + nukta  ->  ya-with-nukta
+    ('\u09a1\u09bc', '\u09dc'),  # dda  + nukta  ->  dda-with-nukta
+    ('\u09a2\u09bc', '\u09dd'),  # ddha + nukta  ->  ddha-with-nukta
 )
 
 
@@ -108,7 +117,7 @@ def transliterate(value: str) -> str:
 
 
 def slugify_name(value: str) -> str:
-    """A business name as a DNS label, or `''` when nothing usable survives."""
+    """A business name as a safe handle, or `''` when nothing usable survives."""
     ascii_only = transliterate(value).lower()
     # Every run of anything that is not a letter or a digit becomes one hyphen,
     # so "Mr. Tanvir's Cuts!!" is `mr-tanvir-s-cuts`, not `mr--tanvir--s--cuts`.
@@ -116,7 +125,7 @@ def slugify_name(value: str) -> str:
     if not hyphenated:
         return ''
     trimmed = hyphenated[:MAX_LABEL].strip('-')
-    return trimmed if DNS_LABEL.match(trimmed) else ''
+    return trimmed if SAFE_LABEL.match(trimmed) else ''
 
 
 def _suffixed(base: str, n: int) -> str:

@@ -11,4 +11,4 @@ wheels/
 
 # Local environment
 .env
-db.sqlite3
+db.sqlite3*

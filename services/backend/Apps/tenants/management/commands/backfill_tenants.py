@@ -54,6 +54,10 @@ from Apps.services.models import Service
 from Apps.tenants.models import Tenant
 from Apps.tenants.slugs import unique_slug
 from Apps.users.models import BarberProfile, Role, Salon, User
+# The project's one definition of "the job this person currently holds".
+# `Apps.bookings.reports` already imports it from here; there is no second
+# notion of a current employment to keep in step with.
+from Apps.users.serializers import active_employment
 
 #: The four tables this command fills in, and how each one reaches the business
 #: that owns it. `WorkingDay` has three routes because a chair's own hours hang
@@ -148,6 +152,9 @@ class Command(BaseCommand):
 
                 cascaded = self._cascade(tenants)
                 self._report_cascade(cascaded)
+
+                employee_rows, unattributable = self._cascade_employee_rows()
+                self._report_employee_cascade(employee_rows, unattributable)
 
                 self._verify(tenants, snapshot)
 
@@ -293,6 +300,28 @@ class Command(BaseCommand):
                 query |= Q(**{f'{path}_id': pk})
         return query
 
+    def _expected_filter(self, kind: str, pk: int, paths: tuple[str, ...]) -> Q:
+        """Every row that *should* end up carrying this tenant.
+
+        Wider than `_owner_filter` by one case: a salon's tenant also covers
+        the rows hanging off the personal profiles of the stylists it
+        currently employs (step 4b). Those rows are not owned by the salon in
+        the database — their `barber_id` points at the stylist's own profile —
+        so a reconciliation that only looked at direct ownership would report
+        a mismatch for every salon with a stylist who lists their own work.
+        """
+        query = self._owner_filter(kind, pk, paths)
+        if kind == 'salon' and 'barber' in paths:
+            employed = list(
+                BarberProfile.objects.filter(
+                    user__employments__salon_id=pk,
+                    user__employments__is_active=True,
+                ).values_list('pk', flat=True)
+            )
+            if employed:
+                query |= Q(barber_id__in=employed)
+        return query
+
     def _cascade(self, tenants: dict) -> dict:
         """Set `tenant` on every child row of every tenant we know about.
 
@@ -316,6 +345,72 @@ class Command(BaseCommand):
                     counts[label] += model.objects.filter(pk__in=ids).update(tenant=tenant)
         return counts
 
+    # -- step 4b: rows owned by a hired stylist's own profile ---------------
+
+    def _cascade_employee_rows(self) -> tuple[dict, list]:
+        """Attribute an employee's own rows to the salon that employs them.
+
+        Every hired stylist keeps a `BarberProfile` — it is made for them when
+        they are taken on, so their photograph and bio have a home and so that
+        leaving hands them back a working barber account. That profile is not a
+        business and never gets a tenant of its own (step 2 excludes it), but
+        rows *can* hang off it: a service they listed, pictures of their work,
+        a week of their own hours.
+
+        Those rows still belong to somebody. While the stylist is employed,
+        the answer is the salon employing them, so the tenant is read off
+        their current job rather than off their profile.
+
+        Where there is no current job the answer is genuinely unknown. A
+        stylist whose employment has ended has no salon to attribute anything
+        to, and the salon they used to work at is a guess — an ex-employer has
+        no claim on a row just because they once did. Those go to a bucket a
+        person has to look at, and their tenant stays null.
+
+        `Appointment` is included for completeness though it has no such rows
+        today: an appointment always names its own business, so one owned by an
+        employee's profile would be a data fault rather than an attribution
+        question. Handling it here means a future one is filled in rather than
+        left to fail a NOT NULL later.
+        """
+        counts: dict[str, int] = defaultdict(int)
+        unattributable: list[dict] = []
+
+        for label, model, paths in CHILD_MODELS:
+            if 'barber' not in paths:
+                continue
+            rows = (
+                model.objects.filter(tenant__isnull=True, barber__isnull=False)
+                .select_related('barber__user')
+                .order_by('pk')
+            )
+            for row in rows:
+                profile = row.barber
+                # An independent barber's row with no tenant would mean step 2
+                # missed a business, which is a different fault entirely — it
+                # is left alone so the verification below reports it as MISSED.
+                if profile.user.role != Role.SALON_EMPLOYEE:
+                    continue
+
+                employment = active_employment(profile.user)
+                # Reverse one-to-one: Django's RelatedObjectDoesNotExist also
+                # subclasses AttributeError, so the default applies.
+                tenant = (
+                    getattr(employment.salon, 'tenant', None)
+                    if employment is not None else None
+                )
+                if tenant is None:
+                    unattributable.append({
+                        'table': label, 'row_id': row.pk, 'profile': profile,
+                        'employment': employment,
+                    })
+                    continue
+
+                model.objects.filter(pk=row.pk).update(tenant=tenant)
+                counts[label] += 1
+
+        return counts, unattributable
+
     # -- step 5: verification ----------------------------------------------
 
     def _snapshot(self) -> dict:
@@ -329,14 +424,14 @@ class Command(BaseCommand):
         for salon in Salon.objects.order_by('pk'):
             snap[('salon', salon.pk)] = {
                 label: model.objects.filter(
-                    self._owner_filter('salon', salon.pk, paths)
+                    self._expected_filter('salon', salon.pk, paths)
                 ).count()
                 for label, model, paths in CHILD_MODELS
             }
         for profile in BarberProfile.objects.order_by('pk'):
             snap[('barber', profile.pk)] = {
                 label: model.objects.filter(
-                    self._owner_filter('barber', profile.pk, paths)
+                    self._expected_filter('barber', profile.pk, paths)
                 ).count()
                 for label, model, paths in CHILD_MODELS
             }
@@ -362,8 +457,12 @@ class Command(BaseCommand):
                 f'    {label:<16}{null_total:>8}{null_total - missed:>10}{missed:>9}{marker}'
             )
         self.stdout.write(
-            '    "expected" = the row\'s own business has no tenant '
-            '(hired staff, manual review).'
+            '    "expected" = the row\'s own business has no tenant AND step 4b '
+            'could not attribute it'
+        )
+        self.stdout.write(
+            '                 (a stylist with no current employer). Must be 0 '
+            'before NOT NULL.'
         )
         self.stdout.write('    "MISSED"   = the business HAS a tenant but the row '
                           'was not updated. Must be 0.')
@@ -383,7 +482,9 @@ class Command(BaseCommand):
 
         # (c) Per-tenant totals against the pre-backfill counts.
         self.stdout.write('')
-        self.stdout.write('  Per-tenant row counts vs pre-backfill counts:')
+        self.stdout.write('  Per-tenant row counts vs pre-backfill counts')
+        self.stdout.write('  (expected = rows owned by the business, plus the rows of '
+                          'stylists it currently employs):')
         header = f'    {"tenant":<32} '
         for label, _, _ in CHILD_MODELS:
             header += f'{label[:9]:>11}'
@@ -403,18 +504,54 @@ class Command(BaseCommand):
                     row += f'{after}!={expected}'.rjust(11)
             self.stdout.write(row)
 
+        # (d) Every employee-attributed row points at a salon that currently
+        #     employs the person whose profile owns it. Counting the rows only
+        #     says the cascade ran; this says it ran to the right place.
         self.stdout.write('')
-        if total_missed == 0 and disagree == 0 and mismatches == 0:
+        self.stdout.write('  Employee-attributed rows, checked against live employment:')
+        checked = wrong = 0
+        for label, model, paths in CHILD_MODELS:
+            if 'barber' not in paths:
+                continue
+            rows = (
+                model.objects.filter(tenant__isnull=False, barber__isnull=False)
+                .select_related('barber__user', 'tenant')
+                .order_by('pk')
+            )
+            for row in rows:
+                profile = row.barber
+                if profile.user.role != Role.SALON_EMPLOYEE:
+                    continue  # an independent barber's own tenant, not this case
+                checked += 1
+                employment = active_employment(profile.user)
+                expected = (
+                    getattr(employment.salon, 'tenant', None)
+                    if employment is not None else None
+                )
+                if expected is None or expected.pk != row.tenant_id:
+                    wrong += 1
+                    self.stdout.write(self.style.ERROR(
+                        f'    {label} row #{row.pk}: tenant={row.tenant.slug} '
+                        f'but current employer tenant='
+                        f'{expected.slug if expected else "NONE"}'
+                    ))
+        line = (f'    {checked} row(s) checked, {wrong} pointing at a salon that '
+                f'does not currently employ the owner.')
+        self.stdout.write(line if wrong == 0 else self.style.ERROR(line))
+
+        self.stdout.write('')
+        if total_missed == 0 and disagree == 0 and mismatches == 0 and wrong == 0:
             self.stdout.write(self.style.SUCCESS(
-                '  All three verification checks passed.'
+                '  All four verification checks passed.'
             ))
         else:
             # Reported, never raised: a dry run exists precisely to show this.
             self.stdout.write(self.style.ERROR(
                 f'  VERIFICATION PROBLEMS: {total_missed} missed row(s), '
                 f'{disagree} disagreeing appointment(s), '
-                f'{mismatches} count mismatch(es). Do not --apply until these '
-                f'are understood.'
+                f'{mismatches} count mismatch(es), '
+                f'{wrong} misattributed employee row(s). Do not --apply until '
+                f'these are understood.'
             ))
 
     # -- reporting ---------------------------------------------------------
@@ -504,6 +641,34 @@ class Command(BaseCommand):
         self.stdout.write(f'  from salons:            {salons}')
         self.stdout.write(f'  from independent barbers: {barbers}')
         self.stdout.write(f'  total:                  {len(tenants)}')
+
+    def _report_employee_cascade(self, counts: dict, unattributable: list) -> None:
+        self._heading("4b. EMPLOYEE-OWNED ROWS -> THEIR EMPLOYER'S TENANT")
+        total = sum(counts.values())
+        self.stdout.write('  rows hanging off a hired stylist\'s own profile, '
+                          'attributed to the salon employing them:')
+        for label, model, _ in CHILD_MODELS:
+            self.stdout.write(f'    {label:<16}{counts.get(label, 0):>6}')
+        self.stdout.write(f'    {"TOTAL":<16}{total:>6}')
+
+        self.stdout.write('')
+        if not unattributable:
+            self.stdout.write('  manual review (no active employment): 0')
+            return
+
+        self.stdout.write(self.style.WARNING(
+            f'  MANUAL REVIEW - employee row, no active employment, cannot '
+            f'attribute: {len(unattributable)}'
+        ))
+        for item in unattributable:
+            profile = item['profile']
+            self.stdout.write(
+                f'    {item["table"]:<15} row #{item["row_id"]:<6} '
+                f'BarberProfile #{profile.pk:<4} user #{profile.user_id:<4} '
+                f'{profile.user.phone:<16} role={profile.user.role}'
+            )
+        self.stdout.write('    -> tenant left null. An ex-employer has no claim '
+                          'on a row just because they once employed the person.')
 
     def _report_cascade(self, counts: dict) -> None:
         self._heading('4. CASCADE ONTO CHILD ROWS')
