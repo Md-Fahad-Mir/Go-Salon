@@ -14,7 +14,8 @@ ways at once, and each of them failed quietly:
   - It could only ever report on what the client was allowed to download, which
     is not the same question as what the business took.
 
-So the aggregation lives here, every query starts from `access.scoped(user)`,
+So the aggregation lives here, every query starts from `access.scoped(user,
+tenant)`,
 and no caller can widen what a role may see by asking a different question.
 
 WHICH DAY A COMPLETED APPOINTMENT COUNTS ON
@@ -95,11 +96,11 @@ def window(period: str, today: date_cls | None = None) -> tuple[date_cls, date_c
     return today - timedelta(days=6), today
 
 
-def _completed(user, start: date_cls, end: date_cls):
+def _completed(user, tenant, start: date_cls, end: date_cls):
     """Completed work in the window, already narrowed to what this account may
     see. The bucket is `completed_at` on the salon's clock — see the module
     docstring — so the filter has to be a datetime range, not a date range."""
-    query, viewpoint = scoped(user)
+    query, viewpoint = scoped(user, tenant)
     from datetime import datetime, time
 
     tz = business_tz()
@@ -306,10 +307,10 @@ def _by_staff(rows) -> tuple[list[dict], dict]:
     return staff, {'revenue': _taka(loose['revenue']), 'bookings': loose['bookings']}
 
 
-def analytics(user, period: str) -> dict:
+def analytics(user, tenant, period: str) -> dict:
     """Everything the owner's Analytics screen shows, for one period."""
     start, end = window(period)
-    rows, viewpoint = _completed(user, start, end)
+    rows, viewpoint = _completed(user, tenant, start, end)
     staff, unassigned = _by_staff(rows)
     return {
         'viewpoint': viewpoint,
@@ -326,7 +327,7 @@ def analytics(user, period: str) -> dict:
     }
 
 
-def performance(user, period: str) -> dict:
+def performance(user, tenant, period: str) -> dict:
     """Everything an employee's Performance screen shows, for one period.
 
     `scoped()` has already narrowed this to the employee's own chair, so there
@@ -334,7 +335,7 @@ def performance(user, period: str) -> dict:
     salon, which is why the view refuses any viewpoint but `employee`.
     """
     start, end = window(period)
-    rows, viewpoint = _completed(user, start, end)
+    rows, viewpoint = _completed(user, tenant, start, end)
     employment = active_employment(user)
     rate = employment.commission_rate if employment else None
 

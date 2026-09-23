@@ -23,6 +23,7 @@ from django.utils import timezone
 
 from Apps.schedules.models import WorkingDay
 from Apps.schedules.services import has_schedule
+from Apps.tenants.provisioning import MissingTenant
 from Apps.users.models import SalonEmployee
 
 from .models import LIVE_STATUSES, Appointment, business_tz
@@ -113,9 +114,31 @@ def chairs_for(*, salon=None, barber=None, services=()) -> list[Chair]:
     return [Chair(e) for e in active if e.id in (allowed or set())]
 
 
-def _busy(chair: Chair, *, salon=None, barber=None, day: Date, exclude_id=None):
-    """What already holds this chair on this day, prep time included."""
-    query = Appointment.objects.filter(date=day, status__in=LIVE_STATUSES)
+def _busy(chair: Chair, *, tenant, salon=None, barber=None, day: Date, exclude_id=None):
+    """What already holds this chair on this day, prep time included.
+
+    Leads with `tenant` so the composite index built in Step 4 is the one the
+    planner reaches for. The salon/barber filter stays: it is what picks the
+    business out, and the tenant is its second name rather than a replacement
+    — a booking that somehow disagreed with its own business must not be
+    counted as holding a chair in either.
+
+    A `None` tenant is refused rather than passed to the ORM. `filter(tenant=
+    None)` is `WHERE tenant_id IS NULL`, which today matches no appointment
+    and so quietly reports an empty diary — every slot free, including the
+    ones that are taken. That is a wrong answer dressed as a safe one, and it
+    would silently become a *different* wrong answer the moment any row had a
+    null tenant.
+    """
+    if tenant is None:
+        raise MissingTenant(
+            'Availability was asked for with no tenant. Every caller resolves '
+            'one before reaching here, so this is a bug rather than a request '
+            'that should be refused.'
+        )
+
+    query = Appointment.objects.filter(
+        tenant=tenant, date=day, status__in=LIVE_STATUSES)
     query = query.filter(salon=salon) if salon is not None else query.filter(barber=barber)
     if chair.employee is not None:
         query = query.filter(employee=chair.employee)
@@ -153,6 +176,7 @@ def _free(chair_busy, start_at, end_at, blocked_from) -> bool:
 
 def day_availability(
     *,
+    tenant,
     salon=None,
     barber=None,
     day: Date,
@@ -188,7 +212,7 @@ def day_availability(
         for chair in chairs
     }
     busy_by_chair = {
-        chair.key: _busy(chair, salon=salon, barber=barber, day=day,
+        chair.key: _busy(chair, tenant=tenant, salon=salon, barber=barber, day=day,
                          exclude_id=exclude_appointment)
         for chair in chairs
     }
@@ -241,8 +265,8 @@ def _fits(stretches, start: time, end: time, buffer: int, start_at, tz, day: Dat
 
 
 def first_free_chair(
-    *, salon=None, barber=None, day: Date, start: time, duration: int, buffer: int,
-    services=(), employee=None, exclude_appointment=None, now=None,
+    *, tenant, salon=None, barber=None, day: Date, start: time, duration: int,
+    buffer: int, services=(), employee=None, exclude_appointment=None, now=None,
 ) -> tuple[bool, Chair | None, str]:
     """Can this exact time be booked, by which chair — and if not, why not?
 
@@ -256,9 +280,9 @@ def first_free_chair(
     is permanently held.
     """
     slots = day_availability(
-        salon=salon, barber=barber, day=day, duration=duration, buffer=buffer,
-        services=services, employee=employee, exclude_appointment=exclude_appointment,
-        now=now,
+        tenant=tenant, salon=salon, barber=barber, day=day, duration=duration,
+        buffer=buffer, services=services, employee=employee,
+        exclude_appointment=exclude_appointment, now=now,
     )
     if not slots:
         # An empty day has two different causes and they need different words:

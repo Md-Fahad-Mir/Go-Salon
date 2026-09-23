@@ -8,8 +8,10 @@ from django.conf import settings
 from django.utils import timezone
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 
 from Apps.services.models import Service
+from Apps.tenants.context import business_of_tenant, tenant_of_request
 from Apps.users.models import BarberProfile, Role, Salon, SalonEmployee, User
 from Apps.users.phone import normalize_phone
 
@@ -47,17 +49,52 @@ def platform_fee() -> int:
     return getattr(settings, 'BOOKING_PLATFORM_FEE', 20)
 
 
-def parse_listing(value: str):
+def parse_listing(value: str, tenant):
     """`salon-3` / `barber-9` — the same ids the directory hands out, so a
-    customer books the listing they were looking at."""
+    customer books the listing they were looking at.
+
+    The id is a bare primary key supplied by the client, and nothing used to
+    check that it named a business the caller had any business with: anyone
+    signed in could read any salon's slot-by-slot occupancy, chair ids and all
+    (audit finding H1). `tenant` is what closes that — a listing outside it is
+    a 403, not a lookup.
+
+    The check lives here, in the one function both availability and booking
+    creation already share, rather than being written twice and kept in step
+    by hand.
+
+    **A `None` tenant refuses everything.** It used to mean "do not check",
+    which read as harmless while every caller had a tenant — and stopped being
+    harmless the moment an account with *no* tenant could reach this. A
+    platform admin, or a customer who has joined nowhere, could name any salon
+    and be handed its whole week. No tenant is not permission to see
+    everything; it is permission to see nothing.
+    """
     kind, _, raw = (value or '').partition('-')
     if not raw.isdigit():
         return None
+
     if kind == 'salon':
-        return Salon.objects.filter(pk=int(raw)).select_related('owner').first()
-    if kind == 'barber':
-        return BarberProfile.objects.filter(pk=int(raw)).select_related('user').first()
-    return None
+        business = Salon.objects.filter(pk=int(raw)).select_related('owner').first()
+    elif kind == 'barber':
+        business = BarberProfile.objects.filter(pk=int(raw)).select_related('user').first()
+    else:
+        return None
+
+    if business is None:
+        return None
+
+    # Not found-then-refused as two different answers: a listing outside the
+    # caller's tenant is refused whether or not it exists, so this cannot be
+    # used to discover which ids are real.
+    if (tenant is None
+            or getattr(business, 'tenant', None) is None
+            or business.tenant.pk != tenant.pk):
+        raise PermissionDenied(
+            'That salon is not the one you are signed in to.',
+            code='wrong_tenant',
+        )
+    return business
 
 
 def listing_id(appointment: Appointment) -> str:
@@ -196,7 +233,8 @@ class AvailabilityQuerySerializer(serializers.Serializer):
     exclude = serializers.IntegerField(required=False, allow_null=True)
 
     def validate_listing(self, value: str):
-        business = parse_listing(value)
+        business = parse_listing(
+            value, tenant_of_request(self.context.get('request')))
         if business is None:
             raise serializers.ValidationError(
                 [serializers.ErrorDetail('No such salon or barber.', code='not_found')]
@@ -228,7 +266,8 @@ class BookingCreateSerializer(serializers.Serializer):
     reschedule_of = serializers.IntegerField(required=False, allow_null=True)
 
     def validate_listing(self, value: str):
-        business = parse_listing(value)
+        business = parse_listing(
+            value, tenant_of_request(self.context.get('request')))
         if business is None:
             raise serializers.ValidationError(
                 [serializers.ErrorDetail('No such salon or barber.', code='not_found')]
@@ -335,7 +374,13 @@ class WalkInCreateSerializer(serializers.Serializer):
         forced_chair = None
 
         if user.role == Role.SALON_OWNER:
-            salon = Salon.objects.filter(owner=user).first()
+            # The salon whose counter this is, from the request's tenant —
+            # not whichever of the owner's shops sorts first by name.
+            business = business_of_tenant(
+                tenant_of_request(self.context.get('request')))
+            salon = (business or {}).get('salon')
+            if salon is not None and salon.owner_id != user.id:
+                salon = None
         elif user.role == Role.SALON_EMPLOYEE:
             forced_chair = (
                 SalonEmployee.objects.filter(user=user, is_active=True)

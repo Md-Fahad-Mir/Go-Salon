@@ -1,20 +1,42 @@
 """Who may see and touch an appointment.
 
-Four roles, four different answers, and one rule underneath all of them: an
-appointment is only ever reachable through the queryset that already narrows
-it to the caller. A detail view looks a row up *with* its ownership filter, so
-somebody else's booking is a 404 — not a 403 that confirms it exists.
+Four roles, four different answers, and two rules underneath all of them.
+
+**A caller only ever sees one tenant at a time.** `scoped` takes the tenant the
+request is about and filters every branch by it — the customer branch included.
+There is no marketplace and no cross-tenant read to preserve: a customer who
+has joined three salons is acting in exactly one of them at any moment, and
+their booking list means the bookings they have *there*.
+
+**Belonging to that tenant is checked here, not upstream.** It would be
+tempting to leave membership to a permission class, but `scoped` has a caller
+with no request behind it at all: `realtime.recipients` runs inside a
+`transaction.on_commit` callback and re-runs every broadcast candidate through
+this function precisely so that a socket can never deliver a row the API would
+answer with a 404. That invariant only holds while this function embodies the
+*whole* rule, so the membership test lives here and every caller inherits it.
+
+A caller who does not belong to the tenant gets `none()`, the same answer an
+unrecognised role has always got. Not an exception: this is a question about
+which rows exist for somebody, and "none of them" is a complete answer.
 """
 
 from __future__ import annotations
 
+# The membership rule lives in `Apps.tenants.context` so that this module
+# and the request layer cannot come to disagree about it. Re-exported here
+# because `scoped` below is written against it and callers read it from
+# this module historically.
+from Apps.tenants.context import belongs_to  # noqa: F401
 from Apps.users.models import Role
 
 from .models import Appointment
 
 
-def scoped(user) -> tuple:
-    """The appointments this account may read, and how it stands to them.
+
+
+def scoped(user, tenant) -> tuple:
+    """The appointments this account may read here, and how it stands to them.
 
     Returns `(queryset, viewpoint)` where viewpoint is one of `customer`,
     `owner`, `barber`, `employee` or `none`.
@@ -27,6 +49,17 @@ def scoped(user) -> tuple:
         'review', 'review__replied_by',
     ).prefetch_related('items')
 
+    # Before role, before anything: does this account stand in this tenant?
+    if not belongs_to(user, tenant):
+        return base.none(), 'none'
+
+    # Every branch below is narrowed to the tenant as well as to the caller.
+    # The two are not the same question — a salon owner belongs to their own
+    # tenant and owns their own salon, but an appointment could in principle
+    # carry a tenant that disagrees with its salon, and this is not the place
+    # to find out. Filtering on both means neither alone has to be trusted.
+    base = base.filter(tenant=tenant)
+
     if user.role == Role.CUSTOMER:
         return base.filter(customer=user), 'customer'
 
@@ -38,7 +71,9 @@ def scoped(user) -> tuple:
         if profile is None:
             return base.none(), 'none'
         # An independent barber sees their own diary. If they have also been
-        # hired somewhere, the chair they sit in at that salon is theirs too.
+        # hired somewhere, the chair they sit in at that salon is theirs too —
+        # though only when *this* tenant is the one they sit in, which the
+        # filter above has already settled.
         employment = user.employments.filter(is_active=True).first()
         query = base.filter(barber=profile)
         if employment is not None:
@@ -76,12 +111,22 @@ def runs_business(appointment: Appointment, user) -> bool:
     return False
 
 
-def business_of(user):
-    """The salon or barber profile this account takes bookings for, if any."""
-    if user.role == Role.SALON_OWNER:
-        salon = user.salons.first()
-        return {'salon': salon} if salon else None
-    if user.role == Role.BARBER:
-        profile = getattr(user, 'barber_profile', None)
-        return {'barber': profile} if profile else None
+def business_of(user, tenant):
+    """The salon or barber profile this account takes bookings for, here.
+
+    Read off the tenant rather than off the account, which is the difference
+    that matters: `user.salons.first()` picks whichever salon sorts first by
+    name, and an owner with two would silently get the wrong one. The tenant
+    already names exactly one business, so there is nothing to choose.
+
+    Note this function currently has no callers — it was written for a view
+    that never arrived. It is updated rather than deleted so that it cannot be
+    picked up later in its old, tenant-blind shape.
+    """
+    if not belongs_to(user, tenant):
+        return None
+    if tenant.salon_id and user.role == Role.SALON_OWNER:
+        return {'salon': tenant.salon}
+    if tenant.barber_profile_id and user.role == Role.BARBER:
+        return {'barber': tenant.barber_profile}
     return None

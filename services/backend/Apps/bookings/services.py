@@ -16,6 +16,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import APIException
 
+from Apps.tenants.provisioning import tenant_for
 from Apps.users.exceptions import Conflict
 
 from .availability import first_free_chair
@@ -151,9 +152,21 @@ def create_appointment(
     # even when the money and the minutes come from the frozen ones.
     eligible = [line.service for line in lines if line.service is not None]
 
+    # The business this booking is for, under its other name. Resolved before
+    # the diary is consulted, because the diary is now read per tenant too.
+    #
+    # A move copies the tenant off the row it replaces rather than resolving
+    # it again: the new row is the same booking at a different hour, and
+    # `reschedule` below has already fixed its salon/barber to the old row's,
+    # so re-deriving here could only ever introduce a disagreement.
+    tenant = (
+        reschedule_of.tenant if reschedule_of is not None
+        else tenant_for({'salon': salon} if salon is not None else {'barber': barber})
+    )
+
     # Re-checked here, under the transaction, against the live diary.
     free, picked, why = first_free_chair(
-        salon=salon, barber=barber, day=day, start=start, duration=duration,
+        tenant=tenant, salon=salon, barber=barber, day=day, start=start, duration=duration,
         buffer=buffer, services=eligible, employee=chair,
         exclude_appointment=reschedule_of.pk if reschedule_of else None,
     )
@@ -165,6 +178,7 @@ def create_appointment(
         customer=customer,
         salon=salon,
         barber=barber,
+        tenant=tenant,
         employee=picked.employee if picked else None,
         status=(
             AppointmentStatus.APPROVED
@@ -248,6 +262,10 @@ def create_walk_in(
         walk_in=True,
         salon=salon,
         barber=barber,
+        # Same business, same resolution as a booked appointment. The walk-in
+        # path takes its salon/barber from whoever is at the counter rather
+        # than from the request, so this inherits that.
+        tenant=tenant_for({'salon': salon} if salon is not None else {'barber': barber}),
         employee=chair,
         status=AppointmentStatus.APPROVED,
         approved_at=timezone.now(),
@@ -303,7 +321,7 @@ def reschedule(appointment: Appointment, *, day, start, chair=None, by_customer:
             code='service_gone',
         )
 
-    return create_appointment(
+    moved = create_appointment(
         customer=appointment.customer,
         salon=appointment.salon,
         barber=appointment.barber,
@@ -314,6 +332,20 @@ def reschedule(appointment: Appointment, *, day, start, chair=None, by_customer:
         notes=appointment.notes,
         reschedule_of=appointment,
     )
+
+    # A move never changes business — the salon and barber above are copied
+    # straight off the old row — so the new row's tenant has to be the old
+    # row's too. `create_appointment` copies it rather than re-deriving it;
+    # this checks the result rather than trusting the argument, because the
+    # two ways of getting here silently disagreeing is exactly the kind of
+    # drift a denormalised column invites.
+    if moved.tenant_id != appointment.tenant_id:
+        raise AssertionError(
+            f'rescheduling appointment {appointment.pk} produced '
+            f'{moved.pk} under tenant {moved.tenant_id}, but the booking it '
+            f'replaces belongs to tenant {appointment.tenant_id}'
+        )
+    return moved
 
 
 def cancel(appointment: Appointment, *, by_customer: bool, reason: str = '') -> Appointment:

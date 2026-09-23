@@ -19,6 +19,9 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from Apps.tenants.context import business_of_tenant, tenant_of_request
+from Apps.tenants.permissions import OptionalTenantContext, TenantContext
+
 from .exceptions import Conflict
 from .models import OTPPurpose, Role, Salon, SalonEmployee, User
 from .permissions import IsSalonOrParlorOwner
@@ -394,14 +397,22 @@ class SalonEmployeeListCreateView(GenericAPIView):
     """Employee accounts exist because an owner made one. Nothing here is
     reachable by an employee: the permission is the boundary."""
 
-    permission_classes = (IsAuthenticated, IsSalonOrParlorOwner)
+    permission_classes = (IsAuthenticated, IsSalonOrParlorOwner, TenantContext)
     serializer_class = SalonEmployeeSerializer
 
     def _salon(self, request) -> Salon:
-        salons = request.user.salons.all()
-        requested = request.data.get('salon') if request.method == 'POST' else None
-        salon = salons.filter(pk=requested).first() if requested else salons.first()
-        if salon is None:
+        """The salon a new chair is being added to.
+
+        Two single-business assumptions used to live in one line here: a
+        `salon` id taken from the request body, and `.first()` when it was
+        absent. The body is no longer consulted at all — which salon a request
+        is acting in is not something the client gets to assert alongside its
+        credentials — and the fallback is the tenant rather than whichever
+        shop sorts first by name.
+        """
+        business = business_of_tenant(tenant_of_request(request))
+        salon = (business or {}).get('salon')
+        if salon is None or salon.owner_id != request.user.id:
             raise Conflict('Register your salon before adding staff.', code='no_salon')
         return salon
 
@@ -426,7 +437,7 @@ class SalonEmployeeListCreateView(GenericAPIView):
 
 
 class SalonEmployeeDetailView(GenericAPIView):
-    permission_classes = (IsAuthenticated, IsSalonOrParlorOwner)
+    permission_classes = (IsAuthenticated, IsSalonOrParlorOwner, TenantContext)
     serializer_class = SalonEmployeeUpdateSerializer
 
     def _employment(self, request, pk: int):
@@ -494,13 +505,13 @@ class ProfileMeView(GenericAPIView):
     cannot reach the ones their owner keeps.
     """
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, OptionalTenantContext)
 
     def get_serializer_class(self):
         return PROFILE_WRITERS.get(self.request.user.role)
 
     def get(self, request):
-        return Response(profile_payload(request.user))
+        return Response(profile_payload(request.user, tenant_of_request(request)))
 
     def patch(self, request):
         serializer_class = self.get_serializer_class()
@@ -515,4 +526,5 @@ class ProfileMeView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         request.user.refresh_from_db()
-        return Response(profile_payload(request.user))
+        return Response(
+            profile_payload(request.user, tenant_of_request(request)))

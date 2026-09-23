@@ -1,7 +1,8 @@
 """The booking endpoints.
 
-Every view starts from `access.scoped(request.user)` — the queryset already
-narrowed to what this account may see. A detail lookup filters *through* it, so
+Every view starts from `access.scoped(request.user, tenant)` — the queryset
+already narrowed to what this account may see, in the tenant it is asking
+about. A detail lookup filters *through* it, so
 another customer's appointment or another salon's diary is a 404 rather than a
 403 that confirms the row exists.
 """
@@ -17,6 +18,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from Apps.tenants.context import tenant_of_request
+from Apps.tenants.permissions import TenantContext
 from Apps.users.models import Role, SalonEmployee
 from Apps.users.permissions import IsCustomer
 
@@ -66,7 +69,7 @@ class AvailabilityView(GenericAPIView):
     thing they most want to know.
     """
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, TenantContext)
     serializer_class = AvailabilityQuerySerializer
 
     def get(self, request):
@@ -113,6 +116,7 @@ class AvailabilityView(GenericAPIView):
             ).first()
 
         slots = day_availability(
+            tenant=tenant_of_request(request),
             salon=salon, barber=barber, day=day, duration=duration, buffer=buffer,
             services=services, employee=chair,
             exclude_appointment=data.get('exclude'),
@@ -130,11 +134,11 @@ class AvailabilityView(GenericAPIView):
 
 
 class BookingListCreateView(GenericAPIView):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, TenantContext)
     serializer_class = AppointmentSerializer
 
     def get(self, request):
-        query, viewpoint = scoped(request.user)
+        query, viewpoint = scoped(request.user, tenant_of_request(request))
 
         wanted = request.query_params.get('status')
         if wanted:
@@ -197,7 +201,7 @@ class WalkInView(GenericAPIView):
     being re-decided here.
     """
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, TenantContext)
     serializer_class = WalkInCreateSerializer
 
     def post(self, request):
@@ -224,10 +228,10 @@ class WalkInView(GenericAPIView):
 class BookingActionView(APIView):
     """Shared lookup: the row, through the caller's own queryset."""
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, TenantContext)
 
     def appointment(self, request, pk: int):
-        query, _ = scoped(request.user)
+        query, _ = scoped(request.user, tenant_of_request(request))
         return query.filter(pk=pk).first()
 
 
@@ -353,12 +357,12 @@ class CompleteView(BookingActionView):
 class AnalyticsView(GenericAPIView):
     """What the salon took, for the owner's Analytics screen.
 
-    Every figure is computed in `reports.py` from `access.scoped(request.user)`,
+    Every figure is computed in `reports.py` from `access.scoped(user, tenant)`,
     so this view cannot widen what a role may see — an employee calling it gets
     their own chair, which is why the viewpoint is returned rather than assumed.
     """
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, TenantContext)
     serializer_class = AppointmentSerializer  # for DRF's schema only
 
     def get(self, request):
@@ -369,7 +373,8 @@ class AnalyticsView(GenericAPIView):
                  'errors': {'period': ['Unknown period.']}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        return Response(reports.analytics(request.user, period))
+        return Response(reports.analytics(
+            request.user, tenant_of_request(request), period))
 
 
 class PerformanceView(GenericAPIView):
@@ -380,7 +385,7 @@ class PerformanceView(GenericAPIView):
     whole salon under a heading that says "you".
     """
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, TenantContext)
     serializer_class = AppointmentSerializer
 
     def get(self, request):
@@ -391,7 +396,8 @@ class PerformanceView(GenericAPIView):
                  'errors': {'period': ['Unknown period.']}},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        payload = reports.performance(request.user, period)
+        payload = reports.performance(
+            request.user, tenant_of_request(request), period)
         if payload['viewpoint'] != 'employee':
             return _forbidden('This is a salon employee\'s own record.')
         return Response(payload)

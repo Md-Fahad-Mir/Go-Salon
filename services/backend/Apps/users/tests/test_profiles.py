@@ -334,9 +334,17 @@ class EmployeeProfileTests(AuthTestCase):
         by `/api/schedule/me/` — see `Apps.schedules.tests`."""
         from Apps.services.models import Service
 
+        from Apps.tenants.models import Tenant
+
         salon = Salon.objects.get(name='Glow Beauty Parlour')
+        # Built straight through the ORM, so it needs its tenant naming the way
+        # `ServiceListCreateView` would have set it. Without one the row has no
+        # business at all and is invisible to every tenant-scoped read, which
+        # would make this test pass for the wrong reason — a 404 rather than
+        # the refusal it is actually about.
         service = Service.objects.create(
             salon=salon, name='Balayage', price='4500.00', duration_minutes=90,
+            tenant=Tenant.objects.get(salon=salon),
         )
 
         response = self.client.patch(

@@ -92,7 +92,9 @@ class ScopeTests(BookingTestCase):
         from Apps.users.models import BarberProfile
         profile = BarberProfile.objects.get(user__phone='+8801811111111')
 
-        self.as_user(self.customer_session)
+        # This customer has joined the barber as well as the salon, so
+        # the request has to say which of the two it is about.
+        self.customer_at(profile)
         made = self.client.post('/api/bookings/', {
             'listing': f'barber-{profile.id}', 'date': self.day.isoformat(),
             'time': '12:00', 'service_ids': [service['id']],

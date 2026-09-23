@@ -80,7 +80,10 @@ class ReportTestCase(BookingTestCase):
         present moment, so it is the only way to say the money was taken on a
         day other than today — which is exactly what these reports bucket by.
         """
-        self.as_user(customer or self.customer_session)
+        # Always this salon: these reports are about our takings, and a
+        # customer who has also joined somewhere else would otherwise have
+        # nothing to say which of the two this booking is at.
+        self.as_user(customer or self.customer_session, tenant=self.tenant)
         booked = self.book(time=at, services=services or [self.cut],
                            employee=employee, day=day).data
         return self.close_off(booked['id'], paid_with=paid_with, tip=tip,
@@ -598,7 +601,9 @@ class ReturningCustomerTests(ReportTestCase):
         their_cut = self._service('Trim', '500.00', 60)
         their_chair = self._hire('01755000088', 'Shahnaz Begum')
 
-        self.as_user(self.customer_session)
+        # The customer is on both salons' books; the request says which.
+        from Apps.users.models import Salon
+        self.customer_at(Salon.objects.get(pk=their_chair.salon_id))
         elsewhere = self.client.post('/api/bookings/', {
             'listing': f'salon-{their_chair.salon_id}',
             'date': self.day.isoformat(), 'time': '11:00',
@@ -608,6 +613,7 @@ class ReturningCustomerTests(ReportTestCase):
         self.close_off(elsewhere.data['id'], by=other_owner)
 
         # The same customer, later that day, at our salon: still new here.
+        self.customer_at(self.salon)
         self.take(at='13:00', services=[self.cut])
 
         self.assertEqual(self.analytics(self.owner_session)['returning'],
@@ -649,7 +655,9 @@ class ReturningCustomerTests(ReportTestCase):
         return {'session': session, 'service': menu, 'profile': profile}
 
     def visit(self, barber: dict, *, at: str) -> dict:
-        self.as_user(self.customer_session)
+        # Each lone barber is its own tenant, so the customer joins each one
+        # they visit and the request names which.
+        self.customer_at(barber['profile'])
         response = self.client.post('/api/bookings/', {
             'listing': f'barber-{barber["profile"].id}',
             'date': self.day.isoformat(), 'time': at,

@@ -16,6 +16,12 @@ from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 
 from Apps.common.images import MAX_IMAGE_CHARS, validate_image_ref
+from Apps.tenants.context import (
+    business_of_tenant,
+    sole_tenant_of,
+    tenant_of_request,
+)
+from Apps.tenants.provisioning import provision_for_barber, provision_for_salon
 
 from .exceptions import Conflict, PhoneNotVerified
 from .models import (
@@ -114,8 +120,14 @@ class UserSerializer(serializers.ModelSerializer):
                 'location': _location_of(barber),
             }
         if user.role == Role.SALON_OWNER:
-            salon = user.salons.first()
-            if salon is not None:
+            # The tenant this payload is about, when the caller named one.
+            # `session_response` renders this at sign-in, before any tenant has
+            # been chosen, so an owner of exactly one salon still gets it — and
+            # an owner of two gets none rather than the alphabetically first.
+            business = business_of_tenant(
+                self.context.get('tenant') or sole_tenant_of(user))
+            salon = (business or {}).get('salon')
+            if salon is not None and salon.owner_id == user.id:
                 data['salon'] = SalonSerializer(salon).data
         if user.role == Role.SALON_EMPLOYEE:
             employment = user.employments.filter(is_active=True).select_related('salon').first()
@@ -275,7 +287,7 @@ class BarberRegistrationSerializer(BaseRegistrationSerializer):
 
     def build_profile(self, user: User) -> None:
         data = self.validated_data
-        BarberProfile.objects.update_or_create(
+        profile, _ = BarberProfile.objects.update_or_create(
             user=user,
             defaults={
                 'audience': data['audience'],
@@ -285,6 +297,12 @@ class BarberRegistrationSerializer(BaseRegistrationSerializer):
                 **self.location_fields(),
             },
         )
+        # A barber registering for themselves is a business, so they get a
+        # tenant and its join token now, for the same reason a salon does.
+        # `provision_for_barber` still asks rather than assuming: it returns
+        # None for a profile that must not have one, so this cannot quietly
+        # give a tenant to a hired stylist if the roles ever move around.
+        provision_for_barber(profile)
 
 
 class SalonOwnerRegistrationSerializer(BaseRegistrationSerializer):
@@ -317,6 +335,11 @@ class SalonOwnerRegistrationSerializer(BaseRegistrationSerializer):
                 **location,
             },
         )
+        # The salon's tenant is made here rather than on first use, because
+        # `join_token` is what the shop's QR code carries and an owner has to
+        # be able to print it the day they sign up. `create()` above is
+        # atomic, so a salon cannot be committed without one.
+        provision_for_salon(salon)
         return salon
 
 
@@ -550,6 +573,16 @@ class SalonEmployeeCreateSerializer(serializers.Serializer):
             # Every professional keeps one of these, employee or not. Making
             # it now means the bio and photograph they add later have a home,
             # and that leaving the salon hands them a working barber account.
+            #
+            # **No Tenant is created here, and that is deliberate — not an
+            # oversight.** This profile is a personal record belonging to
+            # somebody the salon employs, not a business of its own: the shop
+            # they work in is the tenant, and it already has one. Giving this
+            # profile a tenant would make every hired stylist a business on
+            # the platform, which is precisely what `backfill_tenants`
+            # excluded 21 of 28 profiles for. The one row that may hang off it
+            # without a tenant is their own gallery picture — see
+            # `Apps/tenants/provisioning.py::tenant_for_optional`.
             BarberProfile.objects.get_or_create(
                 user=user,
                 defaults={
@@ -853,8 +886,11 @@ class SalonWriteSerializer(BaseProfileWriteSerializer):
     def save(self, **kwargs) -> User:
         user: User = self.context['request'].user
         self.save_account(user)
-        salon = user.salons.first()
-        if salon is None:
+        # The salon this request is editing, not whichever sorts first: an
+        # owner with two shops renaming one must not rename the other.
+        business = business_of_tenant(tenant_of_request(self.context['request']))
+        salon = (business or {}).get('salon')
+        if salon is None or salon.owner_id != user.id:
             raise Conflict('Register your salon before editing it.', code='no_salon')
 
         changed = [f for f in self.SALON_FIELDS if f in self.validated_data]
@@ -1028,12 +1064,18 @@ class EmploymentReadSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-def profile_payload(user: User) -> dict:
-    """Everything the app needs to draw whoever is signed in.
+def profile_payload(user: User, tenant=None) -> dict:
+    """Everything the app needs to draw whoever is signed in, here.
 
     One shape for all four roles, with the parts that do not apply left null,
     so the client has one call and one branch rather than four endpoints.
+
+    `tenant` is threaded in explicitly rather than read from ambient state,
+    the same way `reports.py` takes it. Left out, it falls back to the one
+    tenant the account belongs to — which is every account but an owner of two
+    salons, and those are exactly the ones that must not be guessed at.
     """
+    tenant = tenant or sole_tenant_of(user)
     payload: dict = {
         'role': user.role,
         'account': AccountSerializer(user).data,
@@ -1052,8 +1094,9 @@ def profile_payload(user: User) -> dict:
         payload['barber'] = BarberProfileReadSerializer(barber).data
 
     if user.role == Role.SALON_OWNER:
-        salon = user.salons.first()
-        if salon is not None:
+        business = business_of_tenant(tenant)
+        salon = (business or {}).get('salon')
+        if salon is not None and salon.owner_id == user.id:
             payload['salon'] = SalonReadSerializer(salon).data
 
     employment = active_employment(user)

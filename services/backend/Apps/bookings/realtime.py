@@ -87,7 +87,9 @@ def recipients(appointment) -> list:
     """The candidates who would actually be served this row by the API."""
     allowed = []
     for person in _candidates(appointment):
-        query, _ = scoped(person)
+        # The event carries its own tenant, so this needs no ambient
+        # context — and cannot disagree with the row being broadcast.
+        query, _ = scoped(person, appointment.tenant)
         if query.filter(pk=appointment.pk).exists():
             allowed.append(person)
     return allowed

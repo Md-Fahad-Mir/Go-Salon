@@ -6,11 +6,15 @@ against the owner it already carries, so a future change that starts writing
 `tenant` from a view — or a migration that quietly weakens the column — is
 caught here rather than in production.
 
-The null check is deliberately duplicated. The database enforces `NOT NULL`
-as of `0005_alter_*_tenant`, so at first glance asserting it again is
-redundant. It is not: a later migration that makes the column nullable again
-would silently pass every other test in this project, and the point of this
-one is to notice.
+The null check carries the weight on its own for now. `tenant` was briefly
+`NOT NULL` and was reverted in Step 5, because nothing wrote the column yet and
+the constraint failed most of the suite; the database will enforce it again
+once every write path sets it. Until then this is the only thing asserting it,
+and when the constraint does come back this test is what stops a later
+migration from quietly weakening it.
+
+`GalleryImage` is the one exception, permanently: a hired stylist's own
+picture has no business to belong to. See `tenant_for_optional`.
 """
 
 from __future__ import annotations
@@ -49,7 +53,10 @@ class TenantConsistencyTests(TestCase):
             is_phone_verified=True,
         )
         cls.salon = Salon.objects.create(owner=cls.owner, name='Audit Salon')
-        cls.salon_tenant = Tenant.objects.create(salon=cls.salon, slug='audit-salon')
+        # Already provisioned by the post_save receiver in
+        # `Apps/tenants/signals.py` — creating one here would be a second
+        # tenant for one salon, which the one-to-one column refuses.
+        cls.salon_tenant = Tenant.objects.get(salon=cls.salon)
 
         # --- an independent barber, role still `barber` --------------------
         cls.barber_user = User.objects.create_user(
@@ -57,9 +64,7 @@ class TenantConsistencyTests(TestCase):
             is_phone_verified=True,
         )
         cls.barber = BarberProfile.objects.create(user=cls.barber_user)
-        cls.barber_tenant = Tenant.objects.create(
-            barber_profile=cls.barber, slug='lone-barber',
-        )
+        cls.barber_tenant = Tenant.objects.get(barber_profile=cls.barber)
 
         # --- an owner who never registered a salon -------------------------
         # The "Faiza" case from the backfill: role says salon_owner, but with
@@ -70,9 +75,9 @@ class TenantConsistencyTests(TestCase):
             is_phone_verified=True,
         )
         cls.ownerless = BarberProfile.objects.create(user=cls.ownerless_user)
-        cls.ownerless_tenant = Tenant.objects.create(
-            barber_profile=cls.ownerless, slug='ownerless-owner',
-        )
+        # role=salon_owner with no salon: still an independent business, so
+        # the receiver provisions it too.
+        cls.ownerless_tenant = Tenant.objects.get(barber_profile=cls.ownerless)
 
         # --- a hired stylist, with a profile of their own -------------------
         cls.staff_user = User.objects.create_user(

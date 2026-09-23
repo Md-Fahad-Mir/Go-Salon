@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from django.db import transaction
 
+from Apps.tenants.provisioning import tenant_for
+
 from .models import WEEKDAYS, Weekday, WorkingDay, WorkingInterval
 
 
@@ -24,10 +26,18 @@ def replace_days(owner: dict, days: list[dict]) -> None:
     written — because a partial update of a list has no sensible meaning: you
     cannot "patch" 9-to-1 into 9-to-1-and-4-to-8 without saying which is which.
     """
+    # `owner` is the same three-way key this model's own constraint describes —
+    # a salon, a lone barber, or one chair's employment — and the tenant is
+    # read off whichever of the three it holds. Resolved once for the whole
+    # week rather than per day: every day of one week belongs to one business.
+    tenant = tenant_for(owner)
+
     for entry in days:
         weekday = Weekday.from_key(entry['day'])
         day, _ = WorkingDay.objects.update_or_create(
-            weekday=weekday, defaults={'is_closed': entry['is_closed']}, **owner
+            weekday=weekday,
+            defaults={'is_closed': entry['is_closed'], 'tenant': tenant},
+            **owner,
         )
         day.intervals.all().delete()
         WorkingInterval.objects.bulk_create([

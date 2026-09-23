@@ -1,6 +1,7 @@
 """Who may read, write and answer a review.
 
-Every read starts from `Apps.bookings.access.scoped(user)` so a role can never
+Every read starts from `Apps.bookings.access.scoped(user, tenant)` so a role
+can never
 see a review of work it could not already see the booking for. There is one
 deliberate exception, and it is the public one: a customer choosing a salon has
 to be able to read that salon's reviews without having booked there. That path
@@ -19,6 +20,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from Apps.bookings.access import scoped
+from Apps.tenants.context import tenant_of_request
+from Apps.tenants.permissions import TenantContext
 from Apps.bookings.models import AppointmentStatus
 from Apps.users.models import BarberProfile, Salon
 
@@ -118,11 +121,11 @@ class MyReviewsView(GenericAPIView):
     the reviews of work they did, a barber their own.
     """
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, TenantContext)
     serializer_class = ReviewSerializer
 
     def get(self, request):
-        visible, viewpoint = scoped(request.user)
+        visible, viewpoint = scoped(request.user, tenant_of_request(request))
         query = Review.objects.filter(appointment__in=visible)
         sort = request.query_params.get('sort', 'newest')
         if sort not in SORTS:
@@ -151,11 +154,11 @@ class MyReviewsView(GenericAPIView):
 class AppointmentReviewView(GenericAPIView):
     """Writing one, and the business answering it."""
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, TenantContext)
     serializer_class = ReviewWriteSerializer
 
     def _appointment(self, request, pk: int):
-        visible, _ = scoped(request.user)
+        visible, _ = scoped(request.user, tenant_of_request(request))
         return visible.filter(pk=pk).first()
 
     def post(self, request, pk: int):

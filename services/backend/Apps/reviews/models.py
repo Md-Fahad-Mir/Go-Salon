@@ -7,12 +7,13 @@ none of them is copied here — a denormalised salon id is a second version of t
 truth waiting to disagree with the first, and the appointment is already the row
 every permission rule in this project is written against.
 
-That last part is the important one. `Apps/bookings/access.py::scoped(user)`
+That last part is the important one. `Apps/bookings/access.py::scoped(user,
+tenant)`
 decides which appointments an account may see, and it has been audited. Because
 a review is reachable only through an appointment, the same call answers who may
 read which reviews:
 
-    Review.objects.filter(appointment__in=scoped(user)[0])
+    Review.objects.filter(appointment__in=scoped(user, tenant)[0])
 
 gives an owner their salon's reviews, an employee the reviews of work they did,
 a barber their own, and a customer the ones they wrote — without a second

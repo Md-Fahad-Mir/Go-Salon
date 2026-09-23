@@ -60,8 +60,10 @@ class ReviewTestCase(BookingTestCase):
         )
         return appointment_id
 
-    def write(self, appointment_id, rating=5, text='', expect=201):
-        self.as_user(self.customer_session)
+    def write(self, appointment_id, rating=5, text='', expect=201, tenant=None):
+        # `tenant` only matters for a customer on more than one salon's
+        # books, where there is nothing for the fallback to pick.
+        self.as_user(self.customer_session, tenant=tenant)
         response = self.client.post(
             booking(appointment_id), {'rating': rating, 'text': text}, format='json')
         if expect is not None:
@@ -180,7 +182,9 @@ class ScopeTests(ReviewTestCase):
         }, format='json')
         self.assertEqual(service.status_code, 201, service.data)
 
-        self.as_user(self.customer_session)
+        # This customer has joined the barber as well as the salon, so
+        # the request has to say which of the two it is about.
+        self.customer_at(profile)
         created = self.client.post('/api/bookings/', {
             'listing': f'barber-{profile.id}', 'date': self.day.isoformat(),
             'time': '11:00', 'service_ids': [service.data['id']],
@@ -191,7 +195,7 @@ class ScopeTests(ReviewTestCase):
         self.as_user(barber)
         self.client.post(f'/api/bookings/{appointment}/approve/')
         self.client.post(f'/api/bookings/{appointment}/complete/')
-        self.write(appointment, 5, 'Sharp.')
+        self.write(appointment, 5, 'Sharp.', tenant=self.tenant_of(profile))
 
         payload = self.ratings(barber)
         self.assertEqual(payload['viewpoint'], 'barber')

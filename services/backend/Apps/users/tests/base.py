@@ -106,8 +106,16 @@ class AuthTestCase(APITestCase):
         return User.objects.create_superuser(phone=phone, password='chairside2026',
                                              name='Platform Admin')
 
-    def as_user(self, session: dict) -> None:
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {session["access"]}')
+    def as_user(self, session: dict, tenant=None) -> None:
+        """Sign in, optionally naming which tenant the requests are about.
+
+        `tenant` is only needed when the account belongs to more than one
+        and the fallback in `tenant_of_request` therefore cannot choose.
+        """
+        headers = {'HTTP_AUTHORIZATION': f'Bearer {session["access"]}'}
+        if tenant is not None:
+            headers['HTTP_X_TENANT_ID'] = str(tenant.pk)
+        self.client.credentials(**headers)
 
     def sign_in(self, phone: str, password: str = 'chairside2026'):
         return self.client.post('/api/auth/login/', {'phone': phone, 'password': password},
@@ -118,3 +126,4 @@ class AuthTestCase(APITestCase):
 
     def assertRole(self, session: dict, role: str) -> None:
         self.assertEqual(session['user']['role'], role)
+

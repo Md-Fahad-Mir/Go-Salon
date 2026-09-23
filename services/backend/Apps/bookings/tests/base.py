@@ -7,6 +7,7 @@ from datetime import date, timedelta
 from django.test import override_settings
 
 from Apps.services.models import Service
+from Apps.tenants.models import CustomerTenantMembership, Tenant
 from Apps.users.models import BarberProfile, Salon, SalonEmployee, User
 from Apps.users.tests.base import AuthTestCase
 
@@ -47,7 +48,60 @@ class BookingTestCase(AuthTestCase):
 
         self.customer_session = self.make_customer()
         self.customer = User.objects.get(pk=self.customer_session['user']['id'])
+        self.tenant = Tenant.objects.get(salon=self.salon)
+        self.join(self.customer)
         self.day = next_monday()
+
+    def join(self, customer: User, tenant=None) -> CustomerTenantMembership:
+        """Put a customer on the salon's books, the way scanning its QR would.
+
+        Standing in for the join endpoint, which Step 6d builds. Written out in
+        the fixture rather than made to happen automatically — no signal, no
+        side effect of booking — because a customer joining a salon is a thing
+        they *do*, and a test that gets it for free would stop noticing when
+        the real endpoint stops doing it.
+        """
+        membership, _ = CustomerTenantMembership.objects.get_or_create(
+            customer=customer, tenant=tenant or self.tenant,
+        )
+        return membership
+
+    def make_customer(self, **overrides) -> dict:
+        """A customer who has already joined this salon.
+
+        Tests routinely make a second or third customer to prove one cannot
+        see another's bookings, and every one of them needs to be on the
+        salon's books before they can book anything — a real customer scans
+        the QR code, and `TenantContext` refuses anyone who has not.
+
+        Joining here rather than in each test keeps that a property of the
+        fixture, which is what it is. Customers made before `self.tenant`
+        exists (the one in `setUp`) are joined explicitly there instead.
+        """
+        session = super().make_customer(**overrides)
+        tenant = getattr(self, 'tenant', None)
+        if tenant is not None:
+            self.join(User.objects.get(pk=session['user']['id']), tenant)
+        return session
+
+    def tenant_of(self, business) -> Tenant:
+        """The tenant of a `Salon` or a `BarberProfile`."""
+        key = 'salon' if isinstance(business, Salon) else 'barber_profile'
+        return Tenant.objects.get(**{key: business})
+
+    def customer_at(self, business, customer=None, session=None) -> Tenant:
+        """Join the customer to a business and act as them *there*.
+
+        A customer who has scanned two salons belongs to both, and the
+        fallback in `tenant_of_request` cannot pick between them — nor should
+        it. So this names the tenant on the request as well as creating the
+        membership, which is the pair a real client will send once Step 6d
+        gives it somewhere to put the identifier.
+        """
+        tenant = self.tenant_of(business)
+        self.join(customer or self.customer, tenant)
+        self.as_user(session or self.customer_session, tenant=tenant)
+        return tenant
 
     # --- building the salon ------------------------------------------------
 

@@ -21,6 +21,8 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from Apps.tenants.context import business_of_tenant, tenant_of_request
+from Apps.tenants.permissions import TenantContext
 from Apps.users.models import Role, SalonEmployee
 from Apps.users.permissions import IsProvider, IsSalonOrParlorOwner
 
@@ -28,24 +30,61 @@ from . import services as schedule_service
 from .serializers import ScheduleWriteSerializer, serialize_days
 
 
-def own_owner(user) -> dict | None:
-    """The rows a professional's own schedule hangs off."""
+def own_owner(user, tenant) -> dict | None:
+    """The rows a professional's own schedule hangs off, in this tenant.
+
+    The owner and barber branches are read off the tenant: an owner with two
+    salons setting opening hours has to be setting *these* opening hours, and
+    `user.salons.first()` answered that with whichever name sorted first.
+
+    The employee branch is different, and stays an employment lookup. A chair
+    belongs to exactly one salon at a time — `unique_active_employment_per_user`
+    is a partial unique index, so the database itself allows only one active
+    row — and the hours hang off that employment, not off the tenant. What the
+    tenant does here is check the two agree: hours for a chair in a salon the
+    request is not about are nobody's to set.
+    """
+    business = business_of_tenant(tenant)
+    if business is None:
+        return None
+
     if user.role == Role.BARBER:
         profile = getattr(user, 'barber_profile', None)
-        return {'barber': profile} if profile is not None else None
+        if profile is None or business.get('barber') is None:
+            return None
+        return {'barber': profile} if business['barber'].pk == profile.pk else None
+
     if user.role == Role.SALON_OWNER:
-        salon = user.salons.first()
-        return {'salon': salon} if salon is not None else None
+        salon = business.get('salon')
+        if salon is None or salon.owner_id != user.id:
+            return None
+        return {'salon': salon}
+
     if user.role == Role.SALON_EMPLOYEE:
         employment = user.employments.filter(is_active=True).first()
-        return {'employment': employment} if employment is not None else None
+        if employment is None or business.get('salon') is None:
+            return None
+        if employment.salon_id != business['salon'].pk:
+            return None
+        return {'employment': employment}
+
     return None
 
 
-def salon_owner_of(user) -> dict | None:
-    """The salon an employee falls back to, if they have one."""
+def salon_owner_of(user, tenant) -> dict | None:
+    """The salon an employee falls back to for hours they have not set.
+
+    Their employer, and only when that is the salon the request is about —
+    otherwise an employee could read one salon's opening hours while acting
+    in another.
+    """
+    business = business_of_tenant(tenant)
+    if business is None or business.get('salon') is None:
+        return None
     employment = user.employments.filter(is_active=True).select_related('salon').first()
-    return {'salon': employment.salon} if employment is not None else None
+    if employment is None or employment.salon_id != business['salon'].pk:
+        return None
+    return {'salon': employment.salon}
 
 
 def schedule_payload(owner: dict, fallback: dict | None = None, *, editable: bool = True) -> dict:
@@ -76,15 +115,16 @@ def schedule_payload(owner: dict, fallback: dict | None = None, *, editable: boo
 
 
 class MyScheduleView(GenericAPIView):
-    permission_classes = (IsAuthenticated, IsProvider)
+    permission_classes = (IsAuthenticated, IsProvider, TenantContext)
     serializer_class = ScheduleWriteSerializer
 
     def _owner(self):
-        return own_owner(self.request.user)
+        return own_owner(self.request.user, tenant_of_request(self.request))
 
     def _fallback(self):
         if self.request.user.role == Role.SALON_EMPLOYEE:
-            return salon_owner_of(self.request.user)
+            return salon_owner_of(self.request.user,
+                                  tenant_of_request(self.request))
         return None
 
     def get(self, request):
@@ -127,7 +167,7 @@ class MyScheduleView(GenericAPIView):
 class EmployeeScheduleView(GenericAPIView):
     """An owner setting the hours of one chair."""
 
-    permission_classes = (IsAuthenticated, IsSalonOrParlorOwner)
+    permission_classes = (IsAuthenticated, IsSalonOrParlorOwner, TenantContext)
     serializer_class = ScheduleWriteSerializer
 
     def _employment(self, request, pk: int):

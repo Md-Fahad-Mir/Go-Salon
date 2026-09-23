@@ -133,7 +133,9 @@ class BookingCreationTests(BookingTestCase):
         from Apps.users.models import BarberProfile
         pk = BarberProfile.objects.get(user__phone='+8801811111111').id
 
-        self.as_user(self.customer_session)
+        # This customer has joined the barber as well as the salon, so
+        # the request has to say which of the two it is about.
+        self.customer_at(BarberProfile.objects.get(pk=pk))
         response = self.client.post('/api/bookings/', {
             'listing': f'barber-{pk}', 'date': self.day.isoformat(), 'time': '11:00',
             'service_ids': [service['id']],

@@ -293,7 +293,8 @@ class BroadcastTests(BookingTestCase):
         self.assertEqual(trim.status_code, 201, trim.data)
 
         listening = self.watch(barber, self.owner)
-        self.as_user(self.customer_session)
+        # The customer has joined the barber too, and says so on the request.
+        self.customer_at(barber.barber_profile)
         with self.captureOnCommitCallbacks(execute=True):
             self.client.post('/api/bookings/', {
                 'listing': f'barber-{barber.barber_profile.id}',
