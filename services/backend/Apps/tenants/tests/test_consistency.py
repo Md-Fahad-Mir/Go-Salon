@@ -2,19 +2,20 @@
 
 This is a whole-table audit rather than a test of one code path. It walks
 `Service`, `GalleryImage`, `WorkingDay` and `Appointment` and checks each row
-against the owner it already carries, so a future change that starts writing
-`tenant` from a view — or a migration that quietly weakens the column — is
+against the owner it already carries, so a view that starts writing `tenant`
+from the wrong place — or a migration that quietly weakens the column — is
 caught here rather than in production.
 
-The null check carries the weight on its own for now. `tenant` was briefly
-`NOT NULL` and was reverted in Step 5, because nothing wrote the column yet and
-the constraint failed most of the suite; the database will enforce it again
-once every write path sets it. Until then this is the only thing asserting it,
-and when the constraint does come back this test is what stops a later
-migration from quietly weakening it.
+`Service`, `WorkingDay` and `Appointment` are `NOT NULL` in the database again
+as of `services.0007`, `schedules.0005` and `bookings.0008`. That makes the
+null check below a belt-and-braces duplicate of a live constraint, which is
+the point: it is what fails CI if a later migration relaxes the column.
 
-`GalleryImage` is the one exception, permanently: a hired stylist's own
-picture has no business to belong to. See `tenant_for_optional`.
+`GalleryImage` is the one exception, permanently — a hired stylist's own
+picture has no business to belong to, so its tenant is null and must stay
+allowed to be. See `tenant_for_optional` and the comment on the field itself.
+The audit therefore does not demand a tenant there; it demands that a missing
+one means *exactly* that and nothing else.
 """
 
 from __future__ import annotations
@@ -39,6 +40,12 @@ TENANT_MODELS = (
     ('GalleryImage', GalleryImage),
     ('WorkingDay', WorkingDay),
     ('Appointment', Appointment),
+)
+
+#: The three the database itself now requires. GalleryImage is deliberately
+#: absent — see the module docstring.
+REQUIRED_TENANT_MODELS = tuple(
+    (label, model) for label, model in TENANT_MODELS if model is not GalleryImage
 )
 
 
@@ -91,20 +98,29 @@ class TenantConsistencyTests(TestCase):
         # No tenant of their own — a hired stylist is not a business.
 
         # --- rows of every ownership shape ---------------------------------
-        for owner_kwargs, tenant in (
-            ({'salon': cls.salon}, cls.salon_tenant),
-            ({'barber': cls.barber}, cls.barber_tenant),
-            ({'barber': cls.ownerless}, cls.ownerless_tenant),
-            # The employer-cascade case: owned by the stylist's own profile,
-            # attributed to the salon that employs them.
-            ({'barber': cls.staff}, cls.salon_tenant),
+        # Third element: the tenant the *gallery* row carries, which is the
+        # one place it can differ. A hired stylist's own picture has none —
+        # that is what `tenant_for_optional` writes, so it is what the audit
+        # has to be able to see.
+        for owner_kwargs, tenant, gallery_tenant in (
+            ({'salon': cls.salon}, cls.salon_tenant, cls.salon_tenant),
+            ({'barber': cls.barber}, cls.barber_tenant, cls.barber_tenant),
+            ({'barber': cls.ownerless}, cls.ownerless_tenant, cls.ownerless_tenant),
+            # Owned by the stylist's own profile. The service and the working
+            # day are reachable only through the ORM — no view will make one,
+            # because `service_owner` refuses an employee and a stylist's
+            # schedule hangs off their `employment` — but both columns are NOT
+            # NULL, so if such a row ever appears it carries the employer's
+            # tenant. The picture is the real, reachable case, and it has none.
+            ({'barber': cls.staff}, cls.salon_tenant, None),
         ):
             Service.objects.create(
                 name='Cut', price='500.00', duration_minutes=30,
                 tenant=tenant, **owner_kwargs,
             )
             GalleryImage.objects.create(
-                image='https://example.test/a.jpg', tenant=tenant, **owner_kwargs,
+                image='https://example.test/a.jpg', tenant=gallery_tenant,
+                **owner_kwargs,
             )
             WorkingDay.objects.create(weekday=1, tenant=tenant, **owner_kwargs)
 
@@ -143,14 +159,17 @@ class TenantConsistencyTests(TestCase):
 
     # -- the audit ---------------------------------------------------------
 
-    def test_tenant_is_never_null(self):
-        """No row anywhere may be missing its tenant.
+    def test_tenant_is_never_null_where_the_column_requires_one(self):
+        """No `Service`, `WorkingDay` or `Appointment` may be missing its
+        tenant.
 
-        Also enforced by the database since `0005_alter_*_tenant`. Asserted
-        here as well so that a migration which makes the column nullable again
-        fails CI instead of passing quietly.
+        The database enforces this itself since `services.0007`,
+        `schedules.0005` and `bookings.0008`. Asserted here as well so that a
+        migration which makes one of the columns nullable again fails CI
+        instead of passing quietly — the column was NOT NULL once before, in
+        Step 4, and was reverted; this is what would notice a second time.
         """
-        for label, model in TENANT_MODELS:
+        for label, model in REQUIRED_TENANT_MODELS:
             with self.subTest(model=label):
                 orphans = model.objects.filter(tenant__isnull=True)
                 self.assertEqual(
@@ -158,6 +177,38 @@ class TenantConsistencyTests(TestCase):
                     f'{label} rows with no tenant: '
                     f'{list(orphans.values_list("pk", flat=True))}',
                 )
+
+    def test_a_gallery_picture_with_no_tenant_is_an_employees_own(self):
+        """The one permitted null, and only for the one reason.
+
+        `GalleryImage.tenant` stays nullable for good, so this table cannot be
+        audited by demanding a tenant. What can be audited is the *meaning* of
+        its absence: the sole writer that produces one is
+        `tenant_for_optional`, and it does so only for a hired stylist's own
+        profile. A null on a salon's picture, or on an independent barber's,
+        is a row nobody's code should have been able to write.
+        """
+        loose = GalleryImage.objects.filter(tenant__isnull=True).select_related(
+            'barber__user'
+        )
+        for row in loose:
+            with self.subTest(pk=row.pk):
+                self.assertIsNone(
+                    row.salon_id,
+                    f"GalleryImage #{row.pk} belongs to a salon and so has a "
+                    f"business to belong to, but carries no tenant",
+                )
+                self.assertEqual(
+                    row.barber.user.role, Role.SALON_EMPLOYEE,
+                    f'GalleryImage #{row.pk} has no tenant but its owner is a '
+                    f'{row.barber.user.role}, not a hired stylist',
+                )
+        # The fixtures build exactly one. A zero here means the check above
+        # proved nothing, which is worth failing over.
+        self.assertGreater(
+            loose.count(), 0,
+            'no tenant-less gallery rows in the fixtures; this test proves nothing',
+        )
 
     def test_business_owned_rows_match_their_owners_tenant(self):
         """A row owned by a salon, or by a barber who is a business in their
@@ -184,54 +235,58 @@ class TenantConsistencyTests(TestCase):
                         f'owner belongs to tenant {expected}',
                     )
 
-    def test_employee_owned_rows_only_have_to_be_populated(self):
-        """A row hanging off a hired stylist's own profile: tenant set, and
-        that is all this test asserts.
+    def test_employee_owned_rows_carry_whatever_their_column_allows(self):
+        """A row hanging off a hired stylist's own profile.
 
-        It deliberately does **not** check that the tenant is the stylist's
-        current employer. The employer attribution in
-        `backfill_tenants._cascade_employee_rows` was a one-time reading of
-        who employed them on the day the backfill ran. Nothing keeps it true
-        afterwards: no view, serializer or signal writes `tenant` at all yet,
-        so there is no code path that would re-point these rows when somebody
-        changes job. Asserting a match here would be asserting an invariant
-        this project does not maintain, and the test would start failing on a
-        perfectly ordinary transfer.
+        This test deliberately does **not** check that the tenant is the
+        stylist's *current* employer. The attribution in
+        `backfill_tenants._cascade_employee_rows` was a one-time reading of who
+        employed them on the day the backfill ran, and nothing re-points these
+        rows when somebody changes job. Asserting a match would be asserting an
+        invariant this project does not maintain, and the test would start
+        failing on a perfectly ordinary transfer.
 
-        TODO(Step 5): decide what these rows mean when a stylist moves salons,
-        at the point where views and serializers begin writing `tenant`
-        directly. As it stands this test will not catch a stylist's old
-        personal listings still pointing at a previous employer's tenant. The
-        options are at least:
+        What it does assert is the split the columns now describe, which is the
+        Step 6 answer to the question Step 4 left open:
 
-          * move them with the stylist, so a portfolio follows its owner;
-          * freeze them at the tenant they were created under, and treat the
-            attribution as history rather than as ownership;
-          * stop attributing them to an employer at all, and give every
-            stylist a tenant of their own.
+          * a picture is the stylist's own and has no tenant at all — their
+            portfolio follows them between shops, which is exactly why it
+            cannot be filed under one;
+          * a service or a working day owned by a personal profile is not
+            reachable through any view, and its column is NOT NULL, so it can
+            only ever carry a real tenant.
 
-        Whichever is chosen, this test should be tightened to assert it.
+        The consequence, stated plainly so nobody finds it by surprise: a
+        stylist's old ORM-made listings can still point at a previous
+        employer's tenant, and nothing here will catch it. Only the picture
+        case is maintained, and it is maintained by having no tenant to go
+        stale.
         """
-        employee_rows = 0
+        pictures = tenants = 0
         for label, model in TENANT_MODELS:
             if not hasattr(model, 'barber'):
                 continue
             for row in model.objects.filter(
                 barber__isnull=False, barber__user__role=Role.SALON_EMPLOYEE
             ).select_related('barber__user'):
-                employee_rows += 1
                 with self.subTest(model=label, pk=row.pk):
-                    self.assertIsNotNone(
-                        row.tenant_id,
-                        f'{label} #{row.pk} is owned by an employee profile and '
-                        f'has no tenant',
-                    )
-        # The fixtures build three such rows. If that ever becomes zero the
-        # test above is passing vacuously, which is worth failing over.
-        self.assertGreater(
-            employee_rows, 0,
-            'no employee-owned rows in the fixtures; this test proves nothing',
-        )
+                    if model is GalleryImage:
+                        pictures += 1
+                        self.assertIsNone(
+                            row.tenant_id,
+                            f"GalleryImage #{row.pk} is a stylist's own picture "
+                            f"but was filed under tenant {row.tenant_id}; their "
+                            f"portfolio is not the shop's",
+                        )
+                    else:
+                        tenants += 1
+                        self.assertIsNotNone(
+                            row.tenant_id,
+                            f'{label} #{row.pk} is owned by an employee profile '
+                            f'and has no tenant',
+                        )
+        self.assertGreater(pictures, 0, 'no employee-owned pictures in the fixtures')
+        self.assertGreater(tenants, 0, 'no employee-owned required rows in the fixtures')
 
     def test_every_tenant_has_exactly_one_business(self):
         """The model's own check constraint, asserted through the ORM.

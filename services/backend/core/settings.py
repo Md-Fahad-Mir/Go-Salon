@@ -262,6 +262,11 @@ BOOKING_HORIZON_DAYS = env_int('BOOKING_HORIZON_DAYS', 60)
 # `PLATFORM_FEE` in services/frontend/src/constants must be the same number.
 BOOKING_PLATFORM_FEE = env_int('BOOKING_PLATFORM_FEE', 50)
 
+# Where a salon's QR code points. It is printed and stuck on a counter, so
+# it has to name wherever the app actually is — not the same string in
+# development as in production.
+JOIN_URL_BASE = env('JOIN_URL_BASE', 'https://app.gosalon.com')
+
 # Where booking events are fanned out between server processes. The in-memory
 # layer is real but process-local: one `runserver` is fine, two workers behind
 # a load balancer would each only reach the dashboards connected to them. Set

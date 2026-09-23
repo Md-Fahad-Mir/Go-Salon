@@ -177,6 +177,33 @@ class OptionalTenantContext(TenantContext):
         return super().has_permission(request, view)
 
 
+class OwnsTenant(BasePermission):
+    """The person whose business this tenant *is* — not merely someone in it.
+
+    `IsProvider` is too wide for anything that changes what the business is:
+    it passes employees, and a stylist is not the shop. `TenantContext` is too
+    wide in the other direction: belonging to a tenant is what an employee
+    does. This is the narrow one — the salon's owner, or the barber the tenant
+    is — and it is what guards the QR code, since regenerating it invalidates
+    every printed copy in the building.
+
+    Must be listed *after* `TenantContext`, which is what puts the tenant on
+    the request for it to read.
+    """
+
+    message = 'Only the owner of this business can do that.'
+
+    def has_permission(self, request, view) -> bool:
+        tenant = getattr(request, 'tenant', None)
+        if tenant is None:
+            return False
+        user = request.user
+        if tenant.salon_id:
+            return tenant.salon.owner_id == user.id
+        profile = getattr(user, 'barber_profile', None)
+        return profile is not None and tenant.barber_profile_id == profile.id
+
+
 def _as_int(raw: str) -> int:
     """The header as a primary key, or a value that matches nothing.
 

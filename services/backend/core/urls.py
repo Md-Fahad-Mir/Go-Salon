@@ -21,6 +21,7 @@ urlpatterns = [
     # Admin accounts are made here and from `manage.py createsuperuser`, never
     # through a public registration endpoint.
     path('admin/', admin.site.urls),
+    path('api/', include('Apps.tenants.urls')),
     path('api/', include('Apps.users.urls')),
     path('api/', include('Apps.services.urls')),
     path('api/', include('Apps.schedules.urls')),

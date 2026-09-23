@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from Apps.services.models import Service, ServiceCategory
+from Apps.tenants.provisioning import tenant_for
 from Apps.users.models import BarberProfile, Salon, User
 from Apps.users.tests.base import AuthTestCase
 
@@ -207,7 +208,11 @@ class DirectoryFilterTests(AuthTestCase):
     def test_search_matches_a_service_by_name(self):
         owner = User.objects.get(phone='+8801912345678')
         salon = Salon.objects.get(owner=owner)
-        Service.objects.create(salon=salon, name='Keratin treatment',
+        # `tenant` is NOT NULL, and through the API it is filled in by
+        # `service_owner` -> `tenant_for`. Built here directly, the fixture has
+        # to resolve it the same way the view would.
+        Service.objects.create(salon=salon, tenant=tenant_for({'salon': salon}),
+                               name='Keratin treatment',
                                price=6000, duration_minutes=180)
         self.assertEqual(self.names(q='keratin'), {'Glow Beauty Parlour'})
 
@@ -222,8 +227,9 @@ class DirectoryFilterTests(AuthTestCase):
 
     def test_sorts_by_price_with_the_menuless_last(self):
         owner = User.objects.get(phone='+8801912345678')
-        Service.objects.create(salon=Salon.objects.get(owner=owner), name='Trim',
-                               price=300, duration_minutes=20)
+        salon = Salon.objects.get(owner=owner)
+        Service.objects.create(salon=salon, tenant=tenant_for({'salon': salon}),
+                               name='Trim', price=300, duration_minutes=20)
         rows = self.results(sort='price')
         self.assertEqual(rows[0]['name'], 'Glow Beauty Parlour')
         self.assertIsNone(rows[-1]['price_from'])

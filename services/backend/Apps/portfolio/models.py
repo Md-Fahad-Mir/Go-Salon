@@ -24,22 +24,24 @@ class GalleryImage(models.Model):
         'users.Salon', on_delete=models.CASCADE, null=True, blank=True,
         related_name='gallery',
     )
-    #: The business this row belongs to. Backfilled from the salon/barber
-    #: columns above and complete for every row in the database today — but
-    #: still nullable, because nothing *writes* it yet. The views, the
-    #: serializers and `bookings/services.py` all create rows without a
-    #: tenant, so a NOT NULL column here fails most of the test suite. The
-    #: constraint goes on in the same change that teaches those paths to set
-    #: it; until then the column is filled by the backfill command alone.
+    #: The business this picture belongs to — **nullable, permanently, by
+    #: design. This is not an unfinished migration.**
     #:
-    #: CASCADE rather than SET_NULL even while the column is nullable. A
-    #: tenant is only ever deleted along with the salon or barber profile it
-    #: belongs to (`Tenant.salon` and `Tenant.barber_profile` are both
-    #: CASCADE), and that deletion already reaches these rows through their
-    #: own owner column, so the outcome is the same either way. Keeping
-    #: CASCADE now also means making the column non-null later is a one-line
-    #: change: SET_NULL is illegal on a non-null column and would have to be
-    #: swapped out again anyway.
+    #: `Service`, `WorkingDay` and `Appointment` all became NOT NULL, and
+    #: the obvious next move is to 'finish the job' here. Do not. A hired
+    #: stylist's own gallery picture belongs to *them*, not to the shop they
+    #: stand in — `gallery_owner` says so and
+    #: `test_an_employees_gallery_is_theirs_and_not_the_salons` asserts the
+    #: picture must never appear in the salon's gallery. Their profile is
+    #: therefore not a business and has no tenant to file this under, and
+    #: both alternatives break that contract: refusing the upload deletes a
+    #: working feature, and filing it under their employer is the thing that
+    #: test forbids.
+    #:
+    #: So a null here means exactly one thing — a stylist's own work — and
+    #: `tenant_for_optional` is the only writer that produces it.
+    #:
+    #: CASCADE for the same reason as the other three: see any of them.
     tenant = models.ForeignKey(
         'tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True,
         db_index=True, related_name='gallery_images',

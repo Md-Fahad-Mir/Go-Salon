@@ -89,23 +89,20 @@ class Service(models.Model):
         related_name='services',
     )
     #: The business this row belongs to. Backfilled from the salon/barber
-    #: columns above and complete for every row in the database today — but
-    #: still nullable, because nothing *writes* it yet. The views, the
-    #: serializers and `bookings/services.py` all create rows without a
-    #: tenant, so a NOT NULL column here fails most of the test suite. The
-    #: constraint goes on in the same change that teaches those paths to set
-    #: it; until then the column is filled by the backfill command alone.
+    #: columns above, set at creation by `tenant_for` on every write path,
+    #: and required: every one of these rows has an owner, so every one has
+    #: a tenant.
     #:
-    #: CASCADE rather than SET_NULL even while the column is nullable. A
+    #: CASCADE rather than SET_NULL, which a non-null column cannot use. A
     #: tenant is only ever deleted along with the salon or barber profile it
     #: belongs to (`Tenant.salon` and `Tenant.barber_profile` are both
-    #: CASCADE), and that deletion already reaches these rows through their
-    #: own owner column, so the outcome is the same either way. Keeping
-    #: CASCADE now also means making the column non-null later is a one-line
-    #: change: SET_NULL is illegal on a non-null column and would have to be
-    #: swapped out again anyway.
+    #: CASCADE), and that same deletion already takes these rows through
+    #: their own owner column — so for every deletion this project performs
+    #: the outcome is unchanged. PROTECT would not do: it raises even when
+    #: the referencing rows are part of the same deletion, which would make
+    #: deleting a salon impossible.
     tenant = models.ForeignKey(
-        'tenants.Tenant', on_delete=models.CASCADE, null=True, blank=True,
+        'tenants.Tenant', on_delete=models.CASCADE,
         db_index=True, related_name='services',
     )
     category = models.ForeignKey(
