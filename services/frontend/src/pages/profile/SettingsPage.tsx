@@ -10,6 +10,7 @@ import { AppearanceSection } from '../../components/profile/AppearanceSection';
 import { LanguageSection } from '../../components/profile/LanguageSection';
 import { LogoutButton } from '../../components/profile/LogoutButton';
 import { PaymentAccountsSection } from '../../components/profile/PaymentAccountsSection';
+import { SalonSection } from '../../components/profile/SalonSection';
 import { useT } from '../../hooks/useLanguage';
 import { useAppStore } from '../../store/useAppStore';
 import { formatNumber } from '../../utils/format';
@@ -55,6 +56,9 @@ export default function SettingsPage() {
             />
           </ListCard>
         </section>
+
+        {/* Renders itself only when there is more than one salon to pick. */}
+        <SalonSection />
 
         <LanguageSection />
 

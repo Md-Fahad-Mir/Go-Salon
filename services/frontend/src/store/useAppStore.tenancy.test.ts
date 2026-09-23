@@ -308,11 +308,31 @@ describe('loadTenants: reading the list from the server', () => {
     expect(store().activeTenantId).toBe(before.active);
   });
 
-  describe('the roles that have no such list', () => {
-    // `/api/tenants/mine/` answers every non-customer 403 `not_a_customer`,
-    // so the right behaviour is not to ask.
-    for (const role of ['salon_owner', 'barber', 'salon_employee', 'admin'] as const) {
-      it(`does not call the endpoint for a ${role}`, async () => {
+  describe('which list each role is asked for', () => {
+    it('asks a customer for the salons they have joined', async () => {
+      signIn('customer');
+      serve({ status: 200, body: [ALPHA] });
+      await store().loadTenants();
+      expect(sent[0].url).toBe('http://api.test/api/tenants/mine/');
+    });
+
+    it('asks an owner for the salons they own, not for memberships', async () => {
+      // `/tenants/mine/` would answer an owner 403 `not_a_customer`; owning a
+      // shop is not joining one, and only owners can have several.
+      signIn('salon_owner');
+      serve({ status: 200, body: [ALPHA, BETA] });
+      await store().loadTenants();
+      expect(sent).toHaveLength(1);
+      expect(sent[0].url).toBe('http://api.test/api/tenants/owned/');
+      expect(store().tenants).toEqual([ALPHA, BETA]);
+    });
+
+    // A barber's profile is one-to-one with their account and a stylist's
+    // active employment is bounded by a partial unique index, so each has at
+    // most one tenant and the backend resolves it from the account. There is
+    // no list, and no endpoint that would answer.
+    for (const role of ['barber', 'salon_employee', 'admin'] as const) {
+      it(`asks nothing at all for a ${role}`, async () => {
         signIn(role);
         serve(); // any request at all would throw
         await store().loadTenants();

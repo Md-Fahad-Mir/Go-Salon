@@ -12,4 +12,11 @@ export const tenant = {
   'tenant.errNotCustomerBody': 'Only a customer account keeps a list of salons. Sign in with your customer account to join this one.',
   'tenant.signInTitle': 'Sign in to join',
   'tenant.signInBody': 'We will bring you straight back here.',
+
+  /* The switcher, in Settings. */
+  'tenant.switchTitle': 'Salon',
+  'tenant.switchHint': 'Which salon the app is showing you.',
+  'tenant.switchActive': 'Showing now',
+  'tenant.errListTitle': 'We could not load your salons',
+  'tenant.errListBody': 'The app is still showing the last list it had.',
 } as const;

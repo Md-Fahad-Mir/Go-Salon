@@ -6,6 +6,7 @@ import { Screen, ScreenBody } from '../../components/layout/Screen';
 import { AppearanceSection } from '../../components/profile/AppearanceSection';
 import { LanguageSection } from '../../components/profile/LanguageSection';
 import { LogoutButton } from '../../components/profile/LogoutButton';
+import { SalonSection } from '../../components/profile/SalonSection';
 import { useT } from '../../hooks/useLanguage';
 
 /** The app's own business, and only that.
@@ -42,6 +43,9 @@ export default function ProSettingsPage() {
             />
           </ListCard>
         </section>
+
+        {/* Renders itself only for an owner with more than one shop. */}
+        <SalonSection />
 
         <LanguageSection />
         <AppearanceSection />

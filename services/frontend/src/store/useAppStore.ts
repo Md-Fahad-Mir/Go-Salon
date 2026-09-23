@@ -403,14 +403,23 @@ export const useAppStore = create<AppStore>()(
       loadTenants: async () => {
         const { user, isAuthenticated } = get();
         if (!isAuthenticated || !user) return;
-        if ((user.role ?? 'customer') !== 'customer') {
+
+        const role = user.role ?? 'customer';
+        // Which list, if any. A barber and a hired stylist have at most one
+        // tenant each and the database is what says so, so there is nothing
+        // for them to choose between and no endpoint that would answer.
+        const read =
+          role === 'customer' ? tenantService.mine
+          : role === 'salon_owner' ? tenantService.owned
+          : null;
+        if (read === null) {
           set({ tenantsStatus: 'ready' });
           return;
         }
 
         set({ tenantsStatus: 'loading' });
         try {
-          const mine = await tenantService.mine();
+          const mine = await read();
           // A body that is not a list would sail through `setTenants` and
           // blow up later inside the reconcile, far from the cause.
           if (!Array.isArray(mine)) throw new TypeError('Expected a list of salons.');
