@@ -125,6 +125,75 @@ class BroadcastTests(BookingTestCase):
         self.assertEqual([item['name'] for item in booking['items']], ['Ladies cut'])
         self.assertEqual(booking['status'], AppointmentStatus.APPROVED)
 
+    def test_the_envelope_names_the_business_the_event_is_about(self):
+        """`tenant_id`, for a client showing one salon at a time.
+
+        On the envelope beside `event`, not inside `booking` — the row's own
+        shape is the REST serializer's and is not this step's to change.
+        """
+        listening = self.watch(self.owner, self.employee, self.customer)
+
+        self.as_user(self.customer_session)
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.book(time='11:00', employee=self.chair)
+
+        appointment = Appointment.objects.get(pk=response.data['id'])
+        self.assertIsNotNone(appointment.tenant_id)
+
+        heard = drain(listening)
+        for who in (self.owner, self.employee, self.customer):
+            events = [message['payload'] for message in heard[group_for(who.id)]]
+            self.assertEqual(len(events), 1)
+            with self.subTest(who=who.name):
+                self.assertEqual(
+                    events[0]['tenant_id'], appointment.tenant_id,
+                    f"{who.name}'s event names tenant {events[0].get('tenant_id')} "
+                    f'but the booking belongs to {appointment.tenant_id}',
+                )
+                # Everyone gets the same answer: it is a fact about the row,
+                # not about who is reading it.
+                self.assertEqual(events[0]['tenant_id'], self.tenant.pk)
+
+    def test_the_tenant_travels_on_updates_too_and_not_only_on_creation(self):
+        self.as_user(self.customer_session)
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.book(time='11:00', employee=self.chair)
+        appointment = Appointment.objects.get(pk=response.data['id'])
+
+        # Watch from here, so only the update is heard.
+        listening = self.watch(self.owner)
+        self.as_user(self.owner_session)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.client.post(f'/api/bookings/{appointment.pk}/complete/',
+                             {'paid_with': 'cash'}, format='json')
+
+        events = self.events(drain(listening), self.owner)
+        self.assertTrue(events, 'the owner heard nothing when the booking was completed')
+        self.assertEqual(events[-1]['event'], 'updated')
+        self.assertEqual(events[-1]['tenant_id'], appointment.tenant_id)
+
+    def test_adding_the_tenant_left_the_row_itself_alone(self):
+        """Purely additive: `booking` is still exactly the REST shape.
+
+        If a future change moves the tenant *into* the serializer, the REST
+        responses change with it — which is a different decision from this
+        one, and should not happen by accident.
+        """
+        listening = self.watch(self.owner)
+        self.as_user(self.customer_session)
+        with self.captureOnCommitCallbacks(execute=True):
+            self.book(time='11:00', employee=self.chair)
+
+        payload = self.events(drain(listening), self.owner)[0]
+        self.assertEqual(set(payload), {'type', 'event', 'tenant_id', 'booking'})
+        self.assertEqual(payload['type'], 'booking')
+        for leaked in ('tenant', 'tenant_id'):
+            self.assertNotIn(
+                leaked, payload['booking'],
+                f'`{leaked}` appeared inside the booking row; the REST '
+                f'serializer was supposed to be untouched',
+            )
+
     def test_another_salon_hears_nothing(self):
         stranger = self.make_owner(
             phone='01966666666', email='other@example.com', business_name='Other Cuts')

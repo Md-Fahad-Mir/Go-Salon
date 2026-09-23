@@ -14,11 +14,18 @@ kept only if the row comes back. A broadcast can therefore never reach
 somebody the API would answer with a 404, and there is no second copy of the
 permission rules to drift out of step with the first.
 
-**An event is sent per recipient, not per room.** The payload is the very same
-serializer the REST endpoints return, rendered once for each person, because
-`can` is a statement about the reader: the owner may approve this booking and
-the customer may not, and one shared message could only be wrong for one of
-them.
+**An event is sent per recipient, not per room.** The `booking` inside the
+payload is the very same serializer the REST endpoints return, rendered once
+for each person, because `can` is a statement about the reader: the owner may
+approve this booking and the customer may not, and one shared message could
+only be wrong for one of them.
+
+Around it the envelope carries what the *delivery* is, rather than what the
+row is: `type`, `event`, and `tenant_id` — which business this concerns, so a
+client showing one salon at a time can tell whether an arriving event belongs
+on the screen in front of it. Every recipient is a verified member of that
+tenant before anything is sent, because `recipients` keeps only the people
+`scoped` would serve the row to, and `scoped` refuses a non-member outright.
 """
 
 from __future__ import annotations
@@ -103,6 +110,23 @@ def _send(appointment, event: str) -> None:
         payload = {
             'type': 'booking',
             'event': event,
+            # Which business this concerns. On the envelope rather than inside
+            # `booking`, because it is a fact about the delivery and not about
+            # the row: a client with a salon switcher asks "is this event for
+            # the salon I am looking at?", and that question is answered by
+            # comparing this against the tenant it last sent in `X-Tenant-Id`.
+            #
+            # The alternative was to let the client derive it from
+            # `booking.listing_id`, and there is no sound way to: the tenant
+            # slug is name-derived rather than `salon-<pk>`, `Salon.name` is
+            # not unique, and the one payload carrying both keys is the
+            # directory, which is being withdrawn. Deriving it would mean
+            # guessing which business a row belongs to — the exact bug class
+            # `scoped` exists to remove.
+            #
+            # Never null: `Appointment.tenant` is NOT NULL as of
+            # `bookings.0008`, so every row broadcast has one.
+            'tenant_id': appointment.tenant_id,
             'booking': dict(
                 AppointmentSerializer(appointment, context={'request': _Viewer(person)}).data
             ),
