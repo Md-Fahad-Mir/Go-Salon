@@ -9,6 +9,7 @@ import { proQueue } from './proQueue';
 import { proBusiness } from './proBusiness';
 import { proSalon } from './proSalon';
 import { proTeam } from './proTeam';
+import { tenant } from './tenant';
 
 /** English is the source of truth: every other language is typed against it,
     so a missing translation is a build error rather than a blank screen. */
@@ -24,6 +25,7 @@ export const en = {
   ...proBusiness,
   ...proSalon,
   ...proTeam,
+  ...tenant,
 };
 
 export type Dictionary = typeof en;

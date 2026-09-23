@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'src', 'i18n');
-const SLICES = ['common', 'auth', 'home', 'booking', 'tryon', 'profile', 'provider', 'proQueue', 'proBusiness', 'proSalon', 'proTeam'];
+const SLICES = ['common', 'auth', 'home', 'booking', 'tryon', 'profile', 'provider', 'proQueue', 'proBusiness', 'proSalon', 'proTeam', 'tenant'];
 
 /** Values that are legitimately identical in both languages. */
 const SAME_BY_DESIGN = new Set([

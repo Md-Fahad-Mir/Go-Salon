@@ -89,6 +89,8 @@ const ClientProfilePage = lazy(() => import('./pages/provider/ClientProfilePage'
 const TreatmentsPage = lazy(() => import('./pages/provider/TreatmentsPage'));
 const LookbookPage = lazy(() => import('./pages/provider/LookbookPage'));
 
+const JoinPage = lazy(() => import('./pages/tenancy/JoinPage'));
+
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const LegalPage = lazy(() => import('./pages/profile/LegalPage'));
 
@@ -116,6 +118,15 @@ export default function App() {
               <Suspense fallback={<RouteFallback />}>
                 <Routes>
                   <Route path="/" element={<RootRedirect />} />
+
+                  {/* What a salon's QR code opens. Deliberately unguarded:
+                      whoever scans it may be signed in, signed out, or holding
+                      the wrong kind of account, and each of those wants a
+                      different answer rather than a redirect. `PublicOnly`
+                      would bounce the signed-in customer it is meant for, and
+                      `CustomerOnly` would throw an owner out with no word
+                      about why. The screen itself does the branching. */}
+                  <Route path="/join/:token" element={<JoinPage />} />
 
                   {/* Signed-out only */}
                   <Route element={<PublicOnly />}>

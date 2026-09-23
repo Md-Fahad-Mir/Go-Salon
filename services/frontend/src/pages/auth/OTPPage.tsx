@@ -57,7 +57,11 @@ export default function OTPPage() {
         t('auth.welcomeToast', { name: firstNameOf(user.name) }),
         user.role === 'customer' ? t('auth.freeTryOns', { count: formatNumber(user.credits) }) : undefined,
       );
-      navigate(landingRouteForUser(user), { replace: true });
+      // Where every sign-up ends, so it is where an interrupted journey has
+      // to be picked back up: nothing between here and the login screen keeps
+      // router state alive.
+      const destination = useAppStore.getState().takePendingRedirect();
+      navigate(destination ?? landingRouteForUser(user), { replace: true });
     } catch (error) {
       setFailure(error instanceof ApiValidationError ? error : null);
       setDigits(emptyCode());

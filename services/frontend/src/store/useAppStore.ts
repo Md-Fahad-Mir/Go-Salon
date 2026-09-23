@@ -144,6 +144,10 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   /** How the last fetch of the list went. Not persisted — a status restored
       from disk describes a request that finished on another day. */
   tenantsStatus: TenantsStatus;
+  /** Where to go once there is a session, when something interrupted a
+      journey to send somebody through auth first. Persisted; see
+      `setPendingRedirect`. */
+  pendingRedirect: string | null;
 
   /* ---- auth ---- */
   /** Takes a session exactly as the backend issued it. */
@@ -173,6 +177,25 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   /** Re-reads the list from the server, for the one role that has one.
       Safe to call for anybody: it decides for itself whether to ask. */
   loadTenants: () => Promise<void>;
+
+  /* ---- coming back after signing in ---- */
+  /** Remembers where somebody was headed before they were sent to sign in.
+
+      React Router can already carry this in `location.state`, and for a
+      straight sign-in it does — but only for that one hop. Registering goes
+      login -> account type -> form -> code screen, and every one of those
+      navigations drops the state; so does the code screen's own back button,
+      and so does a reload, because router state lives in the history entry.
+      Someone who scans a shop's QR code without an account takes exactly that
+      path, so the thing they were trying to do is exactly what gets lost.
+
+      Persisted, for the same reason: a scanned code opens a cold page load,
+      and the journey through auth may include several more. */
+  setPendingRedirect: (path: string | null) => void;
+  /** Reads it and clears it in one step, so a destination cannot be visited
+      twice — a stale one left in storage would hijack the next sign-in on a
+      shared phone. */
+  takePendingRedirect: () => string | null;
 
   /* ---- bookings ---- */
   /** Replaces the cache with what the server just said. */
@@ -240,6 +263,7 @@ export const useAppStore = create<AppStore>()(
       tenants: [],
       activeTenantId: null,
       tenantsStatus: 'idle',
+      pendingRedirect: null,
 
       /* ---- auth ---- */
       setSession: ({ user, access, refresh }) => {
@@ -307,6 +331,10 @@ export const useAppStore = create<AppStore>()(
           tenants: [],
           activeTenantId: null,
           tenantsStatus: 'idle',
+          // Signing out abandons whatever journey was in flight. Leaving it
+          // would send the next person on this phone somewhere they never
+          // asked to go.
+          pendingRedirect: null,
           archive,
         });
       },
@@ -338,6 +366,14 @@ export const useAppStore = create<AppStore>()(
         }
         if (!get().tenants.some((t) => t.id === id)) return;
         set({ activeTenantId: id });
+      },
+
+      setPendingRedirect: (path) => set({ pendingRedirect: path }),
+
+      takePendingRedirect: () => {
+        const path = get().pendingRedirect;
+        if (path !== null) set({ pendingRedirect: null });
+        return path;
       },
 
       activeTenant: () => {
@@ -501,6 +537,7 @@ export const useAppStore = create<AppStore>()(
         // is read back, and again when the server answers.
         tenants: state.tenants,
         activeTenantId: state.activeTenantId,
+        pendingRedirect: state.pendingRedirect,
         bookings: state.bookings,
         favorites: state.favorites,
         generations: state.generations,

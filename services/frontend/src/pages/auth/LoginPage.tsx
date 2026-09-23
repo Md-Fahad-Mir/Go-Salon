@@ -55,7 +55,12 @@ export default function LoginPage() {
     setFailure(null);
     try {
       const user = await login(toE164(phone), password);
-      const from = (location.state as { from?: string } | null)?.from;
+      // The store first: it survives the hops and the reloads that router
+      // state does not. `from` stays as the fallback for the one case it
+      // still covers — a guard bounced somebody here a moment ago.
+      const from =
+        useAppStore.getState().takePendingRedirect() ??
+        (location.state as { from?: string } | null)?.from;
       navigate(from ?? landingRouteForUser(user), { replace: true });
     } catch (error) {
       if (error instanceof ApiValidationError && error.code === 'phone_not_verified') {

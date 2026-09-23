@@ -18,4 +18,12 @@ import { api } from './apiClient';
 export const tenantService = {
   /** `GET /api/tenants/mine/` — every active membership, salon-slug order. */
   mine: () => api.get<Tenant[]>('/tenants/mine/'),
+
+  /** `POST /api/tenants/join/` — the token printed in a shop's QR code.
+
+      Answers 201 the first time and 200 on a re-scan, and the app treats them
+      the same: somebody who scans a code they have already used should be told
+      they are in, not that something went wrong. The client does not see the
+      difference anyway — both come back as the tenant itself. */
+  join: (joinToken: string) => api.post<Tenant>('/tenants/join/', { join_token: joinToken }),
 };

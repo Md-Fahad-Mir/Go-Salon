@@ -47,3 +47,39 @@ export function serve(...answers: Answer[]): void {
 export function serveNothing(): void {
   serve();
 }
+
+/** Answer by URL instead of by order.
+
+    `serve` is a queue, which is exactly right when a test knows the order it
+    expects and wants an unplanned request to fail loudly. It is the wrong
+    shape once several independent things are in flight at once — a screen
+    that loads while a fire-and-forget refresh is still running has no fixed
+    order, and a queue would make the test flaky rather than strict.
+
+    Matching is by substring of the URL, first match wins. A request nothing
+    matches still throws, so the guarantee that matters is kept. */
+export function route(table: Array<[match: string, answer: Answer]>): void {
+  sent.length = 0;
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async (input: string | URL, init?: RequestInit) => {
+      const url = String(input);
+      sent.push({
+        url,
+        method: init?.method ?? 'GET',
+        headers: { ...((init?.headers ?? {}) as Record<string, string>) },
+      });
+      const hit = table.find(([match]) => url.includes(match));
+      if (!hit) throw new Error(`unexpected request: ${url}`);
+      const answer = hit[1];
+      if (answer === 'unreachable') throw new TypeError('Failed to fetch');
+      return new Response(answer.body === undefined ? null : JSON.stringify(answer.body), {
+        status: answer.status,
+        headers: answer.body === undefined ? {} : { 'content-type': 'application/json' },
+      });
+    }),
+  );
+}
+
+/** Every request made to a URL containing `match`. */
+export const requestsTo = (match: string): Recorded[] => sent.filter((r) => r.url.includes(match));

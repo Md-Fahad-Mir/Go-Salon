@@ -10,6 +10,7 @@ import { proQueue } from './proQueue';
 import { proBusiness } from './proBusiness';
 import { proSalon } from './proSalon';
 import { proTeam } from './proTeam';
+import { tenant } from './tenant';
 
 /** Typed as the full English shape, so leaving a key untranslated fails `tsc`. */
 export const bn: Record<keyof Dictionary, string> = {
@@ -24,4 +25,5 @@ export const bn: Record<keyof Dictionary, string> = {
   ...proBusiness,
   ...proSalon,
   ...proTeam,
+  ...tenant,
 };

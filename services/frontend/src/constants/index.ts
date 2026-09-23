@@ -43,6 +43,10 @@ export const ROUTES = {
   bookingDateTime: (id: string) => `/booking/${id}/datetime`,
   bookingSummary: (id: string) => `/booking/${id}/summary`,
   bookingConfirmation: (id: string) => `/booking/confirmation/${id}`,
+  /* What a shop's printed QR code resolves to. The backend builds the same
+     string from `JOIN_URL_BASE`, so the two have to agree character for
+     character or every code already on a wall stops working. */
+  join: (token: string) => `/join/${token}`,
   bookings: '/bookings',
   bookingDetail: (id: string) => `/bookings/${id}`,
 
