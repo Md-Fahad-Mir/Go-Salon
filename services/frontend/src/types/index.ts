@@ -575,3 +575,8 @@ export type {
   AuthSession,
   ResetChannel,
 } from './auth';
+
+/* Which salon a request is acting in. Not part of the mock model above: this
+   one is server state, and the header derived from it is the whole of how the
+   backend tells two businesses apart. */
+export type { Tenant } from './tenant';

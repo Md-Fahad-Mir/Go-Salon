@@ -7,6 +7,7 @@ import type {
   Feedback,
   PaymentAccount,
   RegistrableAccountType,
+  Tenant,
   Toast,
   ToastTone,
   User,
@@ -77,6 +78,40 @@ export interface PendingVerification {
   resendIn: number;
 }
 
+/* --------------------------------------------------------------------------
+   Which salon the app is acting in.
+
+   The backend decides what a request may see from the `X-Tenant-Id` header,
+   checked against a membership record. This holds the two things needed to
+   send one: the salons this account has joined, and which of them is current.
+
+   The list is a CACHE of server state, never the truth. It is persisted so a
+   reload has something to validate against before `/api/tenants/mine/` has
+   answered, and re-validated every time that answer lands. A membership can
+   disappear between one visit and the next — removed on another device, or a
+   salon deactivated — and the stale id must never become a stale header.
+   -------------------------------------------------------------------------- */
+
+/** The active tenant, made to agree with the list it is supposed to be in.
+
+    Three outcomes, in order:
+
+      * still a member      -> keep it. The convenience the whole thing is for.
+      * exactly one left    -> use that one. It is the only answer available,
+                               and it is the same one the backend would reach
+                               for on its own when no header is sent.
+      * anything else       -> null, and no header goes out at all. Null is the
+                               safe value, not a broken one: the backend reads
+                               a missing header as "use my only tenant" or, for
+                               an account with none, as "no tenant", and every
+                               scoped read then answers empty rather than
+                               wrong. Guessing which of several to pick is the
+                               one thing that must not happen here. */
+const reconcileTenant = (tenants: Tenant[], activeTenantId: number | null): number | null => {
+  if (activeTenantId !== null && tenants.some((t) => t.id === activeTenantId)) return activeTenantId;
+  return tenants.length === 1 ? tenants[0].id : null;
+};
+
 export interface AppStore extends Omit<AccountData, 'user'> {
   /* ---- session ---- */
   user: User | null;
@@ -95,6 +130,12 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   toasts: Toast[];
   hasSeenWelcome: boolean;
 
+  /* ---- tenancy ---- */
+  /** The salons this account belongs to. Empty until F2 fetches them. */
+  tenants: Tenant[];
+  /** Whose header goes on every request. Null means send none. */
+  activeTenantId: number | null;
+
   /* ---- auth ---- */
   /** Takes a session exactly as the backend issued it. */
   setSession: (session: { user: User; access: string; refresh: string }) => void;
@@ -109,6 +150,17 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   updateUser: (patch: Partial<User>) => void;
   logout: () => void;
   setHasSeenWelcome: (seen: boolean) => void;
+
+  /* ---- tenancy ---- */
+  /** Replaces the list with what the server just said, and re-settles the
+      active one against it. The only way the list is ever written. */
+  setTenants: (tenants: Tenant[]) => void;
+  /** Switch salons. An id the account does not belong to is refused rather
+      than stored — a header we already know is wrong is a 403 waiting to
+      happen, and the switcher only ever offers ids from the list anyway. */
+  setActiveTenant: (id: number | null) => void;
+  /** The active tenant itself, for screens that want its name or picture. */
+  activeTenant: () => Tenant | null;
 
   /* ---- bookings ---- */
   /** Replaces the cache with what the server just said. */
@@ -173,6 +225,8 @@ export const useAppStore = create<AppStore>()(
       archive: {},
       toasts: [],
       hasSeenWelcome: false,
+      tenants: [],
+      activeTenantId: null,
 
       /* ---- auth ---- */
       setSession: ({ user, access, refresh }) => {
@@ -189,6 +243,12 @@ export const useAppStore = create<AppStore>()(
           pendingVerification: null,
           pendingAccountType: null,
           hasSeenWelcome: true,
+          // Not archived with the rest: which salons an account belongs to is
+          // the server's answer, not this device's memory of one, and the
+          // account signing in now may not be the one that signed out. Left
+          // empty for the first `/api/tenants/mine/` to fill.
+          tenants: [],
+          activeTenantId: null,
           bookings: data.bookings,
           favorites: data.favorites,
           generations: data.generations,
@@ -228,6 +288,10 @@ export const useAppStore = create<AppStore>()(
           authStatus: 'ready',
           pendingVerification: null,
           pendingAccountType: null,
+          // Goes with the session, and for the same reason: leaving it behind
+          // would put the last account's salon on the next account's requests.
+          tenants: [],
+          activeTenantId: null,
           archive,
         });
       },
@@ -247,6 +311,24 @@ export const useAppStore = create<AppStore>()(
       logout: () => get().clearSession(),
 
       setHasSeenWelcome: (seen) => set({ hasSeenWelcome: seen }),
+
+      /* ---- tenancy ---- */
+      setTenants: (tenants) =>
+        set({ tenants, activeTenantId: reconcileTenant(tenants, get().activeTenantId) }),
+
+      setActiveTenant: (id) => {
+        if (id === null) {
+          set({ activeTenantId: null });
+          return;
+        }
+        if (!get().tenants.some((t) => t.id === id)) return;
+        set({ activeTenantId: id });
+      },
+
+      activeTenant: () => {
+        const { tenants, activeTenantId } = get();
+        return tenants.find((t) => t.id === activeTenantId) ?? null;
+      },
 
       /* ---- bookings ---- */
       setBookings: (bookings) => set({ bookings }),
@@ -353,6 +435,13 @@ export const useAppStore = create<AppStore>()(
         pendingAccountType: state.pendingAccountType,
         archive: state.archive,
         hasSeenWelcome: state.hasSeenWelcome,
+        // Both, deliberately. The id on its own could not be checked against
+        // anything until the next `/api/tenants/mine/` came back, so the app
+        // would spend its first moments sending a header it had no way to
+        // vouch for. Persisted together, the pair is re-settled the instant it
+        // is read back, and again when the server answers.
+        tenants: state.tenants,
+        activeTenantId: state.activeTenantId,
         bookings: state.bookings,
         favorites: state.favorites,
         generations: state.generations,
@@ -360,6 +449,13 @@ export const useAppStore = create<AppStore>()(
         paymentAccounts: state.paymentAccounts,
         preferences: state.preferences,
       }),
+      /* What came out of localStorage is last week's answer. Re-settle it
+         before the first request can read it — this runs before React mounts,
+         so nothing ever sees the unchecked pair. */
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        state.activeTenantId = reconcileTenant(state.tenants ?? [], state.activeTenantId ?? null);
+      },
     },
   ),
 );

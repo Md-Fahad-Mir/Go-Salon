@@ -69,6 +69,69 @@ export class ApiValidationError extends ApiError {
   }
 }
 
+/* --------------------------------------------------------------------------
+   Tenant refusals.
+
+   Three of them, and they are not interchangeable — nor are they the same as
+   the ordinary refusal each one shares a status code with. The backend gives
+   every one its own `code`, which is what these match on; matching on the
+   status alone would sweep up a role refusal and a missing row as well.
+
+     400 tenant_required   several salons, and the request named none. Nothing
+                           to resolve, so the backend refuses to guess.
+     404 tenant_not_found  unknown OR deactivated, deliberately not told apart
+                           so nobody can enumerate which salons exist.
+     403 not_a_member      a real salon this account does not belong to. Never
+                           silently swapped for one it does.
+
+   Matched against the live API, not inferred: `Apps/tenants/permissions.py`
+   raises them and `Apps/users/exceptions.py` renders every one as
+   `{detail, code, errors}`.
+   -------------------------------------------------------------------------- */
+
+/** Which of the three. `required` is a question to put to the person; the
+    other two mean the tenant we sent is not one we may use. */
+export type TenantErrorReason = 'required' | 'unknown' | 'forbidden';
+
+const TENANT_ERROR_CODES: Record<string, TenantErrorReason> = {
+  tenant_required: 'required',
+  tenant_not_found: 'unknown',
+  not_a_member: 'forbidden',
+};
+
+/** A refusal about *which salon*, as opposed to who is asking or what they
+    are allowed to do.
+
+    Extends `ApiValidationError` rather than replacing it so that every
+    existing `catch` keeps working untouched — code that only knows about
+    `ApiValidationError` still catches this, reads the same `code`, `detail`
+    and `status`, and behaves exactly as it did. Only code that asks for the
+    distinction sees one. */
+export class TenantError extends ApiValidationError {
+  reason: TenantErrorReason;
+  /** The tenant id that was on the request, so a caller can drop it from the
+      list it no longer belongs in. Null for `required`, where the whole
+      complaint is that nothing was sent. */
+  tenantId: number | null;
+
+  constructor(
+    reason: TenantErrorReason,
+    tenantId: number | null,
+    code: string,
+    message: string,
+    status: number,
+    errors: Record<string, string[]> = {},
+    body: Record<string, unknown> = {},
+  ) {
+    super(code, message, status, errors, undefined, body);
+    this.reason = reason;
+    this.tenantId = tenantId;
+    this.name = 'TenantError';
+  }
+}
+
+export const isTenantError = (error: unknown): error is TenantError => error instanceof TenantError;
+
 const isJson = (response: Response): boolean =>
   (response.headers.get('content-type') ?? '').includes('application/json');
 
@@ -84,6 +147,20 @@ async function parse(response: Response): Promise<unknown> {
 
 function toError(response: Response, body: unknown): ApiValidationError {
   const payload = (body ?? {}) as ApiErrorBody;
+
+  const reason = payload.code ? TENANT_ERROR_CODES[payload.code] : undefined;
+  if (reason) {
+    return new TenantError(
+      reason,
+      reason === 'required' ? null : useAppStore.getState().activeTenantId,
+      payload.code as string,
+      payload.detail ?? 'That salon is not available to you.',
+      response.status,
+      payload.errors ?? {},
+      (body ?? {}) as Record<string, unknown>,
+    );
+  }
+
   const fallback =
     response.status >= 500
       ? 'Something went wrong at our end. Try again in a moment.'
@@ -151,6 +228,21 @@ async function send(path: string, options: RequestOptions, token: string | null)
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
+
+  /* Which salon this is about, beside the token that says who is asking.
+
+     Sent only when there is one. An absent header is a meaningful answer to
+     the backend — use my only salon, or, for an account with none, carry on
+     without one — whereas `X-Tenant-Id: null` is an id for a salon that does
+     not exist and comes back 404. Omitted on anonymous calls too: sign-in and
+     sign-up happen before there is a membership to name.
+
+     Read here rather than passed in, so it is impossible for a call site to
+     forget, and re-read on the replay after a token refresh. */
+  if (!options.anonymous) {
+    const tenantId = useAppStore.getState().activeTenantId;
+    if (tenantId !== null) headers['X-Tenant-Id'] = String(tenantId);
+  }
 
   return fetch(`${BASE_URL}${path}`, {
     method: options.method ?? 'GET',
