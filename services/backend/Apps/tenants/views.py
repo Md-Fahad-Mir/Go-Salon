@@ -28,6 +28,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from Apps.users.models import Role
+from Apps.users.permissions import IsSalonOrParlorOwner
 
 from .models import CustomerTenantMembership, Tenant, new_join_token
 from .permissions import OwnsTenant, TenantContext
@@ -149,6 +150,51 @@ class MyTenantsView(GenericAPIView):
             customer_memberships__is_active=True,
             is_active=True,
         ).select_related('salon', 'barber_profile__user').order_by('slug')
+        return Response(TenantProfileSerializer(tenants, many=True).data)
+
+
+class MyOwnedSalonsView(GenericAPIView):
+    """The salons this owner owns — the switcher's list, for the one role that
+    can have more than one of anything.
+
+    The counterpart to `MyTenantsView`, and deliberately a separate endpoint
+    rather than a role-branch inside it. They answer the same question — which
+    tenants may this account act in, i.e. which `X-Tenant-Id` values it may
+    send — but from two different relationships, and only one of them is
+    revocable. A customer's membership is a row they made by scanning a code
+    and can remove again, which is why `MyTenantView` exists to delete one.
+    Ownership is not a row anyone joins or leaves: the tenant is provisioned
+    with the salon at registration and dies with it. Folding both into one
+    path would mean one URL whose DELETE means something for half its callers
+    and nothing for the other half.
+
+    Read-only, therefore, and permanently — there is no join, leave or remove
+    here, because none of those verbs applies to owning a shop.
+
+    No `TenantContext`: this is what a client calls to find out which tenants
+    exist for it, so requiring it to name one first would be circular. It is
+    also exactly the account this unblocks — an owner of two salons sending no
+    header gets 400 `tenant_required`, and until now had no way to learn either
+    id.
+    """
+
+    permission_classes = (IsAuthenticated, IsSalonOrParlorOwner)
+    serializer_class = TenantProfileSerializer
+
+    def get(self, request):
+        tenants = (
+            Tenant.objects
+            .filter(salon__owner=request.user, is_active=True)
+            .select_related('salon')
+            # By the name on the shopfront, not by `slug` as the customer list
+            # is sorted. The two agree for an English name and part company for
+            # a Bengali one, where the slug is a transliteration — and an owner
+            # picking between their shops reads the name, so sorting by
+            # anything else would look arbitrary to them. Matches
+            # `Salon.Meta.ordering` too, so the list is in the same order here
+            # as everywhere else a salon is listed.
+            .order_by('salon__name')
+        )
         return Response(TenantProfileSerializer(tenants, many=True).data)
 
 
