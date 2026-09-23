@@ -39,6 +39,10 @@ export function useAuth() {
       if (session.user.role && session.user.role !== 'customer') {
         void useProviderStore.getState().load();
       }
+      // Which salons this account has joined, for the `X-Tenant-Id` header.
+      // Called for everyone: `loadTenants` decides for itself whether the
+      // role has such a list, so this cannot become a stray 403.
+      void useAppStore.getState().loadTenants();
       return session.user;
     },
     [setSession],

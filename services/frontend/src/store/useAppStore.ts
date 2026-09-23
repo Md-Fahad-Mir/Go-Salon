@@ -15,6 +15,7 @@ import type {
 } from '../types';
 import { STARTING_CREDITS, STORAGE_KEYS } from '../constants';
 import { nextId } from '../utils/id';
+import { tenantService } from '../utils/tenantService';
 
 /* --------------------------------------------------------------------------
    Session and per-account data.
@@ -92,6 +93,11 @@ export interface PendingVerification {
    salon deactivated — and the stale id must never become a stale header.
    -------------------------------------------------------------------------- */
 
+/** How the last read of the salon list went. `error` is not a failure state
+    the app has to recover from — the previous list is still there and still
+    usable — it is a fact the switcher can render once one exists. */
+export type TenantsStatus = 'idle' | 'loading' | 'ready' | 'error';
+
 /** The active tenant, made to agree with the list it is supposed to be in.
 
     Three outcomes, in order:
@@ -135,6 +141,9 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   tenants: Tenant[];
   /** Whose header goes on every request. Null means send none. */
   activeTenantId: number | null;
+  /** How the last fetch of the list went. Not persisted — a status restored
+      from disk describes a request that finished on another day. */
+  tenantsStatus: TenantsStatus;
 
   /* ---- auth ---- */
   /** Takes a session exactly as the backend issued it. */
@@ -161,6 +170,9 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   setActiveTenant: (id: number | null) => void;
   /** The active tenant itself, for screens that want its name or picture. */
   activeTenant: () => Tenant | null;
+  /** Re-reads the list from the server, for the one role that has one.
+      Safe to call for anybody: it decides for itself whether to ask. */
+  loadTenants: () => Promise<void>;
 
   /* ---- bookings ---- */
   /** Replaces the cache with what the server just said. */
@@ -227,6 +239,7 @@ export const useAppStore = create<AppStore>()(
       hasSeenWelcome: false,
       tenants: [],
       activeTenantId: null,
+      tenantsStatus: 'idle',
 
       /* ---- auth ---- */
       setSession: ({ user, access, refresh }) => {
@@ -249,6 +262,7 @@ export const useAppStore = create<AppStore>()(
           // empty for the first `/api/tenants/mine/` to fill.
           tenants: [],
           activeTenantId: null,
+          tenantsStatus: 'idle',
           bookings: data.bookings,
           favorites: data.favorites,
           generations: data.generations,
@@ -292,6 +306,7 @@ export const useAppStore = create<AppStore>()(
           // would put the last account's salon on the next account's requests.
           tenants: [],
           activeTenantId: null,
+          tenantsStatus: 'idle',
           archive,
         });
       },
@@ -328,6 +343,50 @@ export const useAppStore = create<AppStore>()(
       activeTenant: () => {
         const { tenants, activeTenantId } = get();
         return tenants.find((t) => t.id === activeTenantId) ?? null;
+      },
+
+      /** Asks the server which salons this account has joined.
+
+          The role gate lives *here* rather than at the two call sites, so
+          that no future caller can reintroduce a 403 by forgetting it.
+          `/api/tenants/mine/` refuses every role but `customer` with
+          `not_a_customer`, and rightly: a provider belongs to one business,
+          their own, which the backend resolves from the account whenever no
+          `X-Tenant-Id` is sent. There is no list for them to keep, so asking
+          for one would be a guaranteed-failed request on every sign-in.
+
+          An account whose stored session predates roles is treated as a
+          customer, the same reading `RouteGuards` uses.
+
+          Failure leaves the previous list exactly as it was. That list came
+          either from localStorage or from a successful read earlier in the
+          session, and neither is made less true by a dropped connection —
+          whereas emptying it would drop the active salon, unset the header
+          and quietly change what every subsequent request is scoped to. The
+          old answer is the better answer until a new one arrives. */
+      loadTenants: async () => {
+        const { user, isAuthenticated } = get();
+        if (!isAuthenticated || !user) return;
+        if ((user.role ?? 'customer') !== 'customer') {
+          set({ tenantsStatus: 'ready' });
+          return;
+        }
+
+        set({ tenantsStatus: 'loading' });
+        try {
+          const mine = await tenantService.mine();
+          // A body that is not a list would sail through `setTenants` and
+          // blow up later inside the reconcile, far from the cause.
+          if (!Array.isArray(mine)) throw new TypeError('Expected a list of salons.');
+          get().setTenants(mine);
+          set({ tenantsStatus: 'ready' });
+        } catch {
+          // Deliberately no toast. Nothing on screen reads this list yet, and
+          // a customer who has never heard the word "tenant" cannot act on
+          // "could not load your salons". The switcher that F3 builds is
+          // where this becomes something a person can see and retry.
+          set({ tenantsStatus: 'error' });
+        }
       },
 
       /* ---- bookings ---- */

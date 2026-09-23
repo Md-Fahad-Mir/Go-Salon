@@ -10,14 +10,16 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Tenant, User } from '../types';
 import { STORAGE_KEYS } from '../constants';
+import { sent, serve } from '../test/http';
 import { useAppStore } from './useAppStore';
 
 const ALPHA: Tenant = { id: 4, slug: 'alpha', name: 'Alpha Salon', avatar: '' };
 const BETA: Tenant = { id: 5, slug: 'beta', name: 'Beta Salon', avatar: '' };
 const GAMMA: Tenant = { id: 6, slug: 'gamma', name: 'Gamma Salon', avatar: '' };
 
-const someone = (id = 'U1'): User => ({
+const someone = (id = 'U1', role: User['role'] = 'customer'): User => ({
   id,
+  role,
   name: 'Test Person',
   phone: '+8801955000009',
   createdAt: '2026-01-01T00:00:00.000Z',
@@ -199,5 +201,141 @@ describe('persistence', () => {
     await useAppStore.persist.rehydrate();
     expect(store().tenants).toEqual([]);
     expect(store().activeTenantId).toBeNull();
+  });
+});
+
+describe('loadTenants: reading the list from the server', () => {
+  /** Signed in, with nothing fetched yet. `setSession` clears the tenancy,
+      so this is the state a fresh sign-in leaves behind. */
+  const signIn = (role: User['role'] = 'customer') =>
+    store().setSession({ user: someone('U1', role), access: 'a', refresh: 'r' });
+
+  it('asks the right endpoint and stores what comes back', async () => {
+    signIn();
+    serve({ status: 200, body: [ALPHA, BETA] });
+    await store().loadTenants();
+    expect(sent).toHaveLength(1);
+    expect(sent[0].url).toBe('http://api.test/api/tenants/mine/');
+    expect(sent[0].method).toBe('GET');
+    expect(store().tenants).toEqual([ALPHA, BETA]);
+    expect(store().tenantsStatus).toBe('ready');
+  });
+
+  it('settles the active salon against what came back', async () => {
+    signIn();
+    // A stale choice, as a reload from localStorage would leave one.
+    store().setTenants([ALPHA, BETA]);
+    store().setActiveTenant(BETA.id);
+    serve({ status: 200, body: [ALPHA] });
+    await store().loadTenants();
+    // BETA is gone and ALPHA is the only one left, so ALPHA it is.
+    expect(store().activeTenantId).toBe(ALPHA.id);
+  });
+
+  it('adopts the sole salon a one-salon customer gets back', async () => {
+    signIn();
+    serve({ status: 200, body: [GAMMA] });
+    await store().loadTenants();
+    expect(store().activeTenantId).toBe(GAMMA.id);
+  });
+
+  it('leaves a brand-new customer with an empty list and no active salon', async () => {
+    signIn();
+    serve({ status: 200, body: [] });
+    await store().loadTenants();
+    expect(store().tenants).toEqual([]);
+    expect(store().activeTenantId).toBeNull();
+    expect(store().tenantsStatus).toBe('ready');
+  });
+
+  it('keeps the previous list when the server cannot be reached', async () => {
+    signIn();
+    store().setTenants([ALPHA, BETA]);
+    store().setActiveTenant(ALPHA.id);
+    serve('unreachable');
+    await store().loadTenants();
+    expect(store().tenants).toEqual([ALPHA, BETA]);
+    expect(store().activeTenantId).toBe(ALPHA.id);
+    expect(store().tenantsStatus).toBe('error');
+  });
+
+  it('loads normally when a mid-flight 401 is recovered by a refresh', async () => {
+    signIn();
+    serve(
+      { status: 401, body: { detail: 'expired', code: 'token_not_valid', errors: {} } },
+      { status: 200, body: { access: 'access-2' } },
+      { status: 200, body: [ALPHA, BETA] },
+    );
+    await store().loadTenants();
+    expect(store().tenants).toEqual([ALPHA, BETA]);
+    expect(store().tenantsStatus).toBe('ready');
+  });
+
+  it('lets the tenancy go when the session itself is gone', async () => {
+    signIn();
+    store().setTenants([ALPHA]);
+    // 401, and the refresh token is refused too: there is no session left.
+    serve(
+      { status: 401, body: { detail: 'expired', code: 'token_not_valid', errors: {} } },
+      { status: 401, body: { detail: 'no', code: 'token_not_valid', errors: {} } },
+    );
+    await store().loadTenants();
+    // Not a half-update — `clearSession` ran, so this is a complete signed-out
+    // state. What matters is that no stale salon is left to put on a header.
+    expect(store().isAuthenticated).toBe(false);
+    expect(store().tenants).toEqual([]);
+    expect(store().activeTenantId).toBeNull();
+    expect(store().tenantsStatus).toBe('error');
+  });
+
+  it('keeps the previous list when the body is not a list at all', async () => {
+    signIn();
+    store().setTenants([ALPHA, BETA]);
+    serve({ status: 200, body: { detail: 'something unexpected' } });
+    await store().loadTenants();
+    expect(store().tenants).toEqual([ALPHA, BETA]);
+    expect(store().tenantsStatus).toBe('error');
+  });
+
+  it('never leaves the list half-updated', async () => {
+    signIn();
+    store().setTenants([ALPHA, BETA]);
+    store().setActiveTenant(BETA.id);
+    const before = { tenants: store().tenants, active: store().activeTenantId };
+    serve({ status: 500 });
+    await store().loadTenants();
+    expect(store().tenants).toBe(before.tenants);
+    expect(store().activeTenantId).toBe(before.active);
+  });
+
+  describe('the roles that have no such list', () => {
+    // `/api/tenants/mine/` answers every non-customer 403 `not_a_customer`,
+    // so the right behaviour is not to ask.
+    for (const role of ['salon_owner', 'barber', 'salon_employee', 'admin'] as const) {
+      it(`does not call the endpoint for a ${role}`, async () => {
+        signIn(role);
+        serve(); // any request at all would throw
+        await store().loadTenants();
+        expect(sent).toHaveLength(0);
+        expect(store().tenants).toEqual([]);
+        expect(store().activeTenantId).toBeNull();
+        expect(store().tenantsStatus).toBe('ready');
+      });
+    }
+
+    it('treats a session stored before roles existed as a customer', async () => {
+      store().setSession({ user: { ...someone(), role: undefined }, access: 'a', refresh: 'r' });
+      serve({ status: 200, body: [ALPHA] });
+      await store().loadTenants();
+      expect(sent).toHaveLength(1);
+      expect(store().tenants).toEqual([ALPHA]);
+    });
+  });
+
+  it('asks nothing at all when nobody is signed in', async () => {
+    serve();
+    await store().loadTenants();
+    expect(sent).toHaveLength(0);
+    expect(store().tenantsStatus).toBe('idle');
   });
 });

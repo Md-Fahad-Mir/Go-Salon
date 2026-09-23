@@ -8,8 +8,9 @@
 
    Only the network is faked. The client and the store are the real ones. */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { Tenant, User } from '../types';
+import { lastRequest, sent, serve } from '../test/http';
 import { useAppStore } from '../store/useAppStore';
 import { ApiValidationError, api, isTenantError, TenantError } from './apiClient';
 
@@ -23,39 +24,6 @@ const someone = (): User => ({
   createdAt: '2026-01-01T00:00:00.000Z',
   credits: 3,
 });
-
-interface Recorded {
-  url: string;
-  method: string;
-  headers: Record<string, string>;
-}
-
-const sent: Recorded[] = [];
-const last = () => sent[sent.length - 1];
-
-/** Queue up what the server will say, in order. A call past the end of the
-    queue fails loudly rather than reusing the last answer, so a test cannot
-    pass because of a request it did not mean to make. */
-function serve(...answers: ({ status: number; body?: unknown } | 'unreachable')[]): void {
-  const queue = [...answers];
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(async (input: string | URL, init?: RequestInit) => {
-      sent.push({
-        url: String(input),
-        method: init?.method ?? 'GET',
-        headers: { ...((init?.headers ?? {}) as Record<string, string>) },
-      });
-      const answer = queue.shift();
-      if (answer === undefined) throw new Error(`unexpected request: ${String(input)}`);
-      if (answer === 'unreachable') throw new TypeError('Failed to fetch');
-      return new Response(answer.body === undefined ? null : JSON.stringify(answer.body), {
-        status: answer.status,
-        headers: answer.body === undefined ? {} : { 'content-type': 'application/json' },
-      });
-    }),
-  );
-}
 
 /* The refusals, exactly as the backend was observed to render them. */
 const TENANT_REQUIRED = {
@@ -97,6 +65,8 @@ beforeEach(() => {
   useAppStore.setState(PRISTINE, true);
   sent.length = 0;
 });
+
+const last = () => lastRequest()!;
 
 describe('the tenant header', () => {
   it('is left off entirely when no salon is chosen', async () => {

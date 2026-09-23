@@ -31,6 +31,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (user.role && user.role !== 'customer' && user.role !== 'admin') {
           void useProviderStore.getState().load();
         }
+        // Refreshes the persisted salon list against the server. It runs
+        // after `setUser` because `loadTenants` reads the role from the
+        // store, and only on the success path: if `me()` threw there is no
+        // session left to load anything for.
+        void useAppStore.getState().loadTenants();
       } catch {
         // The api client already tried a refresh. Reaching here means there is
         // no session left, so the app starts signed out.
