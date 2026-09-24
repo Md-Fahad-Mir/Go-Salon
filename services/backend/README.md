@@ -11,13 +11,40 @@ uv sync
 cp .env.example .env          # then fill it in
 .venv/bin/python manage.py migrate
 .venv/bin/python manage.py createsuperuser   # the only way to make an admin
-.venv/bin/python manage.py runserver
+.venv/bin/python manage.py runserver 0.0.0.0:8000
 .venv/bin/python manage.py test Apps.users   # 86 tests
 ```
+
+`0.0.0.0` rather than the default `127.0.0.1`, so the frontend's dev server
+can reach this process and — through it — so can a phone on the same wifi.
+Plain `runserver` binds loopback only, which looks identical from the Mac and
+fails from everywhere else. See "Testing on a phone" below.
 
 `runserver` is an **ASGI** server here — `daphne` is first in `INSTALLED_APPS`
 — because the dashboards hold a WebSocket open. Everything HTTP behaves
 exactly as before.
+
+## Testing on a phone
+
+Start this with `0.0.0.0:8000`, start the frontend normally (`npm run dev`
+already listens on every interface), and open **the Mac's LAN address** on the
+phone — `http://<mac-ip>:5174`. `ipconfig getifaddr en0` prints it.
+
+Nothing else needs configuring, and in particular **no address is written down
+anywhere**. The frontend asks its own origin for `/api`, `/ws` and `/ai`, and
+Vite proxies those to this process and to the AI service (`server.proxy` in
+`services/frontend/vite.config.ts`). So the phone talks only to whatever host
+it loaded the page from, and a new DHCP lease changes nothing.
+
+That is the fix for a failure worth recognising: every screen showing "No
+connection. Check your internet and try again." on a phone while working
+perfectly on the Mac. It meant the client had been told to call `localhost`,
+which on a phone is the phone.
+
+`ALLOWED_HOSTS` and CORS are also widened when `DEBUG` is on — the machine's
+own LAN address is added automatically, and private-range origins are
+accepted — but that is a safety net for anything that bypasses the proxy. A
+deployment sets `DJANGO_DEBUG=false` and neither applies.
 
 ## Roles
 
@@ -489,7 +516,12 @@ that cannot set a subprotocol, but a URL ends up in every access log it passes
 through and an access token in a log file is a live credential. A bad token is
 refused with close code **4401**, so a client can tell "refresh and reconnect"
 from "the network dropped, retry as you are". The handshake is also origin-
-checked against `CORS_ALLOWED_ORIGINS`, the same list the REST API honours.
+checked — against `ALLOWED_HOSTS` in development and `CORS_ALLOWED_ORIGINS`
+otherwise (`core/asgi.py`). Two validators, because channels' `OriginValidator`
+matches exact strings and cannot see the private-range regexes that widen CORS
+locally; pointing the dev one at `ALLOWED_HOSTS`, which already knows this
+machine's LAN address, is what stops the socket refusing a phone the REST API
+had just answered.
 
 **Who hears what.** Groups are one per *account* — never per salon and never
 per chair, because an employee who is promoted, a barber who also rents a chair

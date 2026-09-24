@@ -57,6 +57,52 @@ DEBUG = env_bool('DJANGO_DEBUG', True)
 
 ALLOWED_HOSTS = env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1')
 
+if DEBUG:
+    # --- local development only ------------------------------------------
+    #
+    # Testing on a real phone means reaching this machine by its LAN address,
+    # and DHCP hands out a different one every few days. Pinning it in `.env`
+    # means the environment breaks on a lease renewal and somebody spends an
+    # afternoon on "no connection" — which is exactly what happened.
+    #
+    # So the address is worked out rather than configured. The socket is never
+    # connected to anything and sends no packets; asking a UDP socket where it
+    # *would* send is the standard way to learn which interface the machine
+    # would leave by.
+    #
+    # Guarded by DEBUG, which `if not DEBUG:` at the foot of this file already
+    # uses as the production switch. A deployment sets `DJANGO_DEBUG=false`
+    # and none of this evaluates — `ALLOWED_HOSTS` stays exactly what the
+    # environment said, which is the audit's C4 point about not letting a dev
+    # convenience become a production default.
+    import socket as _socket
+
+    def _lan_addresses() -> list[str]:
+        found = {'localhost', '127.0.0.1', '[::1]'}
+        probe = None
+        try:
+            # Creating the socket is inside the try as well: under an fd
+            # limit, or a sandbox that forbids the syscall, `socket()` itself
+            # raises — and settings must not be the thing that stops a server
+            # starting, which is what this block promises.
+            probe = _socket.socket(_socket.AF_INET, _socket.SOCK_DGRAM)
+            probe.connect(('8.8.8.8', 1))
+            found.add(probe.getsockname()[0])
+        except OSError:
+            # No route to anywhere — a laptop with the wifi off. Loopback is
+            # still correct.
+            pass
+        finally:
+            if probe is not None:
+                probe.close()
+        try:
+            found.add(_socket.gethostbyname(_socket.gethostname()))
+        except OSError:
+            pass
+        return sorted(found)
+
+    ALLOWED_HOSTS = sorted({*ALLOWED_HOSTS, *_lan_addresses()})
+
 
 # Application definition
 
@@ -229,11 +275,33 @@ STARTING_TRY_ON_CREDITS = env_int('STARTING_TRY_ON_CREDITS', 3)
 
 CORS_ALLOWED_ORIGINS = env_list(
     'CORS_ALLOWED_ORIGINS',
-    # Localhost only. Testing on a phone means reaching this machine by its
-    # LAN address, and that address is handed out by DHCP and changes — so it
-    # belongs in `.env` on the machine it describes, never in a default here.
+    # Localhost only, as the shipped default. Testing on a phone no longer
+    # needs an entry here at all — the `if DEBUG:` block below accepts any
+    # private-range origin, and the Vite proxy means the browser is usually
+    # same-origin anyway. Anything listed here is what a *deployment* allows.
     'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5173'
 )
+if DEBUG:
+    # --- local development only ------------------------------------------
+    #
+    # Mostly belt-and-braces. The Vite dev server proxies `/api` and `/ws` to
+    # this process, so a phone's browser makes a *same-origin* request to the
+    # page it loaded and no preflight is issued at all — CORS never enters
+    # into it. This is here for the case that bypasses the proxy: a browser
+    # pointed straight at this port, or a second front end during a spike.
+    #
+    # A regex rather than a list, for the same reason the hosts above are
+    # computed: the LAN address changes and a list goes stale. It matches only
+    # the private ranges — 10/8, 172.16/12, 192.168/16 and localhost — so it
+    # cannot be reached from outside the network the machine is on.
+    CORS_ALLOWED_ORIGIN_REGEXES = [
+        r'^http://localhost:\d+$',
+        r'^http://127\.0\.0\.1:\d+$',
+        r'^http://10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$',
+        r'^http://172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}:\d+$',
+        r'^http://192\.168\.\d{1,3}\.\d{1,3}:\d+$',
+    ]
+
 # Tokens travel in the Authorization header, not in cookies, so credentialed
 # requests are not needed and are left off.
 CORS_ALLOW_CREDENTIALS = False

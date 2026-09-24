@@ -61,6 +61,26 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
+  /* The API is not a static asset and must never be cached here.
+   *
+   * This guard used to be unnecessary by accident: the API lived on another
+   * origin, so the check above sent it away. Once the base URL became a
+   * relative path — so a phone could reach it — every API call became
+   * same-origin and fell through to the stale-while-revalidate branch below,
+   * which caches any `response.ok` GET keyed by URL alone, and with
+   * `ignoreVary: true` so headers are explicitly not part of the key.
+   *
+   * Identity and tenancy live entirely in headers here: `Authorization` says
+   * who is asking and `X-Tenant-Id` says which salon. Two different people,
+   * or one person in two salons, ask for the identical URL — so a cached
+   * `/api/bookings/` would be served to whoever asked next. Leaving this out
+   * would turn a dev-networking fix into a cross-account data leak.
+   *
+   * `/ws` cannot be cached anyway (an upgrade is not a GET response), and
+   * `/admin` and `/static` belong to Django. All of them are the server's,
+   * not this cache's. */
+  if (/^\/(api|ws|ai|admin|static)(\/|$)/.test(url.pathname)) return;
+
   // App navigations: try the network, fall back to the cached shell.
   if (request.mode === 'navigate') {
     event.respondWith(

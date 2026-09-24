@@ -17,14 +17,29 @@ screens should need.
 ```bash
 node -v          # 20.19+ or 22.12+ (Vite 8)
 npm install
-npm run dev      # http://localhost:5174
+cp .env.example .env   # relative API paths; nothing to edit for local work
+npm run dev      # http://localhost:5174 — and on your phone, http://<mac-ip>:5174
 npm run build    # tsc -b && vite build
 npm run preview  # serves the build — needed to exercise the service worker
 npm run lint
 npm run typecheck
 npm run check:i18n   # English and Bangla dictionaries agree
-npm run verify       # all three at once
+npm run verify       # typecheck, lint, i18n and the tests
 ```
+
+`npm run dev` listens on every interface, so the app is reachable from a phone
+on the same wifi at the Mac's own address (`ipconfig getifaddr en0`).
+
+**No API host is configured anywhere.** `VITE_API_BASE_URL` is the relative
+path `/api`, and `vite.config.ts` proxies `/api`, `/ws` and `/ai` to Django and
+the AI service. The browser therefore asks whatever origin served the page,
+which is the only host that is guaranteed to be reachable from the device
+running it — a phone cannot reach the Mac's `localhost`, and a LAN address
+baked into client config goes stale the next time DHCP hands out a different
+one. Start Django with `runserver 0.0.0.0:8000` so the proxy can reach it.
+
+The proxy is dev-server-only: `vite build` ignores `server`, so a deployment
+still uses whatever `VITE_API_BASE_URL` it is built with.
 
 The try-on needs the AI service running alongside it:
 
@@ -33,10 +48,11 @@ cd ../ai && cp .env.example .env   # add a real OPENROUTER_API_KEY
 uv sync && python main.py          # http://localhost:8001
 ```
 
-Then point the app at it — `cp .env.example .env.local` and set
-`VITE_AI_API_URL` (it defaults to `http://localhost:8001`). Without the service
-the try-on screens show "The AI service could not be reached"; the rest of the
-app is unaffected.
+Nothing to point at it: `VITE_AI_API_URL` is the relative `/ai`, which
+`vite.config.ts` proxies to port 8001 — so the try-on flow works from a phone
+for the same reason the API does. Without the service running, the try-on
+screens show "The AI service could not be reached"; the rest of the app is
+unaffected.
 
 The app is designed for 320–480px. On a wider screen it stays a centred phone
 column rather than stretching into a layout it was never drawn for.
