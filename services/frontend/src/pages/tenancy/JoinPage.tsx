@@ -73,7 +73,7 @@ export default function JoinPage() {
   const role = useAppStore((s) => s.user?.role) ?? 'customer';
 
   const [phase, setPhase] = useState<'joining' | 'joined' | 'failed'>('joining');
-  const [salon, setSalon] = useState<string>('');
+  const [joined, setJoined] = useState<Tenant | null>(null);
   const [failure, setFailure] = useState<ApiValidationError | null>(null);
 
   /* The join is a write, and React runs effects twice under StrictMode in
@@ -101,7 +101,7 @@ export default function JoinPage() {
         // code in a shop is someone saying "this one, now".
         store.setTenants([...store.tenants.filter((s) => s.id !== joined.id), joined]);
         store.setActiveTenant(joined.id);
-        setSalon(joined.name);
+        setJoined(joined);
         setPhase('joined');
       },
       (error: unknown) => {
@@ -161,15 +161,24 @@ export default function JoinPage() {
     );
   }
 
-  if (phase === 'joined') {
+  if (phase === 'joined' && joined) {
     return (
       <JoinScreen>
         <EmptyState
           icon={<CheckCircle2 size={26} aria-hidden="true" />}
           tone="success"
           title={t('tenant.joinedTitle')}
-          description={t('tenant.joinedBody', { name: salon })}
-          action={<LinkButton to={ROUTES.home}>{t('tenant.joinedAction')}</LinkButton>}
+          description={t('tenant.joinedBody', { name: joined.name })}
+          /* Into the wizard for the salon just joined, not to a generic
+             home. Somebody standing in a shop scanning its code is trying to
+             book; the salon list they now appear on is a screen they can
+             reach any time. `listingId` is what the wizard is addressed by —
+             see the note on `YourSalons`. */
+          action={
+            <LinkButton to={ROUTES.bookingService(joined.listingId)}>
+              {t('tenant.joinedAction')}
+            </LinkButton>
+          }
         />
       </JoinScreen>
     );

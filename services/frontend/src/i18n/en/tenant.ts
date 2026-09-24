@@ -27,4 +27,11 @@ export const tenant = {
   'tenant.removeBody': 'It comes off your salon list. Your bookings and reviews there stay, and scanning the shop’s code again puts it back.',
   'tenant.removed': '{name} is off your list',
   'tenant.errRemove': 'We could not remove that salon. Try again in a moment.',
+
+  /* Home: the salons you can book at. */
+  'tenant.homeTitle': 'Your salons',
+  'tenant.homeHint': 'Tap one to book.',
+  'tenant.homeEmptyTitle': 'No salons yet',
+  'tenant.homeEmptyBody': 'Scan the QR code in a salon to add it here. Ask at the counter — every salon on Eureka has one.',
+  'tenant.bookAt': 'Book at {name}',
 } as const;

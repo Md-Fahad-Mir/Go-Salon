@@ -1,25 +1,21 @@
-import { Bell, ChevronRight, Sparkles } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { areaLabel } from '../components/auth/areas';
 import { Avatar } from '../components/common/Avatar';
 import { HairstyleCard } from '../components/common/HairstyleCard';
 import { IconButton } from '../components/common/IconButton';
-import { ProfessionalCard } from '../components/common/ProfessionalCard';
 import { SectionHead } from '../components/common/SectionHead';
-import { CardSkeleton } from '../components/common/Skeleton';
 import { HeroCard } from '../components/home/HeroCard';
 import { NextVisitCard } from '../components/home/NextVisitCard';
+import { YourSalons } from '../components/home/YourSalons';
 import { Header } from '../components/layout/Header';
 import { Screen, ScreenBody } from '../components/layout/Screen';
-import { DEFAULT_LOCATION, ROUTES } from '../constants';
-import { useNearby } from '../hooks/useNearby';
+import { ROUTES } from '../constants';
 import { useT } from '../hooks/useLanguage';
 import type { TKey } from '../i18n';
 import { mockHairstyles } from '../mockData';
 import { useAppStore } from '../store/useAppStore';
 import { combineDateTime, firstNameOf, formatNumber, toDateKey } from '../utils/format';
-import { audienceFor } from '../utils/audience';
 import { trendingHairstyles } from '../utils/recommend';
 
 
@@ -39,10 +35,6 @@ export default function HomePage() {
   const [today] = useState(() => toDateKey(new Date()));
   const [hour] = useState(() => new Date().getHours());
 
-  const point = user?.location ?? DEFAULT_LOCATION;
-  const area = user?.location?.area ?? DEFAULT_LOCATION.area;
-  const audience = audienceFor(user?.gender) ?? undefined;
-  const { list: nearby, loading } = useNearby(point, 4, audience);
   const trending = useMemo(
     () => trendingHairstyles(mockHairstyles, 8, user?.gender),
     [user?.gender],
@@ -97,10 +89,10 @@ export default function HomePage() {
         ) : null}
 
         <section className="section home-section">
-          <SectionHead
-            title={t('home.trending')}
-            action={{ label: t('action.seeAll'), to: `${ROUTES.search}?tab=styles` }}
-          />
+          {/* No "see all": the screen it led to was the cross-salon search,
+              which is withdrawn. The cards still go to the try-on flow, which
+              is not a salon-discovery feature and is untouched. */}
+          <SectionHead title={t('home.trending')} />
           <div className="hscroll bleed stagger home-trending" role="list" aria-label={t('home.trending')}>
             {trending.map((style) => (
               <div key={style.id} role="listitem">
@@ -110,35 +102,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="section home-section">
-          <div className="section-head home-nearby-head">
-            <div className="stack-xs">
-              <h2>{t('home.nearbyPros')}</h2>
-              <p className="caption">{t('home.nearArea', { area: areaLabel(t, area) })}</p>
-              {/* Say out loud that the list is narrowed, and offer the way
-                  out — a silent filter reads as missing salons. */}
-              {audience ? (
-                <p className="home-tailored">
-                  <Sparkles size={13} aria-hidden="true" />
-                  {t('home.genderFilterNotice')}
-                  <Link to={`${ROUTES.search}?audience=all`}>{t('home.genderFilterChange')}</Link>
-                </p>
-              ) : null}
-            </div>
-            <Link to={ROUTES.search}>
-              {t('action.seeAll')} <ChevronRight size={16} aria-hidden="true" />
-            </Link>
-          </div>
-          {loading ? (
-            <CardSkeleton count={2} />
-          ) : (
-            <div className="stack stagger" aria-live="polite">
-              {nearby.map((pro) => (
-                <ProfessionalCard key={pro.id} pro={pro} variant="list" />
-              ))}
-            </div>
-          )}
-        </section>
+        <YourSalons />
+
       </ScreenBody>
     </Screen>
   );

@@ -23,14 +23,35 @@
 import type { Tenant } from '../types';
 import { api } from './apiClient';
 
+/** The wire shape. `listing_id` is snake_case on the wire and camel in the
+    app, which is the only field here that needs translating at all. */
+interface ApiTenant {
+  id: number;
+  slug: string;
+  listing_id: string;
+  name: string;
+  avatar: string;
+}
+
+const toTenant = (row: ApiTenant): Tenant => ({
+  id: row.id,
+  slug: row.slug,
+  listingId: row.listing_id,
+  name: row.name,
+  avatar: row.avatar,
+});
+
+const toTenants = (rows: ApiTenant[]): Tenant[] =>
+  Array.isArray(rows) ? rows.map(toTenant) : rows;
+
 export const tenantService = {
   /** `GET /api/tenants/mine/` — a customer's active memberships. */
-  mine: () => api.get<Tenant[]>('/tenants/mine/'),
+  mine: () => api.get<ApiTenant[]>('/tenants/mine/').then(toTenants),
 
   /** `GET /api/tenants/owned/` — an owner's salons, by shopfront name.
 
       Read-only, and permanently: nobody joins or leaves a shop they own. */
-  owned: () => api.get<Tenant[]>('/tenants/owned/'),
+  owned: () => api.get<ApiTenant[]>('/tenants/owned/').then(toTenants),
 
   /** `DELETE /api/tenants/mine/<id>/` — take a salon off the list.
 
@@ -48,5 +69,6 @@ export const tenantService = {
       the same: somebody who scans a code they have already used should be told
       they are in, not that something went wrong. The client does not see the
       difference anyway — both come back as the tenant itself. */
-  join: (joinToken: string) => api.post<Tenant>('/tenants/join/', { join_token: joinToken }),
+  join: (joinToken: string) =>
+    api.post<ApiTenant>('/tenants/join/', { join_token: joinToken }).then(toTenant),
 };

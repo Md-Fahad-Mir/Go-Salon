@@ -8,6 +8,19 @@ already exists. This is not that.
 
   id      what every later request names in `X-Tenant-Id`. Without it the
           client cannot act on the membership it just made.
+  listing_id
+          `salon-3` / `barber-9` — the same handle bookings, reviews and
+          availability already use for this business. Here for the same reason
+          `id` is: without it a client holding a membership cannot open the
+          one screen the membership is for. The salon list is what a customer
+          taps to start booking, and the booking wizard is addressed by
+          listing id, so a list that omitted it would be a list of things that
+          cannot be opened.
+
+          It discloses nothing: a customer learns this exact string from every
+          booking they hold at the salon, every availability call they make
+          there, and every review they write. What it removes is the need to
+          have made a booking *first* in order to make one.
   slug    the readable handle, for a URL or a log line. Not a secret and not
           a credential: nothing routes or authorises on it.
   name    what the customer sees in their salon list. They scanned this shop's
@@ -45,8 +58,18 @@ class TenantProfileSerializer(serializers.Serializer):
 
     id = serializers.IntegerField(read_only=True)
     slug = serializers.CharField(read_only=True)
+    listing_id = serializers.SerializerMethodField()
     name = serializers.SerializerMethodField()
     avatar = serializers.SerializerMethodField()
+
+    def get_listing_id(self, tenant) -> str:
+        # The same two-line rule `Apps/bookings/serializers.py::listing_id`
+        # applies, and deliberately not an import of it: that one reads an
+        # appointment's owner columns and this one a tenant's, so sharing a
+        # function would mean one of them taking an argument it does not have.
+        if tenant.salon_id:
+            return f'salon-{tenant.salon_id}'
+        return f'barber-{tenant.barber_profile_id}' if tenant.barber_profile_id else ''
 
     def get_name(self, tenant) -> str:
         if tenant.salon_id:

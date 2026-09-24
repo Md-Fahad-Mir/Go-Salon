@@ -1,4 +1,4 @@
-import { Scissors, Search, Share2, Sparkles } from 'lucide-react';
+import { Scissors, Share2, Sparkles } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Art } from '../components/common/Art';
 import { Badge } from '../components/common/Badge';
@@ -171,9 +171,9 @@ export default function HairstyleDetailPage() {
 
       <StickyFooter>
         <FooterRow>
-          <LinkButton to={`${ROUTES.search}?hairstyle=${id}`} variant="secondary" icon={<Search size={18} aria-hidden="true" />}>
-            {t('home.findAPro')}
-          </LinkButton>
+          {/* The "find a salon that does this style" button stood on
+              cross-salon search, which is withdrawn as a product decision —
+              a customer books where they have joined. */}
           <Button onClick={tryOn} icon={<Sparkles size={18} aria-hidden="true" />}>
             {t('home.tryItOn')}
           </Button>

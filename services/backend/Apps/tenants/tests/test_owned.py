@@ -19,9 +19,13 @@ OWNED = '/api/tenants/owned/'
 
 #: Exactly what a tenant looks like to a client. Pinned, so that widening it
 #: has to be a decision somebody makes on purpose — the join token lives on
-#: this model, and a fifth field appearing here unnoticed is how it would get
-#: out. Same discipline as the realtime envelope's key-set assertion.
-FIELDS = {'id', 'slug', 'name', 'avatar'}
+#: this model, and a field appearing here unnoticed is how it would get out.
+#: Same discipline as the realtime envelope's key-set assertion.
+#:
+#: `listing_id` joined the set when the salon list became the way into the
+#: booking wizard: the wizard is addressed by listing id, so a list without
+#: one is a list of salons that cannot be opened.
+FIELDS = {'id', 'slug', 'listing_id', 'name', 'avatar'}
 
 
 class OwnedSalonsTests(AuthTestCase):
@@ -89,7 +93,13 @@ class OwnedSalonsTests(AuthTestCase):
 
     # --- the envelope ------------------------------------------------------
 
-    def test_every_row_carries_exactly_the_four_public_fields(self):
+    def test_the_listing_id_is_the_one_the_booking_wizard_uses(self):
+        """`salon-<pk>`, the same handle bookings and availability take."""
+        salon = Salon.objects.get(owner=self.owner)
+        rows = self.owned(self.owner_session).data
+        self.assertEqual(rows[0]['listing_id'], f'salon-{salon.pk}')
+
+    def test_every_row_carries_exactly_the_public_fields(self):
         Salon.objects.create(owner=self.owner, name='Bluebell Parlour')
         response = self.owned(self.owner_session)
 

@@ -16,7 +16,7 @@ import { mount } from '../../test/render';
 import JoinPage from './JoinPage';
 
 const TOKEN = 'a'.repeat(43);
-const SALON = { id: 4, slug: 'aurora-salon', name: 'Aurora Salon', avatar: '' };
+const SALON = { id: 4, slug: 'aurora-salon', listing_id: 'salon-4', name: 'Aurora Salon', avatar: '' };
 
 const SESSION = {
   user: {

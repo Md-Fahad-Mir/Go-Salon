@@ -95,14 +95,14 @@ export default function BookingsPage() {
               tone="accent"
               title={t('bookings.emptyUpcomingTitle')}
               description={t('bookings.emptyUpcomingBody')}
-              action={<LinkButton to={ROUTES.search}>{t('bookings.findSalon')}</LinkButton>}
+              action={<LinkButton to={ROUTES.home}>{t('bookings.findSalon')}</LinkButton>}
             />
           ) : tab === 'completed' ? (
             <EmptyState
               icon={<CheckCircle2 size={26} aria-hidden="true" />}
               title={t('bookings.emptyCompletedTitle')}
               description={t('bookings.emptyCompletedBody')}
-              action={grouped.upcoming.length === 0 ? <LinkButton to={ROUTES.search} variant="secondary">{t('bookings.findSalon')}</LinkButton> : undefined}
+              action={grouped.upcoming.length === 0 ? <LinkButton to={ROUTES.home} variant="secondary">{t('bookings.findSalon')}</LinkButton> : undefined}
             />
           ) : (
             <EmptyState

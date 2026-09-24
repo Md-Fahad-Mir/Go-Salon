@@ -75,7 +75,7 @@ class JoinTests(BookingTestCase):
         """
         response = self.client.post(
             JOIN, {'join_token': self.tenant.join_token}, format='json')
-        self.assertEqual(set(response.data), {'id', 'slug', 'name', 'avatar'})
+        self.assertEqual(set(response.data), {'id', 'slug', 'listing_id', 'name', 'avatar'})
         self.assertEqual(response.data['id'], self.tenant.pk)
         self.assertEqual(response.data['name'], self.salon.name)
 
@@ -162,7 +162,7 @@ class MyTenantsTests(BookingTestCase):
         self.assertEqual(listed.status_code, 200, listed.data)
         self.assertEqual({row['id'] for row in listed.data},
                          {self.tenant.pk, other_tenant.pk})
-        self.assertEqual(set(listed.data[0]), {'id', 'slug', 'name', 'avatar'})
+        self.assertEqual(set(listed.data[0]), {'id', 'slug', 'listing_id', 'name', 'avatar'})
 
     def test_removing_a_salon_is_soft_and_keeps_what_happened_there(self):
         self.as_user(self.customer_session, tenant=self.tenant)

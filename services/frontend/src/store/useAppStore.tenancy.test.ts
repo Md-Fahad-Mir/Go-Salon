@@ -13,9 +13,21 @@ import { STORAGE_KEYS } from '../constants';
 import { sent, serve } from '../test/http';
 import { useAppStore } from './useAppStore';
 
-const ALPHA: Tenant = { id: 4, slug: 'alpha', name: 'Alpha Salon', avatar: '' };
-const BETA: Tenant = { id: 5, slug: 'beta', name: 'Beta Salon', avatar: '' };
-const GAMMA: Tenant = { id: 6, slug: 'gamma', name: 'Gamma Salon', avatar: '' };
+const ALPHA: Tenant = { id: 4, slug: 'alpha', listingId: 'salon-4', name: 'Alpha Salon', avatar: '' };
+const BETA: Tenant = { id: 5, slug: 'beta', listingId: 'salon-5', name: 'Beta Salon', avatar: '' };
+const GAMMA: Tenant = { id: 6, slug: 'gamma', listingId: 'barber-6', name: 'Gamma Salon', avatar: '' };
+
+/** The wire shape of a tenant, for `serve()` bodies. The service maps
+    `listing_id` to `listingId`, so a fixture sent as the app's own shape
+    would arrive with an undefined listing and fail for the wrong reason. */
+const wire = (t: Tenant) => ({
+  id: t.id,
+  slug: t.slug,
+  listing_id: t.listingId,
+  name: t.name,
+  avatar: t.avatar,
+});
+
 
 const someone = (id = 'U1', role: User['role'] = 'customer'): User => ({
   id,
@@ -212,7 +224,7 @@ describe('loadTenants: reading the list from the server', () => {
 
   it('asks the right endpoint and stores what comes back', async () => {
     signIn();
-    serve({ status: 200, body: [ALPHA, BETA] });
+    serve({ status: 200, body: [wire(ALPHA), wire(BETA)] });
     await store().loadTenants();
     expect(sent).toHaveLength(1);
     expect(sent[0].url).toBe('http://api.test/api/tenants/mine/');
@@ -226,7 +238,7 @@ describe('loadTenants: reading the list from the server', () => {
     // A stale choice, as a reload from localStorage would leave one.
     store().setTenants([ALPHA, BETA]);
     store().setActiveTenant(BETA.id);
-    serve({ status: 200, body: [ALPHA] });
+    serve({ status: 200, body: [wire(ALPHA)] });
     await store().loadTenants();
     // BETA is gone and ALPHA is the only one left, so ALPHA it is.
     expect(store().activeTenantId).toBe(ALPHA.id);
@@ -234,7 +246,7 @@ describe('loadTenants: reading the list from the server', () => {
 
   it('adopts the sole salon a one-salon customer gets back', async () => {
     signIn();
-    serve({ status: 200, body: [GAMMA] });
+    serve({ status: 200, body: [wire(GAMMA)] });
     await store().loadTenants();
     expect(store().activeTenantId).toBe(GAMMA.id);
   });
@@ -264,7 +276,7 @@ describe('loadTenants: reading the list from the server', () => {
     serve(
       { status: 401, body: { detail: 'expired', code: 'token_not_valid', errors: {} } },
       { status: 200, body: { access: 'access-2' } },
-      { status: 200, body: [ALPHA, BETA] },
+      { status: 200, body: [wire(ALPHA), wire(BETA)] },
     );
     await store().loadTenants();
     expect(store().tenants).toEqual([ALPHA, BETA]);
@@ -311,7 +323,7 @@ describe('loadTenants: reading the list from the server', () => {
   describe('which list each role is asked for', () => {
     it('asks a customer for the salons they have joined', async () => {
       signIn('customer');
-      serve({ status: 200, body: [ALPHA] });
+      serve({ status: 200, body: [wire(ALPHA)] });
       await store().loadTenants();
       expect(sent[0].url).toBe('http://api.test/api/tenants/mine/');
     });
@@ -320,7 +332,7 @@ describe('loadTenants: reading the list from the server', () => {
       // `/tenants/mine/` would answer an owner 403 `not_a_customer`; owning a
       // shop is not joining one, and only owners can have several.
       signIn('salon_owner');
-      serve({ status: 200, body: [ALPHA, BETA] });
+      serve({ status: 200, body: [wire(ALPHA), wire(BETA)] });
       await store().loadTenants();
       expect(sent).toHaveLength(1);
       expect(sent[0].url).toBe('http://api.test/api/tenants/owned/');
@@ -345,7 +357,7 @@ describe('loadTenants: reading the list from the server', () => {
 
     it('treats a session stored before roles existed as a customer', async () => {
       store().setSession({ user: { ...someone(), role: undefined }, access: 'a', refresh: 'r' });
-      serve({ status: 200, body: [ALPHA] });
+      serve({ status: 200, body: [wire(ALPHA)] });
       await store().loadTenants();
       expect(sent).toHaveLength(1);
       expect(store().tenants).toEqual([ALPHA]);

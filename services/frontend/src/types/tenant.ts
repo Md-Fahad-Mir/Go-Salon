@@ -13,6 +13,11 @@
 export interface Tenant {
   id: number;
   slug: string;
+  /** `salon-3` / `barber-9` — the handle bookings, reviews and availability
+      already use for this business, and the one the booking wizard is
+      addressed by. Not the same thing as `id`, and not derivable from `slug`:
+      a slug is made from the name, and two salons may share a name. */
+  listingId: string;
   name: string;
   /** May be an empty string — the backend sends `''`, not null, for a salon
       that has no picture yet. */

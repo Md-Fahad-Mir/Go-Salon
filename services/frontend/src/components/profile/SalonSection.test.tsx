@@ -12,8 +12,8 @@ import { mount } from '../../test/render';
 import type { Tenant, User } from '../../types';
 import { SalonSection } from './SalonSection';
 
-const ALPHA: Tenant = { id: 4, slug: 'alpha', name: 'Aurora Salon', avatar: '' };
-const BETA: Tenant = { id: 5, slug: 'beta', name: 'Bluebell Parlour', avatar: '' };
+const ALPHA: Tenant = { id: 4, slug: 'alpha', listingId: 'salon-4', name: 'Aurora Salon', avatar: '' };
+const BETA: Tenant = { id: 5, slug: 'beta', listingId: 'salon-5', name: 'Bluebell Parlour', avatar: '' };
 
 const someone = (role: User['role']): User => ({
   id: 'U1',
@@ -280,7 +280,7 @@ describe('leaving a salon', () => {
 
   it('refuses to guess when the active salon goes and several remain', async () => {
     const user = userEvent.setup();
-    const gamma = { id: 6, slug: 'gamma', name: 'Gamma Salon', avatar: '' };
+    const gamma = { id: 6, slug: 'gamma', listingId: 'salon-6', name: 'Gamma Salon', avatar: '' };
     store().setTenants([ALPHA, BETA, gamma]);
     store().setActiveTenant(ALPHA.id);
     serve({ status: 204 });

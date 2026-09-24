@@ -39,7 +39,7 @@ export default function SavedPage() {
             icon={<Heart size={26} aria-hidden="true" />}
             title={t('profile.nothingSavedTitle')}
             description={t('profile.nothingSavedBody')}
-            action={<LinkButton to={ROUTES.search}>{t('profile.explore')}</LinkButton>}
+            action={<LinkButton to={ROUTES.home}>{t('profile.explore')}</LinkButton>}
           />
         ) : (
           <>

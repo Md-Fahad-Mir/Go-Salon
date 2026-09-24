@@ -94,7 +94,9 @@ function Preview({ generation }: { generation: AIGeneration }) {
     }
     // An AI pick is not in the catalogue, so there is nothing to filter by —
     // the customer asks for it by name at the salon.
-    navigate(generation.origin === 'ai' ? ROUTES.search : `${ROUTES.search}?hairstyle=${generation.hairstyleId}`);
+    // Was a jump into cross-salon search for somewhere that does this style.
+    // That is withdrawn, so this goes to the salons they have joined instead.
+    navigate(ROUTES.home);
   };
 
   const download = async () => {

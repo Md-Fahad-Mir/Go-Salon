@@ -14,8 +14,8 @@ import { lastRequest, sent, serve } from '../test/http';
 import { useAppStore } from '../store/useAppStore';
 import { ApiValidationError, api, isTenantError, TenantError } from './apiClient';
 
-const ALPHA: Tenant = { id: 4, slug: 'alpha', name: 'Alpha Salon', avatar: '' };
-const BETA: Tenant = { id: 5, slug: 'beta', name: 'Beta Salon', avatar: '' };
+const ALPHA: Tenant = { id: 4, slug: 'alpha', listingId: 'salon-4', name: 'Alpha Salon', avatar: '' };
+const BETA: Tenant = { id: 5, slug: 'beta', listingId: 'salon-5', name: 'Beta Salon', avatar: '' };
 
 const someone = (): User => ({
   id: 'U1',
@@ -170,7 +170,7 @@ describe('tenant refusals become TenantError', () => {
   });
 
   it('404 tenant_not_found: unknown or deactivated', async () => {
-    signedIn([{ id: 999999, slug: 'gone', name: 'Gone', avatar: '' }]);
+    signedIn([{ id: 999999, slug: 'gone', listingId: 'salon-999999', name: 'Gone', avatar: '' }]);
     serve(TENANT_NOT_FOUND);
     const error = await api.get('/bookings/').catch((e: unknown) => e);
     expect(isTenantError(error)).toBe(true);

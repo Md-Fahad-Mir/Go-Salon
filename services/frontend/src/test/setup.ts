@@ -44,8 +44,32 @@ class MemoryStorage implements Storage {
   }
 }
 
-if (!('localStorage' in globalThis)) {
-  globalThis.localStorage = new MemoryStorage();
+/* Installed only when there is not a working one already.
+
+   The test is the *value*, not the key. Node ≥22 declares `localStorage` on
+   `globalThis` and leaves it `undefined` unless the process was started with
+   `--localstorage-file`, so an `in` check sees it, skips the install, and
+   every test then dies on `localStorage.clear()`. Reading it is wrapped
+   because a host that declares it as a throwing getter is also allowed.
+
+   `defineProperty` rather than assignment, because under jsdom the real one
+   is a getter-only own property of the window and vitest installs a
+   write-through accessor over it — assigning throws and takes the whole setup
+   file, and every test in the run, with it. */
+const working = (() => {
+  try {
+    return Boolean(globalThis.localStorage);
+  } catch {
+    return false;
+  }
+})();
+
+if (!working) {
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: new MemoryStorage(),
+    configurable: true,
+    writable: true,
+  });
 }
 
 beforeEach(() => {

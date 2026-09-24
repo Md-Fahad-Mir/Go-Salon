@@ -27,4 +27,11 @@ export const tenant = {
   'tenant.removeBody': 'এটি আপনার স্যালনের তালিকা থেকে সরে যাবে। ওখানকার বুকিং আর রিভিউ থেকে যাবে, আর দোকানের কোড আবার স্ক্যান করলে ফিরে আসবে।',
   'tenant.removed': '{name} আপনার তালিকা থেকে সরানো হয়েছে',
   'tenant.errRemove': 'স্যালনটি সরানো যায়নি। একটু পরে আবার চেষ্টা করুন।',
+
+  /* Home: the salons you can book at. */
+  'tenant.homeTitle': 'আপনার স্যালন',
+  'tenant.homeHint': 'বুক করতে একটিতে চাপ দিন।',
+  'tenant.homeEmptyTitle': 'এখনো কোনো স্যালন নেই',
+  'tenant.homeEmptyBody': 'স্যালনে গিয়ে কিউআর কোড স্ক্যান করলে এখানে যুক্ত হবে। কাউন্টারে জিজ্ঞেস করুন — ইউরেকার প্রতিটি স্যালনেই কোড আছে।',
+  'tenant.bookAt': '{name}-এ বুক করুন',
 } as const;

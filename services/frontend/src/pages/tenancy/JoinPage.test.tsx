@@ -16,7 +16,13 @@ import type { User } from '../../types';
 import JoinPage from './JoinPage';
 
 const TOKEN = 'a'.repeat(43);
-const SALON = { id: 4, slug: 'aurora-salon', name: 'Aurora Salon', avatar: '' };
+const SALON = {
+  id: 4, slug: 'aurora-salon', listingId: 'salon-4', name: 'Aurora Salon', avatar: '',
+};
+/** What the server actually sends; the service maps it. */
+const SALON_WIRE = {
+  id: 4, slug: 'aurora-salon', listing_id: 'salon-4', name: 'Aurora Salon', avatar: '',
+};
 
 const someone = (role: User['role'] = 'customer'): User => ({
   id: 'U1',
@@ -49,9 +55,21 @@ const open = (token = TOKEN) =>
   });
 
 describe('a customer scanning a salon’s code', () => {
+  it('offers the way straight into booking that salon, not a generic home', async () => {
+    signIn();
+    serve({ status: 201, body: SALON_WIRE });
+    open();
+
+    await screen.findByText('You’re in');
+    // Somebody standing in a shop scanning its code is trying to book. The
+    // salon list is a screen they can reach any time.
+    expect(screen.getByRole('link', { name: 'Start booking' }))
+      .toHaveAttribute('href', '/booking/salon-4/service');
+  });
+
   it('joins, says so by name, and makes that salon the active one', async () => {
     signIn();
-    serve({ status: 201, body: SALON });
+    serve({ status: 201, body: SALON_WIRE });
     open();
 
     expect(await screen.findByText('You’re in')).toBeInTheDocument();
@@ -62,7 +80,7 @@ describe('a customer scanning a salon’s code', () => {
 
   it('sends the token from the URL to the join endpoint', async () => {
     signIn();
-    serve({ status: 201, body: SALON });
+    serve({ status: 201, body: SALON_WIRE });
     open();
 
     await screen.findByText('You’re in');
@@ -73,7 +91,7 @@ describe('a customer scanning a salon’s code', () => {
 
   it('treats a re-scan (200, already a member) exactly like a first scan', async () => {
     signIn();
-    serve({ status: 200, body: SALON });
+    serve({ status: 200, body: SALON_WIRE });
     open();
 
     expect(await screen.findByText('You’re in')).toBeInTheDocument();
@@ -82,7 +100,7 @@ describe('a customer scanning a salon’s code', () => {
 
   it('shows a spinner while the join is in flight', () => {
     signIn();
-    serve({ status: 201, body: SALON });
+    serve({ status: 201, body: SALON_WIRE });
     open();
 
     expect(screen.getByRole('status')).toHaveAccessibleName('Adding you to the salon');
@@ -90,11 +108,11 @@ describe('a customer scanning a salon’s code', () => {
 
   it('switches the active salon to the one just scanned', async () => {
     signIn();
-    const other = { id: 9, slug: 'other', name: 'Other Salon', avatar: '' };
+    const other = { id: 9, slug: 'other', listingId: 'salon-9', name: 'Other Salon', avatar: '' };
     store().setTenants([other]);
     expect(store().activeTenantId).toBe(other.id);
 
-    serve({ status: 201, body: SALON });
+    serve({ status: 201, body: SALON_WIRE });
     open();
 
     await screen.findByText('You’re in');
@@ -104,7 +122,7 @@ describe('a customer scanning a salon’s code', () => {
 
   it('asks once, not twice, when React double-invokes the effect', async () => {
     signIn();
-    serve({ status: 201, body: SALON });
+    serve({ status: 201, body: SALON_WIRE });
     render(
       <StrictMode>
         <LanguageProvider>

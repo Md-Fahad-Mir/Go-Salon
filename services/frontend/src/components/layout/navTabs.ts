@@ -1,4 +1,4 @@
-import { CalendarDays, Home, ListChecks, Search, Settings, Sparkles, Users, UserRound } from 'lucide-react';
+import { CalendarDays, Home, ListChecks, Settings, Sparkles, Users, UserRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ROUTES } from '../../constants';
 import type { TranslationKey } from '../../i18n';
@@ -29,8 +29,13 @@ export interface NavTab {
    from there, so cutting the bar back did not cut anything off. */
 export const NAV_TABS: Record<UserRole, NavTab[]> = {
   customer: [
+    /* Four, not five. The Search tab led to the cross-salon directory, which
+       is withdrawn — and since Step 6g a customer can only read a salon they
+       have joined, so the screen behind it now refuses most of what it lists.
+       Home is the honest entry point: the salons they can actually book at.
+       The screen itself is left in place for F5c to delete; this only stops
+       the app pointing at it. */
     { to: ROUTES.home, labelKey: 'nav.home', icon: Home, match: ['/home', '/hairstyle', '/professional', '/notifications'] },
-    { to: ROUTES.search, labelKey: 'nav.search', icon: Search, match: ['/search'] },
     { to: ROUTES.tryOn, labelKey: 'nav.tryOn', icon: Sparkles, match: ['/ai-tryon'], hero: true },
     { to: ROUTES.bookings, labelKey: 'nav.bookings', icon: CalendarDays, match: ['/bookings', '/booking'] },
     { to: ROUTES.profile, labelKey: 'nav.profile', icon: UserRound, match: ['/profile'] },
