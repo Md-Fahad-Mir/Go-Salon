@@ -349,7 +349,7 @@ class DirectoryScoreTests(ReviewTestCase):
 
     def test_a_listing_with_no_reviews_reports_none_not_zero(self):
         self.as_user(self.customer_session)
-        response = self.client.get(f'/api/directory/salon-{self.salon.id}/')
+        response = self.client.get(f'/api/listings/salon-{self.salon.id}/')
         self.assertIsNone(response.data['rating'])
         self.assertEqual(response.data['review_count'], 0)
         for chair in response.data['staff']:
@@ -359,7 +359,7 @@ class DirectoryScoreTests(ReviewTestCase):
         self.write(self.finished(time='11:00'), 5)
         self.write(self.finished(time='13:00'), 4)
         self.as_user(self.customer_session)
-        response = self.client.get(f'/api/directory/salon-{self.salon.id}/')
+        response = self.client.get(f'/api/listings/salon-{self.salon.id}/')
         self.assertEqual(response.data['rating'], 4.5)
         self.assertEqual(response.data['review_count'], 2)
 
@@ -367,40 +367,50 @@ class DirectoryScoreTests(ReviewTestCase):
         self.write(self.finished(employee=self.chair, time='11:00'), 5)
         self.write(self.finished(employee=self.second_chair, time='13:00'), 3)
         self.as_user(self.customer_session)
-        response = self.client.get(f'/api/directory/salon-{self.salon.id}/')
+        response = self.client.get(f'/api/listings/salon-{self.salon.id}/')
         chairs = {row['id']: row for row in response.data['staff']}
         self.assertEqual(chairs[str(self.chair.id)]['rating'], 5.0)
         self.assertEqual(chairs[str(self.second_chair.id)]['review_count'], 1)
         self.assertEqual(chairs[str(self.second_chair.id)]['rating'], 3.0)
 
-    def test_scoring_the_list_costs_two_queries_however_long_it_is(self):
-        """One aggregate for the salons and one for the barbers, and that is
-        the whole cost — a star per card must not become a query per card."""
+    def test_scoring_a_salon_costs_two_queries_however_many_chairs_it_has(self):
+        """One aggregate for the salon and one for its chairs, and that is the
+        whole cost — a star per chair must not become a query per chair.
+
+        This used to be asserted against the directory listing, where the same
+        rule had to hold across a page of salons. That endpoint is gone, and
+        the rule did not go with it: a salon's own detail still scores itself
+        and every chair on it, and a busy salon is where a per-row query would
+        actually hurt.
+        """
         from django.db import connection
         from django.test.utils import CaptureQueriesContext
 
         def review_queries() -> int:
             self.as_user(self.customer_session)
             with CaptureQueriesContext(connection) as captured:
-                response = self.client.get('/api/directory/')
+                response = self.client.get(f'/api/listings/salon-{self.salon.id}/')
             asked = sum(1 for query in captured.captured_queries
                         if 'reviews_review' in query['sql'])
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 200, response.data)
             return asked
 
-        self.write(self.finished(time='11:00'), 5)
-        self.make_barber()
+        self.write(self.finished(employee=self.chair, time='11:00'), 5)
         self.assertEqual(review_queries(), 2)
 
-        # Another salon, another barber, another review: still two.
-        self.make_owner(phone='01911000222', email='second@example.com')
-        self.make_barber(phone='01811111112', email='second-barber@example.com')
+        # A third chair and a second review: still two.
+        self.as_user(self.owner_session)
+        hired = self.client.post('/api/salon/employees/', {
+            'phone': '01755000077', 'name': 'Third Chair', 'password': 'chairside2026',
+        }, format='json')
+        self.assertEqual(hired.status_code, 201, hired.data)
         Review.objects.create(appointment=Appointment.objects.get(
-            pk=self.finished(time='13:00')), rating=4)
+            pk=self.finished(employee=self.second_chair, time='13:00')), rating=4)
         self.assertEqual(review_queries(), 2)
+
         self.as_user(self.customer_session)
         self.assertGreaterEqual(
-            len(self.client.get('/api/directory/').data['results']), 4)
+            len(self.client.get(f'/api/listings/salon-{self.salon.id}/').data['staff']), 3)
 
 
 class NameTests(ReviewTestCase):

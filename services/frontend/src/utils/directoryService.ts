@@ -244,7 +244,11 @@ export const directoryService = {
   },
 
   async get(id: string, point?: GeoPoint): Promise<DirectoryDetail> {
-    const row = await api.get<ApiListing>(`/directory/${id}/${queryString(point, {})}`);
+    // `/listings/`, not `/directory/`: the browsable directory is gone and the
+    // path went with it. This one read survives because the booking wizard has
+    // no other source for a salon's menu, chairs, address or phone — and it is
+    // membership-scoped now, so it answers 404 for a salon you have not joined.
+    const row = await api.get<ApiListing>(`/listings/${id}/${queryString(point, {})}`);
     return {
       professional: toProfessional(row),
       services: (row.services ?? []).map((service) => toService(service, row.id)),

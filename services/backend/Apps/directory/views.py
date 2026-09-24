@@ -1,10 +1,31 @@
-"""The customer-facing directory.
+"""One salon, in full, for somebody who belongs to it.
 
-    GET /api/directory/          everyone taking clients, filtered and sorted
-    GET /api/directory/{id}/     one of them, with its menu and its chairs
+    GET /api/listings/{id}/      its menu, its chairs, its week, its address
 
-Ids are kind-prefixed — `salon-3`, `barber-9` — so two tables share one
-namespace and a customer never has to know which one a listing came out of.
+Ids are kind-prefixed — `salon-3`, `barber-9` — the same namespace bookings
+and reviews already use, so a customer never has to know which table a
+listing came out of.
+
+WHAT THIS USED TO BE
+
+A browsable directory: `GET /api/directory/` returned every salon and barber
+on the platform, filtered, sorted and searchable, to anybody signed in. The
+audit called that out as finding C2 — those rows carry business phone
+numbers, staff names, price lists and opening hours — and the detail endpoint
+beside it had the same problem in a narrower form, since any signed-in account
+could read any salon by guessing `salon-<n>`.
+
+The list is gone rather than locked down, because the product it existed for
+is gone: cross-salon search, discovery by hairstyle and post-try-on
+suggestions are all withdrawn, and a customer now reaches a salon by scanning
+its code. Nothing internal used it — Django's own admin is where staff look
+things up — so an admin-gated version would have been a filtering and sorting
+machine with no caller, which is dead code wearing a permission class.
+
+What remains is the one read that still has a job: the booking wizard needs a
+salon's menu, chairs, address and phone, and there is no other endpoint that
+gives a customer any of those. It is now scoped to membership through
+`belongs_to`, the same check every other tenant-scoped read uses.
 
 Read-only by design: everything here is maintained by its owner through
 `/api/profile/me/`, `/api/services/` and `/api/schedule/me/`. There is no
@@ -13,7 +34,7 @@ write path, so there is nothing here to duplicate those.
 
 from __future__ import annotations
 
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -22,18 +43,15 @@ from rest_framework.views import APIView
 from Apps.reviews.ratings import chair_scores_for, scores_for
 from Apps.schedules.models import WorkingDay
 from Apps.services.models import Service
+from Apps.tenants.context import belongs_to
+from Apps.tenants.models import Tenant
 from Apps.users.models import BarberProfile, Role, Salon
 
-from .hours import is_open_at
 from .serializers import barber_listing, salon_listing
 
 #: A listing is only worth showing when the account behind it is real: active,
 #: and with the phone its owner actually proved. A half-finished sign-up is
 #: not a salon anyone can walk into — both querysets below say so.
-
-SORTS = {'distance', 'price', 'name'}
-DEFAULT_LIMIT = 50
-MAX_LIMIT = 100
 
 
 def _float(value: str | None) -> float | None:
@@ -41,13 +59,6 @@ def _float(value: str | None) -> float | None:
         return float(value) if value not in (None, '') else None
     except (TypeError, ValueError):
         return None
-
-
-def _int(value: str | None, default: int, ceiling: int) -> int:
-    try:
-        return max(1, min(ceiling, int(value))) if value not in (None, '') else default
-    except (TypeError, ValueError):
-        return default
 
 
 def _salons():
@@ -88,95 +99,42 @@ def _barbers():
     )
 
 
-def _matches_query(listing: dict, needle: str) -> bool:
-    """Name, tagline, area, category, specialties and the menu — what someone
-    would actually type. Done in Python because a listing is already two
-    tables joined and the catalogue is small."""
-    haystack = ' '.join([
-        listing['name'],
-        listing['tagline'],
-        listing['bio'][:200],
-        listing['location']['area'],
-        listing['location']['city'],
-        listing['category'],
-        listing['type'],
-        listing['kind'],
-        ' '.join(listing['specialties']),
-        ' '.join(service['name'] for service in listing.get('_service_names', [])),
-    ]).lower()
-    return needle in haystack
+def _tenant_of_listing(kind: str, pk: int):
+    """The tenant a listing id names, or None.
+
+    The listing namespace and the tenancy are two views of the same businesses
+    — a `salon-3` is the salon a tenant points at — so this is a lookup rather
+    than a translation. `is_active=False` answers None: a suspended tenant is
+    a 404 at every other door and must not be a way in through this one.
+    """
+    if kind == 'salon':
+        return Tenant.objects.filter(salon_id=pk, is_active=True).first()
+    if kind == 'barber':
+        return Tenant.objects.filter(barber_profile_id=pk, is_active=True).first()
+    return None
 
 
-class DirectoryListView(APIView):
-    """Signed-in customers only, in the sense that everyone signed in may read
-    it. It is not open to the world: these rows carry business phone numbers,
-    and an anonymous endpoint returning those is a scraping target."""
+class DetailView(APIView):
+    """One salon, to somebody who belongs to it.
 
-    permission_classes = (IsAuthenticated,)
+    NOT a member gets the same 404 as a salon that does not exist, which is
+    the convention this codebase already settled on for object-level access:
+    `MyTenantView` answers "never a member, already removed, or no such salon"
+    identically, and `TenantContext` refuses to tell an unknown id and an
+    inactive one apart, both so that nobody can map the platform by guessing.
+    The 403 `not_a_member` that `TenantContext` does raise is a different
+    question — there the client *asserted* a tenant in a header and has to be
+    told the assertion was refused. Here it named an object, and an object it
+    may not see is an object that is not there.
 
-    def get(self, request):
-        params = request.query_params
-        point = (_float(params.get('lat')), _float(params.get('lng')))
-        kind = (params.get('type') or 'all').lower()
-        audience = (params.get('audience') or 'all').lower()
-        area = (params.get('area') or '').strip()
-        needle = (params.get('q') or '').strip().lower()
-        open_now = params.get('open_now') in {'1', 'true', 'yes'}
-        sort = (params.get('sort') or 'distance').lower()
-        limit = _int(params.get('limit'), DEFAULT_LIMIT, MAX_LIMIT)
+    Providers are let through by the same check rather than by a special case,
+    and it is worth saying that none of them needs this endpoint: an owner
+    reads their salon through `/api/profile/me/`, `/api/services/`,
+    `/api/salon/employees/` and `/api/schedule/me/`, and a stylist through
+    their own profile and shift. `belongs_to` covers all four roles, so
+    excluding them would mean writing a rule to forbid something harmless.
+    """
 
-        listings: list[dict] = []
-        salons = list(_salons())
-        profiles = [] if kind == 'salon' else list(_barbers())
-        # Every score on the page in two queries, before a single card is built.
-        scores = scores_for(
-            salon_ids=[row.id for row in salons],
-            barber_ids=[row.id for row in profiles],
-        )
-
-        # `barber` as a *type* means a barbershop as well as a lone barber, so
-        # salons whose business type is `barber` belong in that filter too.
-        for salon in salons:
-            listing = salon_listing(salon, point=point, scores=scores)
-            listing['_service_names'] = [{'name': s.name} for s in salon.services.all()]
-            listings.append(listing)
-        for profile in profiles:
-            listing = barber_listing(profile, point=point, scores=scores)
-            listing['_service_names'] = [{'name': s.name} for s in profile.services.all()]
-            listings.append(listing)
-
-        if kind in {'salon', 'barber'}:
-            listings = [row for row in listings if row['type'] == kind]
-        if audience in {'men', 'women'}:
-            # `unisex` serves everyone, so it belongs in both sides.
-            listings = [row for row in listings if row['audience'] in {audience, 'unisex'}]
-        if area:
-            listings = [row for row in listings
-                        if row['location']['area'].lower() == area.lower()]
-        if needle:
-            listings = [row for row in listings if _matches_query(row, needle)]
-        if open_now:
-            listings = [row for row in listings if row['open_now']]
-
-        listings = _sorted(listings, sort)
-        for row in listings:
-            row.pop('_service_names', None)
-        return Response({'count': len(listings), 'results': listings[:limit]})
-
-
-def _sorted(listings: list[dict], sort: str) -> list[dict]:
-    """Rows with nothing to sort on go last rather than first — a salon with
-    no pin is not the nearest one, and one with no menu is not the cheapest."""
-    if sort == 'price':
-        return sorted(listings, key=lambda row: (row['price_from'] is None,
-                                                 row['price_from'] or 0, row['name']))
-    if sort == 'name':
-        return sorted(listings, key=lambda row: row['name'].lower())
-    return sorted(listings, key=lambda row: (row['distance_km'] is None,
-                                             row['distance_km'] or 0, row['name']))
-
-
-class DirectoryDetailView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, listing_id: str):
@@ -184,6 +142,14 @@ class DirectoryDetailView(APIView):
                  _float(request.query_params.get('lng')))
         kind, _, raw = listing_id.partition('-')
         if not raw.isdigit():
+            return _not_found()
+
+        # Membership first, before a single row is read. Doing it after the
+        # lookup would be the same answer and a wasted query, and it would put
+        # the business in a local variable in the branch where nobody may see
+        # it — which is how the next person accidentally returns it.
+        tenant = _tenant_of_listing(kind, int(raw))
+        if tenant is None or not belongs_to(request.user, tenant):
             return _not_found()
 
         if kind == 'salon':
@@ -195,14 +161,11 @@ class DirectoryDetailView(APIView):
             return Response(salon_listing(salon, point=point, detail=True,
                                           scores=scores, chair_scores=chairs))
 
-        if kind == 'barber':
-            profile = _barbers().filter(pk=int(raw)).first()
-            if profile is None:
-                return _not_found()
-            scores = scores_for(barber_ids=[profile.id])
-            return Response(barber_listing(profile, point=point, detail=True, scores=scores))
-
-        return _not_found()
+        profile = _barbers().filter(pk=int(raw)).first()
+        if profile is None:
+            return _not_found()
+        scores = scores_for(barber_ids=[profile.id])
+        return Response(barber_listing(profile, point=point, detail=True, scores=scores))
 
 
 def _not_found() -> Response:

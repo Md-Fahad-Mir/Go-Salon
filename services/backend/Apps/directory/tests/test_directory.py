@@ -1,73 +1,149 @@
-"""The customer-facing directory: who appears, who does not, and in what order."""
+"""One salon, in full, to somebody who belongs to it.
+
+The browsable directory these tests used to cover is gone — see `views.py`.
+What is left is the endpoint the booking wizard reads a salon's menu, chairs,
+address and week from, and the two things worth pinning about it are that the
+payload still carries all of that, and that nobody outside the salon can see
+any of it.
+"""
 
 from __future__ import annotations
 
 from unittest.mock import patch
 
 from Apps.services.models import Service, ServiceCategory
+from Apps.tenants.models import Tenant
 from Apps.tenants.provisioning import tenant_for
 from Apps.users.models import BarberProfile, Salon, User
 from Apps.users.tests.base import AuthTestCase
 
-DIRECTORY = '/api/directory/'
+LISTINGS = '/api/listings/'
 
 # Dhanmondi, roughly.
 HERE = {'lat': 23.7461, 'lng': 90.3742}
 
 
-class DirectoryVisibilityTests(AuthTestCase):
-    """A listing exists because somebody finished signing up for it."""
+class ListingTestCase(AuthTestCase):
+    """Shared plumbing: joining a salon, and reading one."""
+
+    def join(self, session, tenant) -> None:
+        """Through the real endpoint, so a membership here is a membership."""
+        self.as_user(session)
+        response = self.client.post(
+            '/api/tenants/join/', {'join_token': tenant.join_token}, format='json')
+        self.assertIn(response.status_code, (200, 201), response.data)
+
+    def listing_of(self, salon) -> str:
+        return f'salon-{salon.pk}'
+
+    def fetch(self, listing_id: str, expect: int = 200, **params) -> dict:
+        response = self.client.get(f'{LISTINGS}{listing_id}/', {**HERE, **params})
+        self.assertEqual(response.status_code, expect, response.data)
+        return response.data
+
+
+class AccessTests(ListingTestCase):
+    """Who may read a salon, now that reading one is not browsing."""
 
     def setUp(self):
         super().setUp()
-        self.owner = self.make_owner()
-        self.barber = self.make_barber()
-        self.as_user(self.make_customer())
+        self.owner_session = self.make_owner()
+        self.salon = Salon.objects.get(owner_id=self.owner_session['user']['id'])
+        self.tenant = Tenant.objects.get(salon=self.salon)
+        self.listing = self.listing_of(self.salon)
 
-    def names(self, **params) -> set[str]:
-        response = self.client.get(DIRECTORY, {**HERE, **params})
-        self.assertEqual(response.status_code, 200, response.data)
-        return {row['name'] for row in response.data['results']}
+    def test_a_customer_who_has_joined_sees_the_salon(self):
+        customer = self.make_customer()
+        self.join(customer, self.tenant)
+        self.assertEqual(self.fetch(self.listing)['name'], 'Glow Beauty Parlour')
 
-    def test_a_customer_sees_salons_and_independent_barbers(self):
-        self.assertEqual(self.names(), {'Glow Beauty Parlour', "Rafiq's Chair"})
+    def test_a_customer_who_has_not_joined_gets_nothing(self):
+        """A 404, not a 403.
 
-    def test_each_listing_says_which_kind_it_is(self):
-        rows = {row['name']: row for row in self.client.get(DIRECTORY, HERE).data['results']}
-        self.assertEqual(rows['Glow Beauty Parlour']['kind'], 'salon')
-        self.assertEqual(rows["Rafiq's Chair"]['kind'], 'barber')
-        self.assertTrue(rows['Glow Beauty Parlour']['id'].startswith('salon-'))
-        self.assertTrue(rows["Rafiq's Chair"]['id'].startswith('barber-'))
+        The same answer a salon that does not exist gets, and deliberately so:
+        `MyTenantView` gives one answer to "never a member, already removed, or
+        no such salon", and `TenantContext` refuses to tell an unknown id from
+        an inactive one, both so that nobody can map the platform by guessing
+        `salon-1`, `salon-2`, `salon-3`. A 403 here would confirm every id it
+        refused.
+        """
+        self.as_user(self.make_customer(phone='01777000888'))
+        self.fetch(self.listing, expect=404)
 
-    def test_an_unverified_sign_up_is_not_a_business_yet(self):
-        self.register('salon-owner', {
-            'phone': '01913333333', 'name': 'Half Done', 'password': 'chairside2026',
-            'accepted_terms': True, 'business_name': 'Never Verified',
-            'business_type': 'salon', 'audience': 'unisex', 'address': 'Road 1, Dhaka',
-        })
-        self.assertNotIn('Never Verified', self.names())
+    def test_a_customer_who_left_stops_seeing_it(self):
+        customer = self.make_customer()
+        self.join(customer, self.tenant)
+        self.fetch(self.listing)                       # in
 
-    def test_a_disabled_account_drops_out_of_the_directory(self):
-        user = User.objects.get(phone='+8801811111111')
-        user.is_active = False
-        user.save(update_fields=['is_active'])
-        self.assertNotIn("Rafiq's Chair", self.names())
+        removed = self.client.delete(f'/api/tenants/mine/{self.tenant.pk}/')
+        self.assertEqual(removed.status_code, 204, removed.data)
+        self.fetch(self.listing, expect=404)           # and out
 
-    def test_an_employee_is_a_chair_not_a_listing(self):
-        self.as_user(self.owner)
-        self.client.post('/api/salon/employees/', {
-            'phone': '01755000004', 'name': 'Hasan Mahmud', 'password': 'chairside2026',
+    def test_a_stranger_who_owns_another_salon_gets_nothing(self):
+        other = self.make_owner(phone='01911000999', email='other@example.com',
+                                business_name='Rival Salon')
+        self.as_user(other)
+        self.fetch(self.listing, expect=404)
+
+    def test_the_owner_sees_their_own_salon(self):
+        self.as_user(self.owner_session)
+        self.assertEqual(self.fetch(self.listing)['name'], 'Glow Beauty Parlour')
+
+    def test_a_hired_stylist_sees_the_salon_they_work_in(self):
+        self.as_user(self.owner_session)
+        hired = self.client.post('/api/salon/employees/', {
+            'phone': '01755000009', 'name': 'Hasan Mahmud', 'password': 'chairside2026',
         }, format='json')
-        self.as_user(self.make_customer(phone='01777000111'))
-        self.assertNotIn('Hasan Mahmud', self.names())
+        self.assertEqual(hired.status_code, 201, hired.data)
+        staff = User.objects.get(phone='+8801755000009')
+        staff.is_phone_verified = True
+        staff.save(update_fields=['is_phone_verified'])
 
-    def test_signing_out_closes_the_directory(self):
+        self.as_user(self.sign_in(staff.phone).data)
+        self.assertEqual(self.fetch(self.listing)['name'], 'Glow Beauty Parlour')
+
+    def test_an_independent_barber_sees_their_own_trade(self):
+        barber = self.make_barber()
+        profile = BarberProfile.objects.get(user_id=barber['user']['id'])
+        self.as_user(barber)
+        self.assertEqual(self.fetch(f'barber-{profile.pk}')['kind'], 'barber')
+
+    def test_a_barber_cannot_read_another_barber(self):
+        first = self.make_barber()
+        profile = BarberProfile.objects.get(user_id=first['user']['id'])
+        second = self.make_barber(phone='01811111199', email='second@example.com')
+        self.as_user(second)
+        self.fetch(f'barber-{profile.pk}', expect=404)
+
+    def test_a_suspended_salon_is_closed_even_to_its_members(self):
+        customer = self.make_customer()
+        self.join(customer, self.tenant)
+        self.tenant.is_active = False
+        self.tenant.save(update_fields=['is_active'])
+        # A suspended tenant is a 404 at every other door; this is not a way in.
+        self.fetch(self.listing, expect=404)
+
+    def test_an_unknown_listing_is_a_404(self):
+        self.as_user(self.make_customer(phone='01777000777'))
+        for bad in ('salon-9999', 'barber-9999', 'nonsense', 'salon-abc'):
+            response = self.client.get(f'{LISTINGS}{bad}/')
+            self.assertEqual(response.status_code, 404, bad)
+
+    def test_signing_out_closes_it(self):
         self.client.credentials()
-        self.assertEqual(self.client.get(DIRECTORY).status_code, 401)
+        response = self.client.get(f'{LISTINGS}{self.listing}/')
+        self.assertEqual(response.status_code, 401)
+
+    def test_the_browsable_directory_is_gone(self):
+        """No list endpoint, for anybody. The product it served is withdrawn."""
+        self.as_user(self.make_customer(phone='01777000666'))
+        self.assertEqual(self.client.get('/api/directory/').status_code, 404)
+        self.assertEqual(self.client.get(LISTINGS).status_code, 404)
 
 
-class DirectoryContentTests(AuthTestCase):
-    """A listing carries what a customer decides on."""
+class ContentTests(ListingTestCase):
+    """A listing carries what a customer decides on — and what the booking
+    wizard cannot get anywhere else."""
 
     def setUp(self):
         super().setUp()
@@ -97,10 +173,11 @@ class DirectoryContentTests(AuthTestCase):
                            {'start': '16:00', 'end': '20:00'}]},
             {'day': 'fri', 'is_closed': True, 'intervals': []},
         ]}, format='json')
-        self.as_user(self.make_customer())
+        self.salon = Salon.objects.get(owner_id=self.owner['user']['id'])
+        self.join(self.make_customer(), Tenant.objects.get(salon=self.salon))
 
     def listing(self) -> dict:
-        return self.client.get(DIRECTORY, HERE).data['results'][0]
+        return self.fetch(self.listing_of(self.salon))
 
     def test_carries_the_profile_the_owner_wrote(self):
         row = self.listing()
@@ -120,10 +197,10 @@ class DirectoryContentTests(AuthTestCase):
         self.assertEqual(row['service_count'], 2)
 
     def test_a_business_with_no_menu_has_no_price_rather_than_zero(self):
-        self.as_user(self.make_barber())
-        row = next(r for r in self.client.get(DIRECTORY, HERE).data['results']
-                   if r['kind'] == 'barber')
-        self.assertIsNone(row['price_from'])
+        barber = self.make_barber()
+        profile = BarberProfile.objects.get(user_id=barber['user']['id'])
+        self.as_user(barber)
+        self.assertIsNone(self.fetch(f'barber-{profile.pk}')['price_from'])
 
     def test_carries_the_real_week_including_a_split_day(self):
         sunday = next(d for d in self.listing()['hours'] if d['day'] == 'sun')
@@ -140,132 +217,55 @@ class DirectoryContentTests(AuthTestCase):
 
     def test_distance_comes_back_in_kilometres(self):
         self.assertEqual(self.listing()['distance_km'], 0.0)
-        far = self.client.get(DIRECTORY, {'lat': 23.8759, 'lng': 90.3795}).data['results'][0]
+        far = self.client.get(f'{LISTINGS}{self.listing_of(self.salon)}/',
+                              {'lat': 23.8759, 'lng': 90.3795}).data
         self.assertGreater(far['distance_km'], 10)
 
     def test_distance_is_unknown_without_a_point(self):
-        self.assertIsNone(self.client.get(DIRECTORY).data['results'][0]['distance_km'])
+        response = self.client.get(f'{LISTINGS}{self.listing_of(self.salon)}/')
+        self.assertIsNone(response.data['distance_km'])
 
-    def test_the_detail_view_adds_the_menu_and_the_chairs(self):
-        listing_id = self.listing()['id']
-        response = self.client.get(f'{DIRECTORY}{listing_id}/', HERE)
-        self.assertEqual(response.status_code, 200, response.data)
-        self.assertEqual(len(response.data['services']), 2)
-        self.assertEqual(response.data['staff'], [])
-        names = {service['name'] for service in response.data['services']}
-        self.assertEqual(names, {'Balayage', 'Blow dry'})
+    def test_it_carries_the_menu_and_the_chairs(self):
+        row = self.listing()
+        self.assertEqual(len(row['services']), 2)
+        self.assertEqual(row['staff'], [])
+        self.assertEqual({service['name'] for service in row['services']},
+                         {'Balayage', 'Blow dry'})
+
+    def test_it_carries_everything_the_booking_wizard_reads(self):
+        """The wizard has no other source for any of this.
+
+        Pinned as a set rather than field by field so that a change which
+        drops one is a failure here rather than a screen that quietly loses
+        its Directions button — which is exactly what the frontend inventory
+        found `address` was one edit away from.
+        """
+        row = self.listing()
+        for field in ('id', 'kind', 'name', 'phone', 'location', 'hours',
+                      'services', 'staff', 'avatar', 'acceptance', 'open_now'):
+            with self.subTest(field=field):
+                self.assertIn(field, row)
+
+        # The one the wizard cannot get from anywhere else at all.
+        self.assertEqual(row['location']['address'], 'Road 27')
+        for field in ('area', 'city', 'address', 'latitude', 'longitude'):
+            self.assertIn(field, row['location'])
+
+        # A service a customer can pick has a price and a length.
+        for field in ('id', 'name', 'price', 'duration'):
+            self.assertIn(field, row['services'][0])
 
     def test_a_hidden_service_is_off_the_public_menu(self):
         self.as_user(self.owner)
         service = Service.objects.get(name='Blow dry')
         self.client.patch(f'/api/services/{service.pk}/', {'is_active': False}, format='json')
-        self.as_user(self.make_customer(phone='01777000222'))
+        self.join(self.make_customer(phone='01777000222'),
+                  Tenant.objects.get(salon=self.salon))
         row = self.listing()
         self.assertEqual(row['service_count'], 1)
         self.assertEqual(row['price_from'], 4500.0)
 
-    def test_an_unknown_listing_is_a_404(self):
-        for bad in ('salon-9999', 'barber-9999', 'nonsense', 'salon-abc'):
-            self.assertEqual(self.client.get(f'{DIRECTORY}{bad}/').status_code, 404, bad)
-
-
-class DirectoryFilterTests(AuthTestCase):
-    def setUp(self):
-        super().setUp()
-        self.make_owner()                       # women's parlour, Dhanmondi
-        self.make_barber()                      # men's barber, Mirpur
-        self.as_user(self.make_customer())
-
-    def results(self, **params):
-        response = self.client.get(DIRECTORY, {**HERE, **params})
-        self.assertEqual(response.status_code, 200, response.data)
-        return response.data['results']
-
-    def names(self, **params) -> set[str]:
-        return {row['name'] for row in self.results(**params)}
-
-    def test_filters_by_kind(self):
-        self.assertEqual(self.names(type='salon'), {'Glow Beauty Parlour'})
-        self.assertEqual(self.names(type='barber'), {"Rafiq's Chair"})
-
-    def test_filters_by_who_it_is_for(self):
-        self.assertEqual(self.names(audience='women'), {'Glow Beauty Parlour'})
-        self.assertEqual(self.names(audience='men'), {"Rafiq's Chair"})
-
-    def test_unisex_appears_on_both_sides(self):
-        self.as_user(self.make_barber(phone='01812222222', business_name='Everyone Cuts',
-                                      audience='unisex'))
-        self.as_user(self.make_customer(phone='01777000333'))
-        self.assertIn('Everyone Cuts', self.names(audience='men'))
-        self.assertIn('Everyone Cuts', self.names(audience='women'))
-
-    def test_searches_name_area_and_menu(self):
-        self.assertEqual(self.names(q='glow'), {'Glow Beauty Parlour'})
-        self.assertEqual(self.names(q='mirpur'), {"Rafiq's Chair"})
-        self.assertEqual(self.names(q='rafiq'), {"Rafiq's Chair"})
-        self.assertEqual(self.names(q='nothing like this'), set())
-
-    def test_search_matches_a_service_by_name(self):
-        owner = User.objects.get(phone='+8801912345678')
-        salon = Salon.objects.get(owner=owner)
-        # `tenant` is NOT NULL, and through the API it is filled in by
-        # `service_owner` -> `tenant_for`. Built here directly, the fixture has
-        # to resolve it the same way the view would.
-        Service.objects.create(salon=salon, tenant=tenant_for({'salon': salon}),
-                               name='Keratin treatment',
-                               price=6000, duration_minutes=180)
-        self.assertEqual(self.names(q='keratin'), {'Glow Beauty Parlour'})
-
-    def test_filters_by_area(self):
-        self.assertEqual(self.names(area='Mirpur'), {"Rafiq's Chair"})
-
-    def test_sorts_by_distance_with_the_unpinned_last(self):
-        # The barber never set coordinates, so it cannot be the nearest.
-        rows = self.results(sort='distance')
-        self.assertEqual(rows[0]['name'], 'Glow Beauty Parlour')
-        self.assertIsNone(rows[-1]['distance_km'])
-
-    def test_sorts_by_price_with_the_menuless_last(self):
-        owner = User.objects.get(phone='+8801912345678')
-        salon = Salon.objects.get(owner=owner)
-        Service.objects.create(salon=salon, tenant=tenant_for({'salon': salon}),
-                               name='Trim', price=300, duration_minutes=20)
-        rows = self.results(sort='price')
-        self.assertEqual(rows[0]['name'], 'Glow Beauty Parlour')
-        self.assertIsNone(rows[-1]['price_from'])
-
-    def test_open_now_reads_the_real_week(self):
-        owner = self.sign_in('+8801912345678').data
-        self.as_user(owner)
-        self.client.put('/api/schedule/me/', {'days': [
-            {'day': day, 'is_closed': False,
-             'intervals': [{'start': '00:00', 'end': '23:59'}]}
-            for day in ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
-        ]}, format='json')
-        self.as_user(self.make_customer(phone='01777000444'))
-        self.assertEqual(self.names(open_now='true'), {'Glow Beauty Parlour'})
-
-    def test_a_shut_business_is_not_open_now(self):
-        owner = self.sign_in('+8801912345678').data
-        self.as_user(owner)
-        self.client.put('/api/schedule/me/', {'days': [
-            {'day': day, 'is_closed': True, 'intervals': []}
-            for day in ('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat')
-        ]}, format='json')
-        self.as_user(self.make_customer(phone='01777000555'))
-        self.assertEqual(self.names(open_now='true'), set())
-
-    def test_the_limit_is_capped(self):
-        response = self.client.get(DIRECTORY, {**HERE, 'limit': '5000'})
-        self.assertLessEqual(len(response.data['results']), 100)
-
-    def test_count_reports_the_whole_match_not_the_page(self):
-        response = self.client.get(DIRECTORY, {**HERE, 'limit': 1})
-        self.assertEqual(response.data['count'], 2)
-        self.assertEqual(len(response.data['results']), 1)
-
-
-class OpenNowClockTests(AuthTestCase):
+class OpenNowClockTests(ListingTestCase):
     """Opening hours are local times, so "now" has to be local too."""
 
     def test_lunchtime_counts_as_closed_between_two_stretches(self):
@@ -290,7 +290,7 @@ class OpenNowClockTests(AuthTestCase):
         self.assertFalse(is_open_at(week, sunday.replace(day=14, hour=11)))
 
 
-class ChairHoursTests(AuthTestCase):
+class ChairHoursTests(ListingTestCase):
     """A chair's week travels with the listing.
 
     The customer's calendar greys out days nobody works, and it has to reach
@@ -311,14 +311,15 @@ class ChairHoursTests(AuthTestCase):
         }, format='json')
         self.assertEqual(hired.status_code, 201, hired.data)
         self.chair = hired.data['id']
+        self.salon = Salon.objects.get(owner_id=self.owner['user']['id'])
+
+    def as_a_customer(self) -> None:
+        """A customer of *this* salon. Signing one in is no longer enough —
+        the listing is only readable by somebody who belongs to it."""
+        self.join(self.make_customer(), Tenant.objects.get(salon=self.salon))
 
     def detail(self) -> dict:
-        from Apps.users.models import Salon
-
-        salon = Salon.objects.first()
-        response = self.client.get(f'/api/directory/salon-{salon.id}/', HERE)
-        self.assertEqual(response.status_code, 200, response.data)
-        return response.data
+        return self.fetch(self.listing_of(self.salon))
 
     def chair_week(self) -> list[dict]:
         return next(s for s in self.detail()['staff'] if s['id'] == str(self.chair))['hours']
@@ -333,7 +334,7 @@ class ChairHoursTests(AuthTestCase):
 
     def test_a_chair_with_no_hours_of_its_own_carries_the_salons(self):
         self.set_week('/api/schedule/me/', '09:00', '21:00', closed=('fri',))
-        self.as_user(self.make_customer())
+        self.as_a_customer()
 
         week = self.chair_week()
         monday = next(d for d in week if d['day'] == 'mon')
@@ -344,7 +345,7 @@ class ChairHoursTests(AuthTestCase):
     def test_a_chair_with_its_own_hours_carries_those_instead(self):
         self.set_week('/api/schedule/me/', '09:00', '21:00', closed=('fri',))
         self.set_week(f'/api/schedule/employees/{self.chair}/', '10:00', '20:00')
-        self.as_user(self.make_customer())
+        self.as_a_customer()
 
         week = self.chair_week()
         self.assertEqual(
@@ -365,7 +366,7 @@ class ChairHoursTests(AuthTestCase):
         chair.
         """
         self.set_week(f'/api/schedule/employees/{self.chair}/', '10:00', '20:00')
-        self.as_user(self.make_customer())
+        self.as_a_customer()
 
         listing = self.detail()
         self.assertTrue(all(day['is_closed'] for day in listing['hours']),
@@ -379,7 +380,7 @@ class ChairHoursTests(AuthTestCase):
         )
 
 
-class UnsavedHoursTests(AuthTestCase):
+class UnsavedHoursTests(ListingTestCase):
     """A week that is only *offered* is not a week that is set.
 
     `/api/schedule/me/` answers a business that has never saved hours with a
@@ -405,8 +406,9 @@ class UnsavedHoursTests(AuthTestCase):
         self.assertTrue(monday['intervals'])
 
     def test_and_customers_are_meanwhile_shown_a_business_that_is_shut(self):
-        self.as_user(self.make_customer())
-        row = self.client.get(DIRECTORY, HERE).data['results'][0]
+        salon = Salon.objects.get(owner_id=self.owner['user']['id'])
+        self.join(self.make_customer(), Tenant.objects.get(salon=salon))
+        row = self.fetch(self.listing_of(salon))
         self.assertTrue(all(day['is_closed'] for day in row['hours']))
         self.assertFalse(row['open_now'])
 
