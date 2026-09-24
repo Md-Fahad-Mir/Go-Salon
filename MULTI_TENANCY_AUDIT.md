@@ -641,7 +641,7 @@ Evaluated **against this codebase**, not in the abstract.
 | `salon-a.gosalon.com` | Salon A's booking page + its staff dashboard | Salon A | Salon A's staff; customers of Salon A |
 | `api.gosalon.com` *(suggested)* | The Django API, if you separate it | resolved from `X-Tenant` or path | all |
 
-**UNCLEAR FROM CODEBASE:** whether the API is served from the same host as the SPA (same-origin, path `/api/`) or from a separate host. Today they are separate origins in dev (`:5174` → `:8000`) with CORS. This choice changes §15 materially: same-origin means `Host` alone identifies the tenant; cross-origin means the API host is constant and the tenant must arrive by `Origin`, an explicit header, or a path segment.
+**UNCLEAR FROM CODEBASE:** whether the API is served from the same host as the SPA (same-origin, path `/api/`) or from a separate host. Today they are separate origins in dev (`:5174` → `:8000`) with CORS. *(Superseded 2026-09-24 by `ec91ff4`: the Vite dev server — and `vite preview`, which inherits its proxy — now proxy `/api` to Django, so dev is same-origin and issues no preflight. The §15 reasoning below should be re-read with that in mind.)* This choice changes §15 materially: same-origin means `Host` alone identifies the tenant; cross-origin means the API host is constant and the tenant must arrive by `Origin`, an explicit header, or a path segment.
 
 ### 14.2 Request lifecycle (proposed — none of this exists today)
 

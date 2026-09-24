@@ -228,6 +228,52 @@ class SalonQRTests(BookingTestCase):
         self.assertGreater(width, 20)
         self.assertEqual(width, height)          # a QR code is square
 
+    def test_the_accept_header_the_app_sends_is_one_this_view_answers(self):
+        """The test above passes with no `Accept` header at all, which is not
+        what a browser does — and the difference once cost us the feature.
+
+        DRF negotiates `Accept` against `renderer_classes` in `APIView.initial()`,
+        before the handler runs and regardless of the raw `HttpResponse` this one
+        returns. The app asks for `application/json`, which the project-default
+        `JSONRenderer` satisfies, and the PNG is then written straight past the
+        renderer. Ask for `image/png` instead — which no renderer here declares —
+        and negotiation refuses it with `406 Not Acceptable` before a byte is
+        drawn. That was the live bug: green tests, and a broken screen in every
+        browser.
+
+        So this pins the header the client actually sends. Simply adding an
+        `image/png` renderer to make the literal header work fails here, which is
+        the point: it also hands every refusal to that renderer, and a 403
+        arrives as the error dict's keys run together under `Content-Type:
+        image/png`. There is a correct version of that approach — the renderer
+        paired with a `finalize_response` that forces JSON for any DRF
+        `Response` — and if anyone builds it, these two tests are what must
+        still pass.
+        """
+        self.as_user(self.owner_session, tenant=self.tenant)
+
+        for label, url, call in (('get', QR, self.client.get),
+                                 ('regenerate', QR_REGENERATE, self.client.post)):
+            with self.subTest(label):
+                response = call(url, HTTP_ACCEPT='application/json')
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response['Content-Type'], 'image/png')
+                self.assertTrue(png_is_intact(response.content))
+
+    def test_a_refusal_is_json_even_under_that_header(self):
+        """The other half of the same contract.
+
+        The client parses a failure by status, not by endpoint, so a refusal from
+        the PNG endpoint has to carry `{detail, code, errors}` like any other.
+        """
+        self.as_user(self.customer_session, tenant=self.tenant)
+        response = self.client.get(QR, HTTP_ACCEPT='application/json')
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertIn('detail', response.json())
+        self.assertIn('code', response.json())
+
     def test_the_link_it_encodes_is_the_join_url(self):
         from Apps.tenants.views import join_url
 

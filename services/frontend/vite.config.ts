@@ -25,8 +25,10 @@ export default defineConfig({
      * `changeOrigin` presents `Host: 127.0.0.1:8000` to Django, so
      * `ALLOWED_HOSTS` never sees the LAN address either.
      *
-     * Dev only. `server` is not consulted by `vite build`, so a production
-     * bundle still calls whatever `VITE_API_BASE_URL` says at build time.
+     * Not in the bundle — but not dev-only either. `vite build` never consults
+     * `server`, so a production bundle still calls whatever `VITE_API_BASE_URL`
+     * it was built with. `vite preview` *does* serve these routes: see the
+     * `preview` block below for why it does not repeat them.
      */
     proxy: {
       '/api': {
@@ -74,6 +76,20 @@ export default defineConfig({
   },
 
   preview: {
+    /* The port, and deliberately nothing else. Vite defaults every other
+       preview option to its `server` counterpart — `preview.host ?? server.host`,
+       `preview.proxy ?? server.proxy`, and the same for `allowedHosts` — so the
+       built bundle is already served on 0.0.0.0 with all five routes above.
+       (`preview.proxy === server.proxy` is literally the same object.) `port` is
+       the one option that does not inherit; without it this would be 4173.
+
+       Do NOT "mirror" a subset of those routes here. The fallback is `??` on the
+       whole object, not a per-key merge, so a `preview.proxy` listing four routes
+       silently drops the fifth — turning an inherited default into a real bug.
+
+       Worth stating because the absence looks like an omission: it is the reason
+       `npm run preview` is reachable from a phone at http://<mac-ip>:4174 and
+       proxies the API exactly as `npm run dev` does. */
     port: 4174,
   },
 

@@ -12,7 +12,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type { Tenant, User } from '../types';
 import { lastRequest, sent, serve } from '../test/http';
 import { useAppStore } from '../store/useAppStore';
-import { ApiValidationError, api, isTenantError, TenantError } from './apiClient';
+import { ApiValidationError, api, isTenantError, requestBlob, TenantError } from './apiClient';
 
 const ALPHA: Tenant = { id: 4, slug: 'alpha', listingId: 'salon-4', name: 'Alpha Salon', avatar: '' };
 const BETA: Tenant = { id: 5, slug: 'beta', listingId: 'salon-5', name: 'Beta Salon', avatar: '' };
@@ -229,5 +229,52 @@ describe('ordinary refusals are left exactly as they were', () => {
     expect(isTenantError(error)).toBe(false);
     expect((error as ApiValidationError).code).toBe('network');
     expect((error as ApiValidationError).status).toBe(0);
+  });
+});
+
+/* The header this sends is not cosmetic, and the obvious value is the wrong one.
+   DRF settles `Accept` against the view's `renderer_classes` in
+   `APIView.initial()` — before the handler runs, and knowing nothing about the
+   raw `HttpResponse` that one writes. `SalonQRView` declares no renderers, so it
+   has the project default of JSON; asking for `image/png` is refused with a 406
+   before the image is drawn. This suite and the backend's both passed while the
+   screen was broken in every browser, so the header itself is pinned here. */
+describe('the QR code request', () => {
+  const png = () =>
+    new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], { type: 'image/png' });
+
+  it('asks for JSON, never for the image it is actually going to get', async () => {
+    signedIn([ALPHA]);
+    serve({ status: 200, blob: png() });
+    await requestBlob('/salon/qr/');
+
+    expect(last().headers.Accept).toBe('application/json');
+  });
+
+  it('hands back the PNG all the same', async () => {
+    signedIn([ALPHA]);
+    serve({ status: 200, blob: png() });
+    const blob = await requestBlob('/salon/qr/');
+
+    expect(blob.type).toBe('image/png');
+    expect(blob.size).toBeGreaterThan(0);
+  });
+
+  it('sends the same header when regenerating', async () => {
+    signedIn([ALPHA]);
+    serve({ status: 200, blob: png() });
+    await requestBlob('/salon/qr/regenerate/', { method: 'POST' });
+
+    expect(last().headers.Accept).toBe('application/json');
+    expect(last().method).toBe('POST');
+  });
+
+  it('still reads a refusal as the JSON it is', async () => {
+    signedIn([ALPHA]);
+    serve({ status: 403, body: { detail: 'Not yours.', code: 'not_owner', errors: {} } });
+    const error = await requestBlob('/salon/qr/').catch((e: unknown) => e);
+
+    expect((error as ApiValidationError).code).toBe('not_owner');
+    expect((error as ApiValidationError).status).toBe(403);
   });
 });

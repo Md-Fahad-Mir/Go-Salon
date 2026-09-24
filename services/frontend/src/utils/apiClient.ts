@@ -21,9 +21,10 @@ export interface RequestOptions {
   /** Send without the Authorization header: sign-in, sign-up, reset. */
   anonymous?: boolean;
   signal?: AbortSignal;
-  /** What the caller will accept back. Defaults to JSON, which is what every
-      endpoint but the QR code answers with. */
-  accept?: string;
+  /* There is deliberately no `accept` option. One existed, `requestBlob` set it
+     to `image/png`, and that is what broke the QR screen — so the header is
+     fixed in `send` rather than left as a knob whose only working value is the
+     default it already has. */
 }
 
 interface ApiErrorBody {
@@ -228,7 +229,12 @@ function withRefresh(): Promise<string | null> {
 }
 
 async function send(path: string, options: RequestOptions, token: string | null): Promise<Response> {
-  const headers: Record<string, string> = { Accept: options.accept ?? 'application/json' };
+  /* Always JSON, and not a caller's choice — see the note on `requestBlob`.
+     DRF settles this header against a view's `renderer_classes` before the
+     handler runs, and no view in this API declares anything but the default, so
+     `application/json` is the only value any of them will accept. Naming the
+     content type a handler happens to write earns a 406 and never reaches it. */
+  const headers: Record<string, string> = { Accept: 'application/json' };
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
 
@@ -304,9 +310,32 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
     A 200 that is not an image is treated as a failure rather than handed back:
     a proxy's sign-in page or an HTML error wrapper would otherwise reach an
-    `<img>` as a blob and render as a broken icon with nothing to explain it. */
+    `<img>` as a blob and render as a broken icon with nothing to explain it.
+
+    It sends the ordinary `Accept: application/json`, and must keep doing so
+    even though what comes back is a PNG. DRF negotiates the Accept header
+    against the view's `renderer_classes` in `APIView.initial()` — before the
+    handler runs, and without any knowledge that this one returns a raw
+    `HttpResponse` that never reaches a renderer. `SalonQRView` declares no
+    renderers, so it has the project default of JSON, and an `Accept: image/png`
+    is refused with `406 Not Acceptable` before a single byte is drawn. That is
+    not hypothetical: it is what this function used to send, and the QR screen
+    was broken by it in every browser while the backend tests — which send no
+    Accept at all — stayed green.
+
+    Declaring an `image/png` renderer on the view is the obvious alternative and
+    the naive form of it is a trap: negotiation picks the renderer up front, so a
+    403 is then handed to the PNG renderer and reaches the client as the error
+    dict's keys run together under `Content-Type: image/png`, taking the contract
+    above with it. It can be done properly — `(PNGRenderer, JSONRenderer)` plus a
+    `finalize_response` that forces JSON whenever the response is a DRF
+    `Response` — and that was measured to work on both paths. It is not done
+    because it costs a renderer and an override on both QR views to buy a more
+    literal Accept header, and the override rests on an invariant nothing states:
+    that success returns a raw `HttpResponse` and failure a DRF `Response`. The
+    day `qr_response` returns a DRF `Response`, refusals quietly become PNGs. */
 export async function requestBlob(path: string, options: RequestOptions = {}): Promise<Blob> {
-  const response = await exchange(path, { ...options, accept: options.accept ?? 'image/png' });
+  const response = await exchange(path, options);
 
   if (!response.ok) {
     throw toError(response, await parse(response));

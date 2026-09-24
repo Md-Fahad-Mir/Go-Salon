@@ -36,6 +36,11 @@ Vite proxies those to this process and to the AI service (`server.proxy` in
 `services/frontend/vite.config.ts`). So the phone talks only to whatever host
 it loaded the page from, and a new DHCP lease changes nothing.
 
+`npm run preview` needs nothing extra either — it is LAN-reachable and proxied
+on the same terms, at `http://<mac-ip>:4174`, because Vite defaults its `host`
+and `proxy` to the dev server's. Use it to test the service worker, which only
+registers in a real build.
+
 That is the fix for a failure worth recognising: every screen showing "No
 connection. Check your internet and try again." on a phone while working
 perfectly on the Mac. It meant the client had been told to call `localhost`,

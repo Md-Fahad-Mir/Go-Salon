@@ -29,6 +29,7 @@ npm run verify       # typecheck, lint, i18n and the tests
 
 `npm run dev` listens on every interface, so the app is reachable from a phone
 on the same wifi at the Mac's own address (`ipconfig getifaddr en0`).
+`npm run preview` does the same on port 4174 — see below.
 
 **No API host is configured anywhere.** `VITE_API_BASE_URL` is the relative
 path `/api`, and `vite.config.ts` proxies `/api`, `/ws` and `/ai` to Django and
@@ -38,8 +39,16 @@ running it — a phone cannot reach the Mac's `localhost`, and a LAN address
 baked into client config goes stale the next time DHCP hands out a different
 one. Start Django with `runserver 0.0.0.0:8000` so the proxy can reach it.
 
-The proxy is dev-server-only: `vite build` ignores `server`, so a deployment
-still uses whatever `VITE_API_BASE_URL` it is built with.
+The proxy belongs to the Vite server, not to the bundle: `vite build` ignores
+`server`, so a deployment still uses whatever `VITE_API_BASE_URL` it is built
+with.
+
+`npm run preview` **does** get the proxy, and is equally reachable from a phone
+at `http://<mac-ip>:4174`. Vite defaults `preview.proxy` to `server.proxy` and
+`preview.host` to `server.host`, so the `preview` block sets only the port and
+inherits the rest — which is why it looks empty. Do not copy the routes into it:
+the fallback replaces the whole object rather than merging, so a partial
+`preview.proxy` would silently drop the routes it omits.
 
 The try-on needs the AI service running alongside it:
 
