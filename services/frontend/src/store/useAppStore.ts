@@ -177,6 +177,11 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   /** Re-reads the list from the server, for the one role that has one.
       Safe to call for anybody: it decides for itself whether to ask. */
   loadTenants: () => Promise<void>;
+  /** Leaves a salon. Resolves true when the server agreed.
+
+      Customers only — the endpoint is theirs, and owning a shop is not
+      something anyone leaves. */
+  removeTenant: (id: number) => Promise<boolean>;
 
   /* ---- coming back after signing in ---- */
   /** Remembers where somebody was headed before they were sent to sign in.
@@ -366,6 +371,27 @@ export const useAppStore = create<AppStore>()(
         }
         if (!get().tenants.some((t) => t.id === id)) return;
         set({ activeTenantId: id });
+      },
+
+      /** Drops one salon from the list, once the server has agreed to it.
+
+          The local list is only edited on success, which is the same rule
+          `loadTenants` follows: a failed call leaves what was there, because
+          the old answer is still the best one available and a list that has
+          quietly lost a row is worse than one that is briefly out of date.
+
+          The removal itself goes through `setTenants`, so the active salon is
+          settled by exactly the reconcile every other path uses — there is no
+          second opinion here about what happens when the one being removed is
+          the one in use. */
+      removeTenant: async (id) => {
+        try {
+          await tenantService.leave(id);
+        } catch {
+          return false;
+        }
+        get().setTenants(get().tenants.filter((salon) => salon.id !== id));
+        return true;
       },
 
       setPendingRedirect: (path) => set({ pendingRedirect: path }),

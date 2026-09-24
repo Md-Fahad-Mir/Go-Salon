@@ -19,4 +19,12 @@ export const tenant = {
   'tenant.switchActive': 'এখন দেখাচ্ছে',
   'tenant.errListTitle': 'আপনার স্যালনের তালিকা আনা যায়নি',
   'tenant.errListBody': 'অ্যাপ এখনো আগের তালিকাটিই দেখাচ্ছে।',
+
+  /* Leaving a salon. Soft on the server, so the copy says what survives. */
+  'tenant.manage': 'একটি স্যালন সরান',
+  'tenant.manageTitle': 'কোন স্যালনটি সরাবেন?',
+  'tenant.removeTitle': '{name} সরাবেন?',
+  'tenant.removeBody': 'এটি আপনার স্যালনের তালিকা থেকে সরে যাবে। ওখানকার বুকিং আর রিভিউ থেকে যাবে, আর দোকানের কোড আবার স্ক্যান করলে ফিরে আসবে।',
+  'tenant.removed': '{name} আপনার তালিকা থেকে সরানো হয়েছে',
+  'tenant.errRemove': 'স্যালনটি সরানো যায়নি। একটু পরে আবার চেষ্টা করুন।',
 } as const;

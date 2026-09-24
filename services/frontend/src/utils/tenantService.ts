@@ -32,6 +32,16 @@ export const tenantService = {
       Read-only, and permanently: nobody joins or leaves a shop they own. */
   owned: () => api.get<Tenant[]>('/tenants/owned/'),
 
+  /** `DELETE /api/tenants/mine/<id>/` — take a salon off the list.
+
+      Soft on the server: the membership row is deactivated rather than
+      deleted, so the bookings and reviews hanging off it stay attached to
+      something. Scanning the shop's code again reactivates that same row —
+      which is why nothing here records that a salon was removed. A local
+      "never show this one again" list would be a second opinion about
+      membership, and it would be wrong the moment somebody re-scanned. */
+  leave: (tenantId: number) => api.delete<null>(`/tenants/mine/${tenantId}/`),
+
   /** `POST /api/tenants/join/` — the token printed in a shop's QR code.
 
       Answers 201 the first time and 200 on a re-scan, and the app treats them

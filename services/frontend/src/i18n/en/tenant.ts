@@ -19,4 +19,12 @@ export const tenant = {
   'tenant.switchActive': 'Showing now',
   'tenant.errListTitle': 'We could not load your salons',
   'tenant.errListBody': 'The app is still showing the last list it had.',
+
+  /* Leaving a salon. Soft on the server, so the copy says what survives. */
+  'tenant.manage': 'Remove a salon',
+  'tenant.manageTitle': 'Remove which salon?',
+  'tenant.removeTitle': 'Remove {name}?',
+  'tenant.removeBody': 'It comes off your salon list. Your bookings and reviews there stay, and scanning the shop’s code again puts it back.',
+  'tenant.removed': '{name} is off your list',
+  'tenant.errRemove': 'We could not remove that salon. Try again in a moment.',
 } as const;
