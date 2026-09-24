@@ -1,4 +1,4 @@
-import { FileText, History, KeyRound, Shield, Star, Trash2 } from 'lucide-react';
+import { FileText, History, KeyRound, QrCode, Shield, Star, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ROUTES } from '../../constants';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
@@ -57,8 +57,26 @@ export default function SettingsPage() {
           </ListCard>
         </section>
 
-        {/* Renders itself only when there is more than one salon to pick. */}
+        {/* The switcher. It renders itself only when there is something to
+            switch or leave — a customer at one salon or more, an owner at two
+            — and nothing at all for a customer with no salon yet. */}
         <SalonSection />
+
+        {/* The way in: the scanner. Its own section rather than a row inside
+            `SalonSection`, because that one hides itself for the customer with
+            no salon — who is exactly the person this exists for. A link to the
+            screen that already does the scanning, not a second camera. */}
+        <section className="section" aria-labelledby="pf-add-salon">
+          <h3 className="label" id="pf-add-salon">{t('tenant.scanTitle')}</h3>
+          <ListCard className="pf-list">
+            <ListRow
+              icon={<QrCode size={18} aria-hidden="true" />}
+              title={t('tenant.scanRow')}
+              sub={t('tenant.scanRowHint')}
+              to={ROUTES.joinScan}
+            />
+          </ListCard>
+        </section>
 
         <LanguageSection />
 

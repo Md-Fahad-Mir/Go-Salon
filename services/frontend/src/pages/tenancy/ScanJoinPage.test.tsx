@@ -5,7 +5,11 @@
    token then does is JoinPage's, and is tested once, in JoinPage's own file. */
 
 import { screen, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { LanguageProvider } from '../../components/LanguageProvider';
 import { useAppStore } from '../../store/useAppStore';
 import { fakeAnimationFrames, fakeCamera, fakeVideoAndCanvas } from '../../test/camera';
 import { sent, serve } from '../../test/http';
@@ -171,6 +175,73 @@ describe('when the camera cannot be opened', () => {
 
     await screen.findByText('The camera is switched off');
     expect(screen.queryByLabelText(/looking for a salon/)).not.toBeInTheDocument();
+  });
+});
+
+describe('the way back is Settings, where this screen is opened from', () => {
+  beforeEach(() => {
+    fakeVideoAndCanvas();
+    fakeAnimationFrames();
+  });
+
+  /** The scanner, with Settings where it really is. */
+  const openFromSettings = () =>
+    mount({
+      at: '/join-salon',
+      routes: {
+        '/join-salon': <ScanJoinPage />,
+        '/profile/settings': <p>the settings screen</p>,
+        '/home': <p>the home screen</p>,
+      },
+      elsewhere: <p>somewhere else</p>,
+    });
+
+  it('sends a refused camera back to Settings, not to Home', async () => {
+    fakeCamera('denied');
+    serve();
+    openFromSettings();
+
+    await screen.findByText('The camera is switched off');
+    await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
+    expect(screen.getByText('the settings screen')).toBeInTheDocument();
+    expect(screen.queryByText('the home screen')).not.toBeInTheDocument();
+  });
+
+  it('pops back to the Settings it came from, rather than pushing another', async () => {
+    fakeCamera('denied');
+    serve();
+    /** Settings, with a Back that pops history the way the real header does. */
+    function Settings() {
+      const navigate = useNavigate();
+      return <button type="button" onClick={() => navigate(-1)}>back from settings</button>;
+    }
+    render(
+      <LanguageProvider>
+        <MemoryRouter initialEntries={['/profile/settings', '/join-salon']} initialIndex={1}>
+          <Routes>
+            <Route path="/join-salon" element={<ScanJoinPage />} />
+            <Route path="/profile/settings" element={<Settings />} />
+          </Routes>
+        </MemoryRouter>
+      </LanguageProvider>,
+    );
+
+    await screen.findByText('The camera is switched off');
+    await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
+    await userEvent.click(screen.getByRole('button', { name: 'back from settings' }));
+
+    // A pushed Settings would have the scanner under it, and Back would land
+    // on the refused camera again — round and round.
+    expect(screen.queryByText('The camera is switched off')).not.toBeInTheDocument();
+  });
+
+  it('closes to Settings when there is no history to pop — a cold load', async () => {
+    fakeCamera('granted');
+    serve();
+    openFromSettings();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.getByText('the settings screen')).toBeInTheDocument();
   });
 });
 

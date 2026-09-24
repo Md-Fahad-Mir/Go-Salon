@@ -5,8 +5,9 @@
    suites use. */
 
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { StrictMode } from 'react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { LanguageProvider } from '../../components/LanguageProvider';
 import { useAppStore } from '../../store/useAppStore';
@@ -55,16 +56,23 @@ const open = (token = TOKEN) =>
   });
 
 describe('a customer scanning a salon’s code', () => {
-  it('offers the way straight into booking that salon, not a generic home', async () => {
+  it('opens the salon they just joined, which is now Home', async () => {
     signIn();
     serve({ status: 201, body: SALON_WIRE });
-    open();
+    mount({
+      at: `/join/${TOKEN}`,
+      routes: { '/join/:token': <JoinPage />, '/home': <p>the home screen</p> },
+      elsewhere: <p>somewhere else</p>,
+    });
 
     await screen.findByText('You’re in');
-    // Somebody standing in a shop scanning its code is trying to book. The
-    // salon list is a screen they can reach any time.
-    expect(screen.getByRole('link', { name: 'Start booking' }))
-      .toHaveAttribute('href', '/booking/salon-4/service');
+    // The join made this salon the active one, so Home *is* this salon —
+    // its menu, its hours, and the button that books. Straight into the
+    // wizard was right when Home was a list; it is one tap further now.
+    const way = screen.getByRole('link', { name: 'Open the salon' });
+    expect(way).toHaveAttribute('href', '/home');
+    await userEvent.click(way);
+    expect(screen.getByText('the home screen')).toBeInTheDocument();
   });
 
   it('joins, says so by name, and makes that salon the active one', async () => {
@@ -153,6 +161,44 @@ describe('a code that is not good any more', () => {
     expect(screen.getByText(/Ask at the counter/)).toBeInTheDocument();
     expect(store().tenants).toEqual([]);
     expect(store().activeTenantId).toBeNull();
+    // Back to where the scanner is opened from — not to a Home that, with no
+    // salon joined, would only say to go and scan one.
+    expect(screen.getByRole('link', { name: 'Back to Settings' }))
+      .toHaveAttribute('href', '/profile/settings');
+  });
+
+  it('leaves no dead code in the history for Back to send again', async () => {
+    signIn();
+    serve({
+      status: 404,
+      body: { detail: 'That code is not valid any more.', code: 'not_found', errors: {} },
+    });
+    /** Settings, with a Back that pops history the way the real header does. */
+    function Settings() {
+      const navigate = useNavigate();
+      return <button type="button" onClick={() => navigate(-1)}>back from settings</button>;
+    }
+    // Where the scanner leaves things: it replaces itself with the join screen,
+    // so Settings is directly underneath.
+    render(
+      <LanguageProvider>
+        <MemoryRouter initialEntries={['/profile/settings', `/join/${TOKEN}`]} initialIndex={1}>
+          <Routes>
+            <Route path="/join/:token" element={<JoinPage />} />
+            <Route path="/profile/settings" element={<Settings />} />
+          </Routes>
+        </MemoryRouter>
+      </LanguageProvider>,
+    );
+
+    await screen.findByText('That code is not valid');
+    await userEvent.click(screen.getByRole('link', { name: 'Back to Settings' }));
+    await userEvent.click(screen.getByRole('button', { name: 'back from settings' }));
+
+    // Pushed rather than replaced, Back would remount the join screen, which
+    // forgets its request and POSTs the dead token again.
+    expect(screen.queryByText('That code is not valid')).not.toBeInTheDocument();
+    expect(sent).toHaveLength(1);
   });
 
   it('offers a retry for a failure that might not repeat', async () => {

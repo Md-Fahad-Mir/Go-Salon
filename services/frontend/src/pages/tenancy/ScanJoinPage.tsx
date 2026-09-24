@@ -1,6 +1,6 @@
 import { CameraOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import jsQR from 'jsqr';
 import { Button } from '../../components/common/Button';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -37,6 +37,7 @@ const NOTICE_MS = 2500;
 export default function ScanJoinPage() {
   const t = useT();
   const navigate = useNavigate();
+  const location = useLocation();
   const { videoRef, status, start, stop } = useCamera('environment');
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -116,12 +117,25 @@ export default function ScanJoinPage() {
   /* The camera's own failure states, told apart the way `useCamera` already
      tells them apart. Both offer the same way out, and it is a real one: the
      phone's camera app reads the very same code and opens the app at the join
-     screen, so a refused permission is an inconvenience rather than a wall. */
+     screen, so a refused permission is an inconvenience rather than a wall.
+
+     Back means Settings, because Settings is where this screen is opened from.
+     The Home target it used to have came from the days when Home listed the
+     salons and offered the scanner under them; now it would throw somebody out
+     of the place they were standing in.
+
+     And it goes back the way the header's own arrow does — by popping — rather
+     than by pushing Settings on top. A pushed Settings has this screen
+     underneath it, so its Back arrow would land straight back on a camera that
+     is still refused, and round again. Only a cold load, with nothing to pop,
+     replaces this screen with Settings instead. */
+  const leave = () =>
+    location.key !== 'default' ? navigate(-1) : navigate(ROUTES.profileSettings, { replace: true });
   const blocked = status === 'denied' || status === 'unsupported' || status === 'error';
 
   return (
     <Screen>
-      <Header title={t('tenant.scanTitle')} close backTo={ROUTES.home} />
+      <Header title={t('tenant.scanTitle')} close backTo={ROUTES.profileSettings} />
       <ScreenBody className={blocked ? 'fullscreen-center' : undefined}>
         {blocked ? (
           <EmptyState
@@ -133,7 +147,9 @@ export default function ScanJoinPage() {
             description={
               status === 'denied' ? t('tenant.scanDeniedBody') : t('tenant.scanUnsupportedBody')
             }
-            action={<Button onClick={() => navigate(ROUTES.home)}>{t('action.backToHome')}</Button>}
+            action={
+              <Button onClick={leave}>{t('tenant.backToSettings')}</Button>
+            }
           />
         ) : (
           <div className="stack">

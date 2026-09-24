@@ -164,13 +164,15 @@ export default function JoinPage() {
           tone="success"
           title={t('tenant.joinedTitle')}
           description={t('tenant.joinedBody', { name: joined.name })}
-          /* Into the wizard for the salon just joined, not to a generic
-             home. Somebody standing in a shop scanning its code is trying to
-             book; the salon list they now appear on is a screen they can
-             reach any time. `listingId` is what the wizard is addressed by —
-             see the note on `YourSalons`. */
+          /* To Home — which, since the join made this salon the active one,
+             is this salon: its menu, its hours, and the button that books. It
+             used to go straight into the booking wizard, when Home was a list
+             the person would not have wanted; now the one screen that shows
+             them what they just scanned is the right place to land, and
+             booking is one tap further. `replace`, so Back does not return to
+             the "you're in" card. */
           action={
-            <LinkButton to={ROUTES.bookingService(joined.listingId)}>
+            <LinkButton to={ROUTES.home} replace>
               {t('tenant.joinedAction')}
             </LinkButton>
           }
@@ -194,7 +196,11 @@ export default function JoinPage() {
         description={dead ? t('tenant.errInvalidBody') : (failure?.message ?? t('auth.errUnexpected'))}
         action={
           dead ? (
-            <LinkButton to={ROUTES.home}>{t('action.backToHome')}</LinkButton>
+            /* `replace`, so the dead code is not left in the history. Back
+               from Settings would otherwise remount this screen, and a remount
+               forgets the request it made — so it would send the same dead
+               token again and land here again. */
+            <LinkButton to={ROUTES.profileSettings} replace>{t('tenant.backToSettings')}</LinkButton>
           ) : (
             <Button
               onClick={() => {

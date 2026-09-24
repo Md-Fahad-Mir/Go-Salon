@@ -5,7 +5,7 @@ export const tenant = {
   'tenant.joiningBody': 'একটু সময় লাগবে।',
   'tenant.joinedTitle': 'আপনি যোগ দিয়েছেন',
   'tenant.joinedBody': '{name} এখন আপনার স্যালনের তালিকায় আছে।',
-  'tenant.joinedAction': 'বুকিং শুরু করুন',
+  'tenant.joinedAction': 'স্যালনটি খুলুন',
   'tenant.errInvalidTitle': 'কোডটি আর কাজ করছে না',
   'tenant.errInvalidBody': 'স্যালন হয়তো নতুন কোড ছাপিয়েছে। কাউন্টারে গিয়ে বর্তমান কোডটি চেয়ে নিন।',
   'tenant.errNotCustomerTitle': 'এই অ্যাকাউন্ট দিয়ে যোগ দেওয়া যাবে না',
@@ -28,17 +28,24 @@ export const tenant = {
   'tenant.removed': '{name} আপনার তালিকা থেকে সরানো হয়েছে',
   'tenant.errRemove': 'স্যালনটি সরানো যায়নি। একটু পরে আবার চেষ্টা করুন।',
 
-  /* Home: the salons you can book at. */
+  /* Home. `homeTitle`, `homeHint` and `bookAt` are `YourSalons`'s and leave
+     with it in FR3. The rest are the new Home's. */
   'tenant.homeTitle': 'আপনার স্যালন',
   'tenant.homeHint': 'বুক করতে একটিতে চাপ দিন।',
   'tenant.homeEmptyTitle': 'এখনো কোনো স্যালন নেই',
   'tenant.homeEmptyBody': 'স্যালনে গিয়ে কিউআর কোড স্ক্যান করলে এখানে যুক্ত হবে। কাউন্টারে জিজ্ঞেস করুন — ইউরেকার প্রতিটি স্যালনেই কোড আছে।',
+  'tenant.homeEmptyAction': 'সেটিংসে গিয়ে স্যালন যোগ করুন',
+  'tenant.homePickTitle': 'আপনি কোন স্যালনে যাচ্ছেন?',
+  'tenant.homePickBody': 'একটিতে চাপ দিলে সেটি খুলবে। সেটিংস থেকে যেকোনো সময় বদলাতে পারবেন।',
   'tenant.bookAt': '{name}-এ বুক করুন',
 
   /* The in-app scanner. */
   'tenant.scanTitle': 'স্যালন যোগ করুন',
   'tenant.scanHint': 'স্যালনের কিউআর কোডের দিকে ক্যামেরা ধরুন।',
   'tenant.scanAddSalon': 'স্যালন যোগ করুন',
+  'tenant.scanRow': 'স্যালনের কিউআর কোড স্ক্যান করুন',
+  'tenant.scanRowHint': 'কাউন্টারে জিজ্ঞেস করুন — ইউরেকার প্রতিটি স্যালনেই কোড আছে।',
+  'tenant.backToSettings': 'সেটিংসে ফিরে যান',
   'tenant.scanCameraLabel': 'ক্যামেরা, স্যালনের কিউআর কোড খুঁজছে',
   'tenant.scanStarting': 'ক্যামেরা চালু হচ্ছে…',
   'tenant.scanNotOurs': 'এটি স্যালনের কোড নয়। কাউন্টারে যেটি আছে সেটি দেখুন।',

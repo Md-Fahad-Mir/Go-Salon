@@ -5,7 +5,7 @@ export const tenant = {
   'tenant.joiningBody': 'This only takes a moment.',
   'tenant.joinedTitle': 'You’re in',
   'tenant.joinedBody': '{name} is on your list of salons now.',
-  'tenant.joinedAction': 'Start booking',
+  'tenant.joinedAction': 'Open the salon',
   'tenant.errInvalidTitle': 'That code is not valid',
   'tenant.errInvalidBody': 'The salon may have printed a new one. Ask at the counter for the current code.',
   'tenant.errNotCustomerTitle': 'This account cannot join a salon',
@@ -28,17 +28,28 @@ export const tenant = {
   'tenant.removed': '{name} is off your list',
   'tenant.errRemove': 'We could not remove that salon. Try again in a moment.',
 
-  /* Home: the salons you can book at. */
+  /* Home. `homeTitle`, `homeHint` and `bookAt` are `YourSalons`'s and leave
+     with it in FR3. The rest are the new Home's: the salon you are in, the way
+     to one, or — after a fresh sign-in with several — which one you mean. */
   'tenant.homeTitle': 'Your salons',
   'tenant.homeHint': 'Tap one to book.',
   'tenant.homeEmptyTitle': 'No salons yet',
   'tenant.homeEmptyBody': 'Scan the QR code in a salon to add it here. Ask at the counter — every salon on Eureka has one.',
+  'tenant.homeEmptyAction': 'Add a salon in Settings',
+  'tenant.homePickTitle': 'Which salon are you visiting?',
+  'tenant.homePickBody': 'Tap one to open it. You can switch any time from Settings.',
   'tenant.bookAt': 'Book at {name}',
 
   /* The in-app scanner. */
   'tenant.scanTitle': 'Add a salon',
   'tenant.scanHint': 'Point your camera at the salon’s QR code.',
   'tenant.scanAddSalon': 'Add a salon',
+  /* The row in Settings that opens the scanner, under a heading that already
+     says "Add a salon" — so the row says what to do, not what it is. */
+  'tenant.scanRow': 'Scan a salon’s QR code',
+  'tenant.scanRowHint': 'Ask at the counter — every salon on Eureka has one.',
+  /* Where the scanner and the join screen send someone back to. */
+  'tenant.backToSettings': 'Back to Settings',
   'tenant.scanCameraLabel': 'Camera, looking for a salon’s QR code',
   'tenant.scanStarting': 'Opening the camera…',
   'tenant.scanNotOurs': 'That is not a salon code. Try the one on the counter.',
