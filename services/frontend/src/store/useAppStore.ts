@@ -16,6 +16,7 @@ import type {
 import { STARTING_CREDITS, STORAGE_KEYS } from '../constants';
 import { nextId } from '../utils/id';
 import { tenantService } from '../utils/tenantService';
+import { useDirectoryStore } from './useDirectoryStore';
 
 /* --------------------------------------------------------------------------
    Session and per-account data.
@@ -299,6 +300,22 @@ export const useAppStore = create<AppStore>()(
       setAuthStatus: (status) => set({ authStatus: status }),
 
       clearSession: () => {
+        /* The salons this device has looked at go with the session.
+
+           That cache holds a shop's gallery, its staff names, its week and its
+           phone number, keyed by listing id and persisted — so without this,
+           whoever signs in next on a shared phone inherits the last person's
+           salons. Nothing reads it across accounts today, but "nothing reads
+           it" is not a property anybody can keep true.
+
+           Here rather than in `useAuth.logout` beside the other stores'
+           resets, because this is the one function every way of losing a
+           session goes through: signing out, a refresh token the server
+           refuses (`apiClient`), and a start-up whose `me()` fails
+           (`AuthProvider`). The other three stores are only cleared on the
+           first of those, which is a gap of its own — see the step report. */
+        useDirectoryStore.getState().clear();
+
         const state = get();
         const archive = { ...state.archive };
         if (state.user) {

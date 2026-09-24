@@ -243,16 +243,35 @@ export default function BookingDetailPage() {
               </p>
             ) : null}
           </div>
-          {pro ? (
-            <div className="grid-2">
+          {/* Two buttons with two different sources, and only one of them is
+              reliable.
+
+              The number comes off the booking, which always carries it. It
+              used to come from the directory cache, and that cache is only
+              filled by opening a salon's own screens — so a booking made on
+              another phone, or one opened after site data was cleared, had no
+              number to ring. Ringing the salon is the thing a customer needs
+              most when something has gone wrong with a booking, and it must
+              not depend on which screens they happen to have visited.
+
+              Directions still needs the cache, because an address is the one
+              thing the booking payload does not carry. It is absent rather
+              than broken when the cache is cold. */}
+          <div className={pro ? 'grid-2' : undefined}>
+            {pro ? (
               <ExternalButton href={directionsUrl(pro.location)} size="sm" icon={<Navigation size={16} aria-hidden="true" />}>
                 {t('action.directions')}
               </ExternalButton>
-              <ExternalButton href={`tel:${pro.phone}`} size="sm" newTab={false} icon={<Phone size={16} aria-hidden="true" />}>
-                {t('action.call')}
-              </ExternalButton>
-            </div>
-          ) : null}
+            ) : null}
+            <ExternalButton
+              href={`tel:${booking.businessPhone}`}
+              size="sm"
+              newTab={false}
+              icon={<Phone size={16} aria-hidden="true" />}
+            >
+              {t('action.call')}
+            </ExternalButton>
+          </div>
         </Card>
 
         <Card className="stack-sm">

@@ -12,6 +12,7 @@ import type { Tenant, User } from '../types';
 import { STORAGE_KEYS } from '../constants';
 import { sent, serve } from '../test/http';
 import { useAppStore } from './useAppStore';
+import { useDirectoryStore } from './useDirectoryStore';
 
 const ALPHA: Tenant = { id: 4, slug: 'alpha', listingId: 'salon-4', name: 'Alpha Salon', avatar: '' };
 const BETA: Tenant = { id: 5, slug: 'beta', listingId: 'salon-5', name: 'Beta Salon', avatar: '' };
@@ -369,5 +370,61 @@ describe('loadTenants: reading the list from the server', () => {
     await store().loadTenants();
     expect(sent).toHaveLength(0);
     expect(store().tenantsStatus).toBe('idle');
+  });
+});
+
+describe('the salons this device has looked at', () => {
+  /** A cached salon, as `rememberDetail` would have left one. */
+  const cache = () =>
+    useDirectoryStore.setState({
+      byId: { 'salon-4': { id: 'salon-4', name: 'Aurora Salon' } as never },
+      servicesById: { 'salon-4': [{ id: 'SV1', name: 'Cut' } as never] },
+      staffById: { 'salon-4': [{ id: 'EMP1', name: 'Hasan' } as never] },
+    });
+
+  const cacheIsEmpty = () => {
+    const { byId, servicesById, staffById } = useDirectoryStore.getState();
+    return Object.keys(byId).length === 0
+      && Object.keys(servicesById).length === 0
+      && Object.keys(staffById).length === 0;
+  };
+
+  beforeEach(() => useDirectoryStore.getState().clear());
+
+  it('is emptied when the session ends', () => {
+    store().setSession({ user: someone(), access: 'a', refresh: 'r' });
+    cache();
+    expect(cacheIsEmpty()).toBe(false);
+
+    store().clearSession();
+
+    // The cache holds a shop's gallery, its staff names, its week and its
+    // phone number. Whoever signs in next on a shared phone must not inherit
+    // the last person's salons.
+    expect(cacheIsEmpty()).toBe(true);
+  });
+
+  it('is emptied however the session ends, not only on a deliberate sign-out', async () => {
+    store().setSession({ user: someone(), access: 'a', refresh: 'r' });
+    cache();
+
+    // A refresh token the server refuses: `apiClient` calls `clearSession`
+    // itself, and no logout button was ever pressed.
+    serve(
+      { status: 401, body: { detail: 'expired', code: 'token_not_valid', errors: {} } },
+      { status: 401, body: { detail: 'no', code: 'token_not_valid', errors: {} } },
+    );
+    await store().loadTenants();
+
+    expect(store().isAuthenticated).toBe(false);
+    expect(cacheIsEmpty()).toBe(true);
+  });
+
+  it('survives an ordinary sign-in, which is what makes it a cache', () => {
+    cache();
+    store().setSession({ user: someone(), access: 'a', refresh: 'r' });
+    // Signing in is not signing out: a salon looked at a moment ago is still
+    // worth having, and `setSession` is also how a session is *restored*.
+    expect(cacheIsEmpty()).toBe(false);
   });
 });
