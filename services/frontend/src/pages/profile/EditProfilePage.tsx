@@ -58,7 +58,12 @@ function EditProfileForm({ user }: { user: User }) {
 
   const nameErr = nameError(name);
   const emailErr = emailError(email);
-  const valid = !nameErr && !emailErr && !!hairType && !!hairLength && !!area;
+  /* Hair and area are the customer's to add when they like. A sign-up from a
+     salon's QR code asks for neither, and a form that would not save a new
+     name until both were filled — behind a disabled button, with no word why —
+     was a trap for exactly those people. The server has always taken all
+     three as optional (`CustomerProfileWriteSerializer`, `allow_blank`). */
+  const valid = !nameErr && !emailErr;
   const dirty =
     name.trim() !== user.name ||
     (email.trim() || undefined) !== (user.email || undefined) ||
@@ -66,7 +71,11 @@ function EditProfileForm({ user }: { user: User }) {
     gender !== user.gender ||
     hairType !== user.hairType ||
     hairLength !== user.hairLength ||
-    area !== user.location?.area;
+    // Against what the chips started on, not the raw field: an account with
+    // no area comes back from the server as `''`, which no chip is, so the
+    // raw comparison called every such form changed before a thing was
+    // touched.
+    area !== (isArea(user.location?.area) ? user.location?.area : undefined);
 
   const pickPhoto = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -91,10 +100,11 @@ function EditProfileForm({ user }: { user: User }) {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setTouched({ name: true, email: true });
-    if (!valid || !dirty || !area || saving) return;
+    if (!valid || !dirty || saving) return;
 
-    const location: Location =
-      user.location && user.location.area === area
+    const location: Location | undefined = !area
+      ? undefined
+      : user.location && user.location.area === area
         ? user.location
         : { ...AREA_CENTRES[area], area, city: 'Dhaka', address: `${area}, Dhaka` };
 
@@ -109,13 +119,20 @@ function EditProfileForm({ user }: { user: User }) {
         gender: gender ?? '',
         hair_type: hairType ?? '',
         hair_length: hairLength ?? '',
-        location: {
-          area: location.area,
-          city: location.city,
-          address: location.address,
-          latitude: location.lat,
-          longitude: location.lng,
-        },
+        // Only when there is one. The server writes whichever location keys it
+        // is sent, so an absent one leaves the stored place alone where an
+        // empty one would blank it.
+        ...(location
+          ? {
+              location: {
+                area: location.area,
+                city: location.city,
+                address: location.address,
+                latitude: location.lat,
+                longitude: location.lng,
+              },
+            }
+          : {}),
       });
       updateUser(toUser(saved));
       toast('success', t('profile.updated'));

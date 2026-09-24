@@ -22,6 +22,36 @@ class RegistrationTests(AuthTestCase):
         self.assertTrue(CustomerProfile.objects.filter(user=user).exists())
         self.assertEqual(user.customer_profile.hair_type, 'wavy')
 
+    def test_a_customer_can_register_with_the_account_alone(self):
+        """The body the app's trimmed sign-up sends, exactly.
+
+        Since FR2 the customer sign-up is one screen — phone, name, password,
+        an optional email, the terms — because a customer now arrives from a
+        salon's QR code with somebody waiting. It sends no hair profile and no
+        location at all, and `gender` as the empty string it always sent. Every
+        other test here posts the full payload, so this is the one that proves
+        the serializer's `required=False` defaults hold for a real request.
+        """
+        response = self.client.post('/api/auth/register/customer/', {
+            'phone': '+8801712345678',
+            'name': 'Ahmed Hassan',
+            'email': '',
+            'password': 'chairside2026',
+            'accepted_terms': True,
+            'gender': '',
+        }, format='json')
+
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertTrue(response.data['verification_required'])
+
+        profile = User.objects.get(phone='+8801712345678').customer_profile
+        self.assertEqual(profile.gender, '')
+        self.assertEqual(profile.hair_type, '')
+        self.assertEqual(profile.hair_length, '')
+        self.assertEqual(profile.area, '')
+        self.assertIsNone(profile.latitude)
+        self.assertIsNone(profile.longitude)
+
     def test_password_is_hashed_and_never_returned(self):
         self.register('customer', CUSTOMER_PAYLOAD)
         user = User.objects.get(phone='+8801712345678')

@@ -47,12 +47,21 @@ export interface RegistrationBase {
   acceptedTerms: boolean;
 }
 
-/** Someone booking a chair. */
-export interface CustomerRegistration extends RegistrationBase {
+/** Someone booking a chair.
+
+    The account and nothing else. The sign-up used to ask for an area and a
+    hair profile as well, over three screens; a customer now reaches this
+    from a salon's QR code, standing at its counter, and the only thing worth
+    asking before the code is texted is who they are. Every field the backend
+    treats as optional — location, gender, hair type, hair length — is
+    optional here too, and simply not sent. The profile screen still takes
+    them later. */
+export interface CustomerRegistration extends Omit<RegistrationBase, 'location'> {
   accountType: 'customer';
+  location?: Location;
   gender?: Gender;
-  hairType: HairType;
-  hairLength: HairLength;
+  hairType?: HairType;
+  hairLength?: HairLength;
 }
 
 /** A barber or hairstylist working for themselves. `audience` is where a

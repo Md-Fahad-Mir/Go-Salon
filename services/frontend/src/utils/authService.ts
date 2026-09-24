@@ -144,7 +144,7 @@ const locationPayload = (location: Location | undefined) =>
       }
     : undefined;
 
-const basePayload = (request: RegistrationBase) => ({
+const basePayload = (request: Omit<RegistrationBase, 'location'> & { location?: Location }) => ({
   phone: request.phone,
   name: request.name,
   email: request.email || '',

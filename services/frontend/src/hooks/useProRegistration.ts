@@ -52,25 +52,29 @@ export function useProRegistration() {
 
   const whereValid = Boolean(location && terms);
 
-  /** The shared fields of the request, or null while the form is unfinished.
-      Each screen spreads this and adds what its own account type needs. */
+  /** Who they are and how they sign in, normalised the way the server wants
+      it. The customer sign-up is this and the terms, and nothing else; the
+      professional ones go through `base()`, which adds where they work. One
+      place for the normalising either way, so the sign-ups cannot drift. */
+  const accountFields = () => ({
+    phone: toE164(phone),
+    name: name.trim(),
+    email: email.trim() || undefined,
+    password,
+  });
+
+  /** The shared fields of a professional request, or null while the form is
+      unfinished. Each screen spreads this and adds what its own account type
+      needs. */
   const base = (): RegistrationBase | null =>
-    location
-      ? {
-          phone: toE164(phone),
-          name: name.trim(),
-          email: email.trim() || undefined,
-          password,
-          location,
-          acceptedTerms: terms,
-        }
-      : null;
+    location ? { ...accountFields(), location, acceptedTerms: terms } : null;
 
   return {
     phone,
     accountValid,
     accountValidWithoutEmail,
     whereValid,
+    accountFields,
     base,
     /** Props for <RegisterStepAccount>. */
     account: {
