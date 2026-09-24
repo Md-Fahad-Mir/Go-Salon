@@ -30,11 +30,11 @@ export function useWizardStep(professionalId: string | undefined, options: Wizar
      and no revalidation is not a cache, it is a copy that silently stops
      being true — and opening hours are exactly the field that changes.
 
-     What gets painted meanwhile is the *detail*, not a search row: a row from
-     search or the home screen carries neither the menu nor the chairs, and
-     treating one as loaded opens a price list with nothing on it. The menu
-     having been fetched is the honest test — an empty menu is a real answer
-     and `undefined` is the absence of one. */
+     What gets painted meanwhile is the *detail*, and the menu having been
+     fetched is the honest test for it — an empty menu is a real answer and
+     `undefined` is the absence of one. The distinction used to matter more,
+     when a salon could also arrive as a bare search row carrying neither the
+     menu nor the chairs; the one read that survives always brings both. */
   const cached = useDirectoryStore((state) =>
     professionalId ? state.byId[professionalId] : undefined,
   );

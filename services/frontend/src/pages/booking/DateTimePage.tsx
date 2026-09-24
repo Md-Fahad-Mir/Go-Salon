@@ -59,7 +59,7 @@ export default function DateTimePage() {
      what has already been sold. Times that are taken come back marked rather
      than missing, so the calendar can *say* four o'clock is gone.
 
-     Kept as one keyed result, the way search and nearby do it: `loading` is
+     Kept as one keyed result: `loading` is
      "the answer for *this* query has not arrived", which is also what makes a
      stale answer for yesterday's day impossible to show. */
   const wanted = (serviceIds ?? []).join(',');

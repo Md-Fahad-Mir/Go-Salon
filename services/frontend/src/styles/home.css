@@ -4,10 +4,10 @@
    This is the first thing a customer sees after signing in, so it carries the
    whole impression. Everything here is customer-private:
 
-     - `.home-*`, `.hs-*`, `.ntf-*` and `.search-*` are written by four pages
+     - `.home-*`, `.hs-*` and `.ntf-*` are written by the pages
        and three components that only a signed-in customer ever reaches, so
        they need no scope of their own.
-     - `.pro-card`, `.pro-row`, `.hs-card`, `.section-head` and `.list-card`
+     - `.hs-card`, `.section-head` and `.list-card`
        are shared primitives from ui.css / layout.css. Every override of one
        is hung on `:root[data-app='customer']` — the attribute AppFrame stamps
        on <html> for a signed-in customer and nobody else — so no professional
@@ -48,10 +48,10 @@
    so anything that is a *direct* child of a staggered list is pinned at
    `transform: none` forever.
 
-   That silently kills every lift and every press on this surface: `.pro-card`
-   in the home list and in the search results, `.hs-card` in the style grid,
-   `.pro-row` under a hairstyle. No error, no warning — the card simply stops
-   answering, and only in the lists that stagger.
+   That silently kills every lift and every press on this surface — `.hs-card`
+   in the style grid, and anything else a staggered list holds directly. No
+   error, no warning: the card simply stops answering, and only in the lists
+   that stagger.
 
    Written on the independent `translate` property the same entrance never
    names `transform` at all, so the arrival and the answer can both exist.
@@ -69,12 +69,7 @@
   to { opacity: 1; translate: 0 0; }
 }
 
-:root[data-app='customer'] .stagger > .pro-card,
-:root[data-app='customer'] .stagger > .pro-row,
-:root[data-app='customer'] .stagger > .hs-card,
-:root[data-app='customer'] .search-results.stagger > *,
-:root[data-app='customer'] .search-styles.stagger > *,
-:root[data-app='customer'] .hs-pro-list.stagger > * {
+:root[data-app='customer'] .stagger > .hs-card {
   animation-name: discover-in;
 }
 
@@ -287,142 +282,6 @@
    back, the extra air is wanted. */
 
 .home-trending { padding-block: var(--space-3) var(--space-5); }
-.home-nearby-head .caption { font-size: var(--fs-sm); }
-
-/* --------------------------------------------------------------------------
-   4. The two objects a customer looks at most
-
-   `.pro-card` is every search result and every nearby salon; `.pro-row` is the
-   same business on the hairstyle page. Both arrived with no shadow, no hover,
-   no press and no transition, so they read flatter than the generic `.card`
-   sitting beside them. Both are brought onto the --elev-* ladder and given the
-   interaction story `.hs-card` already had.
-
-   Scoped, because ui.css owns these classes for four professional apps too.
-   -------------------------------------------------------------------------- */
-
-:root[data-app='customer'] .pro-card {
-  position: relative;
-  border-radius: var(--radius-2xl);
-  border-color: var(--border-light);
-  box-shadow: var(--elev-card);
-  transition:
-    transform var(--speed) var(--ease-out),
-    box-shadow var(--speed) var(--ease-out),
-    border-color var(--speed) var(--ease);
-}
-
-/* The lit edge has to be a pseudo-element here, not an inset shadow: an inset
-   shadow paints with the element's own background, under every in-flow child,
-   and the cover photograph starts at the card's first pixel — it would cover
-   the bevel exactly where the bevel is meant to show. */
-:root[data-app='customer'] .pro-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: var(--bevel-top), var(--bevel-hair);
-  pointer-events: none;
-}
-
-/* The join between the photograph and the writing, in the same fading gold as
-   the header rule — a material seam rather than a border. */
-:root[data-app='customer'] .pro-card-body {
-  gap: var(--space-3);
-  padding: var(--space-5);
-  background-image: var(--rule-gradient);
-  background-repeat: no-repeat;
-  background-position: top;
-  background-size: 100% 1px;
-}
-/* The one place on this surface where a business gets a headline. 20px is the
-   floor customer.css sets for the display serif — below it a high-contrast
-   face loses its thin strokes — and a salon's name is the one string on the
-   card with no digits, no taka sign and no clock in it, so the serif is safe
-   here in a way it is nowhere else on the card.
-
-   That is what gives a `.pro-card` an inside: a loud name, a quiet tagline, a
-   dim meta row. Before this every line in the body was within two points of
-   every other and the card read as a form. */
-:root[data-app='customer'] .pro-card-name {
-  font-family: var(--font-display);
-  font-size: var(--fs-lg);
-  font-weight: 600;
-  letter-spacing: var(--tracking-tight);
-  line-height: var(--leading-snug);
-}
-/* A step quieter than the name it sits under, not a step smaller: 15px is
-   still comfortable reading, and the drop in colour is what makes the name
-   read as the heading. */
-:root[data-app='customer'] .pro-card-tagline {
-  font-size: var(--fs-base);
-  line-height: var(--leading-normal);
-  color: var(--text-tertiary);
-}
-:root[data-app='customer'] .pro-card-meta {
-  gap: var(--space-2) var(--space-4);
-  font-size: var(--fs-sm);
-}
-:root[data-app='customer'] .pro-card-foot { margin-top: var(--space-2); }
-
-:root[data-app='customer'] .pro-card-cover img,
-:root[data-app='customer'] .pro-card-cover .art > svg {
-  transition: transform 520ms var(--ease-out);
-}
-
-/* `.pro-card` is an <article>, and :active propagates to ancestors — without
-   the :has() the whole card would shrink when the Book button was pressed,
-   which is the button's job, not the card's. */
-:root[data-app='customer'] .pro-card:has(.pro-card-cover:active),
-:root[data-app='customer'] .pro-card:has(.pro-card-name:active) {
-  transform: scale(0.99);
-  box-shadow: var(--elev-card);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  :root[data-app='customer'] .pro-card:hover {
-    transform: translateY(-3px);
-    border-color: var(--border-color);
-    box-shadow: var(--elev-raised);
-  }
-  /* The crop is the card's own `overflow: hidden`, so the zoom never spills. */
-  :root[data-app='customer'] .pro-card:hover .pro-card-cover img,
-  :root[data-app='customer'] .pro-card:hover .pro-card-cover .art > svg {
-    transform: scale(1.05);
-  }
-}
-
-:root[data-app='customer'] .pro-row {
-  border-radius: var(--radius-lg);
-  border-color: var(--border-light);
-  gap: var(--space-3);
-  padding: var(--space-3);
-  box-shadow: var(--bevel-top), var(--elev-card);
-  transition:
-    transform var(--speed) var(--ease-out),
-    box-shadow var(--speed) var(--ease-out),
-    border-color var(--speed) var(--ease);
-}
-:root[data-app='customer'] .pro-row-art {
-  border-radius: var(--radius);
-  box-shadow: var(--bevel-hair);
-}
-:root[data-app='customer'] .pro-row-name {
-  font-size: var(--fs-base);
-  font-weight: 650;
-  letter-spacing: var(--tracking-tight);
-}
-:root[data-app='customer'] .pro-row:has(.pro-row-main:active) {
-  transform: scale(0.99);
-  box-shadow: var(--bevel-top), var(--elev-card);
-}
-@media (hover: hover) and (pointer: fine) {
-  :root[data-app='customer'] .pro-row:hover {
-    transform: translateY(-2px);
-    border-color: var(--border-color);
-    box-shadow: var(--bevel-top), var(--elev-raised);
-  }
-}
 
 /* --------------------------------------------------------------------------
    5. The hairstyle tile
@@ -499,152 +358,6 @@
 :root[data-app='customer'] .hs-card[aria-pressed='true'] {
   box-shadow: 0 0 0 3px var(--accent-bg), var(--elev-raised);
 }
-
-/* --------------------------------------------------------------------------
-   6. Search
-
-   The weakest screen on the surface before this pass, and structurally so: it
-   opened with three stacked controls and then a column of cards all cut to the
-   same weight, so there was nothing loud on it and nothing quiet. Three moves,
-   none of them new vocabulary:
-
-     - The field is the loud object. On a search screen it is the hero; on any
-       other screen the same element would be a form row, which is exactly what
-       it looked like.
-     - The results open as a chapter — the gold hairline and the gold eyebrow
-       bar the section heads on this surface already use — so the controls read
-       as a masthead above them rather than as the first three items in a list.
-     - The count line stops whispering and becomes the standfirst.
-   -------------------------------------------------------------------------- */
-
-.search-top {
-  gap: var(--space-4);
-  padding-top: var(--space-1);
-}
-
-/* The field as this page's one big object: a deep pill on the elevated ground
-   with a lit lip, a gold magnifier and reading-sized type. --fs-md is 17px, so
-   iOS still has no reason to zoom the page on focus.
-
-   The recessed values are customer.css's own, restated because `box-shadow`
-   replaces rather than adds and --bevel-top has to go in front of them.
-   Written at (0,4,0) on purpose — that rule is (0,3,0) and this file is
-   imported first, so a tie would lose. */
-:root[data-app='customer'] .search-bar .input {
-  min-height: 3.5rem;
-  padding-inline: 3.25rem 3rem;
-  font-size: var(--fs-md);
-  background-color: var(--bg-elevated);
-  box-shadow: var(--bevel-top), inset 0 1px 2px rgba(44, 34, 22, 0.05);
-  transition: box-shadow var(--speed) var(--ease), border-color var(--speed) var(--ease);
-}
-:root.dark-theme[data-app='customer'] .search-bar .input {
-  box-shadow: var(--bevel-top), inset 0 1px 3px rgba(0, 0, 0, 0.45);
-}
-/* ui.css sets `outline: none` on a focused input, so this shadow *is* the
-   focus indicator — it stays a full 3px ring and only gains the gold bloom
-   underneath. The `:not(:disabled)` is not a guard, it is a specificity step:
-   the night-mood rule above is already (0,5,0) and a tie would be decided by
-   source order alone, which is not something to leave a focus ring resting on.
-   (0,6,0). Every colour in it flips with the mood. */
-:root[data-app='customer'] .search-bar .input:focus:not(:disabled) {
-  border-color: var(--accent);
-  box-shadow: var(--bevel-top), 0 0 0 3px var(--ring), var(--glow-accent);
-}
-/* Grown to match the taller field. The size attribute lucide writes is a
-   presentation attribute, which any stylesheet rule beats. */
-.search-bar svg:first-child {
-  inset-inline-start: 1.125rem;
-  width: 20px;
-  height: 20px;
-  color: var(--accent-ink);
-}
-
-/* Was `margin-top: -0.25rem` — a patch pulling the row back up under the
-   segmented control. The gap is the screen body's now, and the padding is
-   what keeps a chip's focus halo out of the scroller's clip. */
-.search-filters { padding-block: var(--space-1); }
-
-/* Where the masthead ends and the reading starts. The same chapter break as a
-   home section head, so a customer meets one idiom on this surface and not
-   two — inset to the column, not bled to the frame, for the same reason.
-
-   `container-type: inline-size` answers to this column's own width rather than
-   the viewport's, which is the measurement that decides whether a third tile
-   fits: the app is a fixed column and the viewport says nothing useful about
-   it. It makes this element a containing block and a stacking context, which
-   is safe here — everything fixed on this screen (the tab bar, the toaster,
-   every sheet and modal) is portalled to document.body or lives outside the
-   screen body entirely. */
-.search-results {
-  position: relative;
-  gap: var(--space-4);
-  padding-top: var(--space-5);
-  container-type: inline-size;
-}
-.search-results::before {
-  content: '';
-  position: absolute;
-  inset-inline: 0;
-  top: 0;
-  height: 1px;
-  background-image: var(--rule-gradient);
-}
-
-/* The standfirst: the one line of prose the page writes, opened by the same
-   28px gold bar the section heads carry. It counts things — Bengali numerals
-   in bn — so it stays on the UI face whatever else happens to it.
-
-   The element carries `.caption` as well, and customer.css restyles that at
-   (0,3,0), so the colour and the leading have to be claimed at (0,4,0) or the
-   line silently stays a tertiary whisper at 1.5 — which is exactly the thing
-   this rule exists to stop. */
-:root[data-app='customer'] .search-count,
-.search-count {
-  font-size: var(--fs-md);
-  line-height: var(--leading-snug);
-  color: var(--text-secondary);
-}
-.search-count::before {
-  content: '';
-  display: block;
-  width: 1.75rem;
-  height: 2px;
-  margin-bottom: var(--space-2);
-  border-radius: 1px;
-  background-image: var(--accent-gradient);
-}
-
-.search-styles { gap: var(--space-3); }
-
-/* At the widest step the frame is 34rem, which leaves 31.5rem of column — room
-   for a third portrait without any tile dropping under the 8.5rem the trending
-   scroller already proves reads. On a phone the query never matches. Applied
-   to the page's own companion class, never to the shared `.grid-2`. */
-@container (min-width: 29rem) {
-  .search-styles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
-/* Part of the masthead, so it takes the masthead's material: the card corner
-   and the same lit lip and gold hairline every raised surface here carries.
-   `Callout tone="accent"` already supplies the gold ground. */
-.search-callout {
-  border-radius: var(--radius-lg);
-  box-shadow: var(--bevel-top), var(--bevel-hair);
-}
-.search-callout > div { flex: 1; min-width: 0; }
-.search-callout-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  /* Negative, and staying that way: it is what lets the icon button keep its
-     full 44px hit area without the callout growing around it. */
-  margin-block: -0.5rem;
-  margin-inline-end: -0.5rem;
-}
-.search-callout-inner > span { padding-block: 0.5rem; }
-.search-sort .option-body { display: flex; flex-direction: column; }
 
 /* --------------------------------------------------------------------------
    7. Notifications
@@ -837,31 +550,6 @@
   box-shadow: var(--bevel-hair);
 }
 
-/* Narrow screens: let the rating and distance wrap as whole units. */
-.hs-detail-body .pro-row-meta { flex-wrap: wrap; row-gap: 0; }
-.hs-detail-body .pro-row-meta .dim { white-space: nowrap; }
-
-.hs-pro-list { gap: var(--space-3); }
-
-/* --- Tailored-results notice ----------------------------------------------- */
-
-.home-tailored {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-2);
-  margin-top: var(--space-1);
-  font-size: var(--fs-xs);
-  color: var(--accent-ink);
-}
-.home-tailored svg { flex-shrink: 0; }
-.home-tailored a {
-  color: var(--accent-ink);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-}
-
 /* --------------------------------------------------------------------------
    9. The narrowest phones
 
@@ -887,26 +575,11 @@
 @media (prefers-reduced-motion: reduce) {
   .home-hero-art > img,
   .home-hero .art,
-  .home-visit,
-  :root[data-app='customer'] .pro-card,
-  :root[data-app='customer'] .pro-row,
-  :root[data-app='customer'] .pro-card-cover img,
-  :root[data-app='customer'] .pro-card-cover .art > svg { transition: none; }
+  .home-visit { transition: none; }
 
   .home-hero:hover .home-hero-art > img,
   .home-hero:active .art,
-  .home-visit:active,
-  :root[data-app='customer'] .pro-card:hover,
-  :root[data-app='customer'] .pro-card:hover .pro-card-cover img,
-  :root[data-app='customer'] .pro-card:hover .pro-card-cover .art > svg,
-  :root[data-app='customer'] .pro-row:hover { transform: none; }
-
-  /* Kept in a rule of their own: one unsupported selector invalidates the
-     whole list it is written in, and a browser without `:has()` would
-     otherwise drop every line above with it. */
-  :root[data-app='customer'] .pro-card:has(.pro-card-cover:active),
-  :root[data-app='customer'] .pro-card:has(.pro-card-name:active),
-  :root[data-app='customer'] .pro-row:has(.pro-row-main:active) { transform: none; }
+  .home-visit:active { transform: none; }
 
   /* ui.css's own lift and press on the tile. They were never guarded, and in
      the staggered grids on this surface they were accidentally dead until the

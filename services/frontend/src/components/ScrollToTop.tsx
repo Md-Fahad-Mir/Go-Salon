@@ -3,7 +3,7 @@ import { useLocation, useNavigationType } from 'react-router-dom';
 
 /** Where each history entry was scrolled to when it was left.
  *
- *  Keyed on the history entry's `key`, not its path: `/search` visited twice
+ *  Keyed on the history entry's `key`, not its path: one path visited twice
  *  is two entries with two positions, which is what Back actually means. Kept
  *  in sessionStorage so a reload mid-session does not lose it, and dropped
  *  when the tab closes — the same lifetime the history itself has. */
@@ -17,9 +17,9 @@ const read = (): Record<string, number> => {
   }
 };
 
-/** Plenty for any real back-stack. Replacing the URL — which the search
-    screen does on every keystroke — mints a fresh history key each time, so
-    without a cap the oldest entries would pile up unread for the session. */
+/** Plenty for any real back-stack. Replacing the URL mints a fresh history
+    key each time, so without a cap the oldest entries would pile up unread
+    for the session. */
 const KEEP = 50;
 
 const write = (positions: Record<string, number>) => {
@@ -34,8 +34,8 @@ const write = (positions: Record<string, number>) => {
 
 /** How long to keep trying to restore, in milliseconds.
  *
- *  A restored page is short before its data lands — lazy chunk, then a search
- *  request — so scrolling to the saved offset immediately lands at the bottom
+ *  A restored page is short before its data lands — lazy chunk, then the
+ *  screen's own request — so scrolling to the saved offset lands at the bottom
  *  of a skeleton. This re-applies it each frame until the page is tall enough
  *  to hold it, then stops. */
 const RESTORE_WINDOW = 1200;

@@ -5,8 +5,6 @@ import { Badge } from '../components/common/Badge';
 import { Button, LinkButton } from '../components/common/Button';
 import { EmptyState } from '../components/common/EmptyState';
 import { IconButton } from '../components/common/IconButton';
-import { ProfessionalCard } from '../components/common/ProfessionalCard';
-import { CardSkeleton } from '../components/common/Skeleton';
 import { Rating } from '../components/common/Rating';
 import { FeasibilityCallout } from '../components/home/FeasibilityCallout';
 import { FACE_SHAPE_KEYS, OCCASION_KEYS, UPKEEP_KEYS } from '../components/home/labels';
@@ -14,10 +12,9 @@ import { HAIR_TYPE_KEYS } from '../components/auth/labels';
 import { Header } from '../components/layout/Header';
 import { Screen, ScreenBody } from '../components/layout/Screen';
 import { FooterRow, StickyFooter } from '../components/layout/StickyFooter';
-import { DEFAULT_LOCATION, OCCASIONS, ROUTES } from '../constants';
+import { OCCASIONS, ROUTES } from '../constants';
 import { useT } from '../hooks/useLanguage';
 import { getHairstyle } from '../mockData';
-import { useNearby } from '../hooks/useNearby';
 import { useAppStore } from '../store/useAppStore';
 import { useTryOnStore } from '../store/useTryOnStore';
 import { formatCompact } from '../utils/format';
@@ -32,10 +29,6 @@ export default function HairstyleDetailPage() {
   const user = useAppStore((s) => s.user);
   const toast = useAppStore((s) => s.toast);
   const style = id ? getHairstyle(id) : undefined;
-  const point = user?.location ?? DEFAULT_LOCATION;
-  /* Nothing links a hairstyle to a price list yet, so these are the places
-     near this customer rather than a claim about who does this exact cut. */
-  const { list: pros, loading: prosLoading } = useNearby(point, 4, style?.audience);
 
   if (!style || !id) {
     return (
@@ -152,28 +145,11 @@ export default function HairstyleDetailPage() {
             </dl>
           </section>
 
-          <section className="section hs-section">
-            <h3>{t('home.prosNearYou')}</h3>
-            {prosLoading ? (
-              <CardSkeleton count={2} />
-            ) : pros.length ? (
-              <div className="stack-sm stagger hs-pro-list">
-                {pros.map((pro) => (
-                  <ProfessionalCard key={pro.id} pro={pro} variant="row" hairstyleId={id} bookLabel={t('action.book')} />
-                ))}
-              </div>
-            ) : (
-              <p className="caption">{t('home.noProsYet')}</p>
-            )}
-          </section>
         </div>
       </ScreenBody>
 
       <StickyFooter>
         <FooterRow>
-          {/* The "find a salon that does this style" button stood on
-              cross-salon search, which is withdrawn as a product decision —
-              a customer books where they have joined. */}
           <Button onClick={tryOn} icon={<Sparkles size={18} aria-hidden="true" />}>
             {t('home.tryItOn')}
           </Button>

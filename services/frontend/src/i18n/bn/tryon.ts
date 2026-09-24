@@ -131,8 +131,6 @@ export const tryon = {
   'tryon.like': 'পছন্দ',
   'tryon.liked': 'পছন্দ',
   'tryon.notForMe': 'পছন্দ না',
-  'tryon.prosTitle': 'যারা এটা করেন',
-  'tryon.prosEmpty': 'কাছাকাছি কেউ এখনও এই স্টাইলটা দেন না। স্যালন খুঁজে নাম বলে জিজ্ঞেস করুন।',
   'tryon.tryAnother': 'আরেকটা দেখুন',
   'tryon.bookLook': 'এই লুকটা বুক করুন',
   'tryon.tryAnotherStyle': 'অন্য স্টাইল দেখুন',

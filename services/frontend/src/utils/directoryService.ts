@@ -1,6 +1,6 @@
 /* The customer-facing directory: who a customer can book, from the backend.
 
-   Every salon and independent barber comes out of `/api/directory/` in one
+   One salon comes out of `/api/listings/` in one
    shape, so a search result and a detail page are the same record with more
    of it filled in. There is no fixture behind any of this — a listing exists
    because somebody finished signing up for it. */
@@ -102,10 +102,6 @@ interface ApiListing {
   staff?: ApiStaff[];
 }
 
-interface ApiDirectory {
-  count: number;
-  results: ApiListing[];
-}
 
 /* --- Mapping -------------------------------------------------------------- */
 
@@ -210,45 +206,19 @@ export interface DirectoryDetail {
 
 /* --- Calls ---------------------------------------------------------------- */
 
-export interface DirectoryFilters {
-  query?: string;
-  type?: 'all' | 'salon' | 'barber';
-  audience?: Audience | 'all';
-  openNow?: boolean;
-  area?: string;
-  sort?: 'distance' | 'price' | 'name';
-  limit?: number;
-}
-
-const queryString = (point: GeoPoint | undefined, filters: DirectoryFilters): string => {
-  const params = new URLSearchParams();
-  if (point) {
-    params.set('lat', String(point.lat));
-    params.set('lng', String(point.lng));
-  }
-  if (filters.query) params.set('q', filters.query);
-  if (filters.type && filters.type !== 'all') params.set('type', filters.type);
-  if (filters.audience && filters.audience !== 'all') params.set('audience', filters.audience);
-  if (filters.openNow) params.set('open_now', 'true');
-  if (filters.area) params.set('area', filters.area);
-  if (filters.sort) params.set('sort', filters.sort);
-  if (filters.limit) params.set('limit', String(filters.limit));
-  const query = params.toString();
-  return query ? `?${query}` : '';
-};
+/** The only query this endpoint still takes: where the caller is, so the
+    listing can report a distance. The filter set went with the browsable
+    directory — there is nothing to filter when the answer is one salon. */
+const queryString = (point: GeoPoint | undefined): string =>
+  point ? `?lat=${point.lat}&lng=${point.lng}` : '';
 
 export const directoryService = {
-  async list(point: GeoPoint | undefined, filters: DirectoryFilters = {}): Promise<Professional[]> {
-    const data = await api.get<ApiDirectory>(`/directory/${queryString(point, filters)}`);
-    return data.results.map(toProfessional);
-  },
-
   async get(id: string, point?: GeoPoint): Promise<DirectoryDetail> {
     // `/listings/`, not `/directory/`: the browsable directory is gone and the
     // path went with it. This one read survives because the booking wizard has
     // no other source for a salon's menu, chairs, address or phone — and it is
     // membership-scoped now, so it answers 404 for a salon you have not joined.
-    const row = await api.get<ApiListing>(`/listings/${id}/${queryString(point, {})}`);
+    const row = await api.get<ApiListing>(`/listings/${id}/${queryString(point)}`);
     return {
       professional: toProfessional(row),
       services: (row.services ?? []).map((service) => toService(service, row.id)),

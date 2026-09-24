@@ -37,7 +37,6 @@ const BarberRegisterPage = lazy(() => import('./pages/auth/register/BarberRegist
 const SalonOwnerRegisterPage = lazy(() => import('./pages/auth/register/SalonOwnerRegisterPage'));
 
 const HomePage = lazy(() => import('./pages/HomePage'));
-const SearchPage = lazy(() => import('./pages/SearchPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const HairstyleDetailPage = lazy(() => import('./pages/HairstyleDetailPage'));
 const ProfessionalDetailPage = lazy(() => import('./pages/ProfessionalDetailPage'));
@@ -62,7 +61,6 @@ const HistoryPage = lazy(() => import('./pages/tryon/HistoryPage'));
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 const EditProfilePage = lazy(() => import('./pages/profile/EditProfilePage'));
 const MyReviewsPage = lazy(() => import('./pages/profile/MyReviewsPage'));
-const SavedPage = lazy(() => import('./pages/profile/SavedPage'));
 const SettingsPage = lazy(() => import('./pages/profile/SettingsPage'));
 const HelpPage = lazy(() => import('./pages/profile/HelpPage'));
 
@@ -151,7 +149,6 @@ export default function App() {
                     {/* Customer app */}
                     <Route element={<CustomerOnly />}>
                     <Route path="/home" element={<HomePage />} />
-                    <Route path="/search" element={<SearchPage />} />
                     <Route path="/notifications" element={<NotificationsPage />} />
                     <Route path="/hairstyle/:id" element={<HairstyleDetailPage />} />
                     <Route path="/professional/:id" element={<ProfessionalDetailPage />} />
@@ -176,7 +173,6 @@ export default function App() {
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/profile/edit" element={<EditProfilePage />} />
                     <Route path="/profile/reviews" element={<MyReviewsPage />} />
-                    <Route path="/profile/saved" element={<SavedPage />} />
                     <Route path="/profile/settings" element={<SettingsPage />} />
                     <Route path="/profile/help" element={<HelpPage />} />
                     </Route>

@@ -2,7 +2,7 @@ import { Download, ImageOff, MoreVertical, Orbit, RefreshCw, Share2, Sparkles, T
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { AIGeneration, Feedback } from '../../types';
-import { DEFAULT_LOCATION, ROUTES } from '../../constants';
+import { ROUTES } from '../../constants';
 import { AngleViewer } from '../../components/ai-tryon/AngleViewer';
 import { CompareSlider } from '../../components/ai-tryon/CompareSlider';
 import { FeasibilityCallout } from '../../components/ai-tryon/FeasibilityCallout';
@@ -14,15 +14,11 @@ import { Button, LinkButton } from '../../components/common/Button';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { EmptyState } from '../../components/common/EmptyState';
 import { IconButton } from '../../components/common/IconButton';
-import { ProfessionalCard } from '../../components/common/ProfessionalCard';
-import { CardSkeleton } from '../../components/common/Skeleton';
-import { SectionHead } from '../../components/common/SectionHead';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
 import { FooterRow, StickyFooter } from '../../components/layout/StickyFooter';
 import { useT } from '../../hooks/useLanguage';
 import { usePhotoUrl } from '../../hooks/usePhotoUrl';
-import { useNearby } from '../../hooks/useNearby';
 import { useAppStore } from '../../store/useAppStore';
 import { useTryOnStore } from '../../store/useTryOnStore';
 import { angleSpec } from '../../utils/angles';
@@ -56,7 +52,6 @@ export default function PreviewPage() {
 function Preview({ generation }: { generation: AIGeneration }) {
   const t = useT();
   const navigate = useNavigate();
-  const user = useAppStore((s) => s.user);
   const generations = useAppStore((s) => s.generations);
   const setGenerationFeedback = useAppStore((s) => s.setGenerationFeedback);
   const removeGeneration = useAppStore((s) => s.removeGeneration);
@@ -77,27 +72,21 @@ function Preview({ generation }: { generation: AIGeneration }) {
   const views = generation.views ?? [];
   const isRing = views.length > 0;
 
-  const origin = user?.location ?? DEFAULT_LOCATION;
-  /* Places near this customer. Nothing links a hairstyle to a price list yet,
-     so this cannot claim to be "the people who do this cut". */
-  const { list: pros, loading: prosLoading } = useNearby(origin, 4);
 
   const tryAnother = () => {
     setPhotoKey(generation.sourceKey);
     navigate(ROUTES.tryOnSelect);
   };
 
-  const bookLook = () => {
-    if (pros.length === 1) {
-      navigate(ROUTES.bookingStaff(pros[0].id), { state: { hairstyleId: generation.hairstyleId } });
-      return;
-    }
-    // An AI pick is not in the catalogue, so there is nothing to filter by —
-    // the customer asks for it by name at the salon.
-    // Was a jump into cross-salon search for somewhere that does this style.
-    // That is withdrawn, so this goes to the salons they have joined instead.
-    navigate(ROUTES.home);
-  };
+  /* To the salons they have joined, and no further.
+
+     This used to shortcut straight into booking when exactly one salon was
+     nearby, and otherwise open a cross-salon search for somewhere that does
+     this style. Both stood on a directory that no longer exists, and neither
+     could be honest now: nothing links a hairstyle to a price list, so the
+     app cannot say who does this cut. What it can do is show where they
+     already go — the customer asks for the look by name at the counter. */
+  const bookLook = () => navigate(ROUTES.home);
 
   const download = async () => {
     const ok = await downloadGeneration(generation);
@@ -233,20 +222,6 @@ function Preview({ generation }: { generation: AIGeneration }) {
           </div>
         </section>
 
-        <section className="section tryon-chapter">
-          <SectionHead title={t('tryon.prosTitle')} />
-          {prosLoading ? (
-            <CardSkeleton count={2} />
-          ) : pros.length ? (
-            <div className="stack-sm">
-              {pros.map((pro) => (
-                <ProfessionalCard key={pro.id} pro={pro} variant="row" hairstyleId={generation.hairstyleId} bookLabel={t('action.book')} />
-              ))}
-            </div>
-          ) : (
-            <p className="caption">{t('tryon.prosEmpty')}</p>
-          )}
-        </section>
       </ScreenBody>
 
       <StickyFooter>

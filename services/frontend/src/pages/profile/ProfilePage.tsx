@@ -1,4 +1,4 @@
-import { CalendarDays, Heart, LifeBuoy, Mail, MapPin, MessageSquare, Pencil, Phone, Scissors, Settings, Sparkles, UserRound } from 'lucide-react';
+import { CalendarDays, LifeBuoy, Mail, MapPin, MessageSquare, Pencil, Phone, Scissors, Settings, Sparkles, UserRound } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../constants';
 import { LinkButton } from '../../components/common/Button';
@@ -18,7 +18,6 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const user = useAppStore((s) => s.user);
   const bookings = useAppStore((s) => s.bookings);
-  const favorites = useAppStore((s) => s.favorites);
   const t = useT();
   /* Counted off the bookings already loaded rather than fetched again: a
      customer's reviews are exactly the reviews on their own visits, and the
@@ -83,10 +82,6 @@ export default function ProfilePage() {
               <strong>{formatNumber(bookingCount)}</strong>
               <span>{t('profile.statBookings')}</span>
             </Link>
-            <Link to={ROUTES.profileSaved} className="pf-stat">
-              <strong>{formatNumber(favorites.length)}</strong>
-              <span>{t('profile.statSaved')}</span>
-            </Link>
             <Link to={ROUTES.profileReviews} className="pf-stat">
               <strong>{formatNumber(reviewCount)}</strong>
               <span>{t('profile.statReviews')}</span>
@@ -109,7 +104,6 @@ export default function ProfilePage() {
           <h3 className="label" id="pf-more">{t('profile.more')}</h3>
           <ListCard className="pf-list pf-list-flat">
             <ListRow icon={<CalendarDays size={18} aria-hidden="true" />} title={t('profile.myBookings')} end={formatNumber(bookingCount)} to={ROUTES.bookings} />
-            <ListRow icon={<Heart size={18} aria-hidden="true" />} title={t('profile.savedPros')} end={formatNumber(favorites.length)} to={ROUTES.profileSaved} />
             <ListRow icon={<MessageSquare size={18} aria-hidden="true" />} title={t('profile.myReviews')} end={formatNumber(reviewCount)} to={ROUTES.profileReviews} />
             <ListRow icon={<Sparkles size={18} aria-hidden="true" />} title={t('profile.tryOnHistory')} to={ROUTES.tryOnHistory} />
             <ListRow icon={<LifeBuoy size={18} aria-hidden="true" />} title={t('profile.help')} to={ROUTES.help} />

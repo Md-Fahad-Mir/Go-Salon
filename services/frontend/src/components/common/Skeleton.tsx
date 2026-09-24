@@ -26,17 +26,3 @@ export function ListSkeleton({ rows = 3 }: { rows?: number }) {
     </div>
   );
 }
-
-export function CardSkeleton({ count = 3 }: { count?: number }) {
-  return (
-    <div className="stack" aria-hidden="true">
-      {Array.from({ length: count }, (_, index) => (
-        <div key={index} className="card card-pad stack-sm">
-          <Skeleton height="9rem" radius="0.75rem" />
-          <Skeleton width="60%" height="1.125rem" />
-          <Skeleton width="40%" height="0.875rem" />
-        </div>
-      ))}
-    </div>
-  );
-}

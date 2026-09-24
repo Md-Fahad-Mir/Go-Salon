@@ -1,9 +1,9 @@
 import type { Audience, Gender, Hairstyle, Professional, User } from '../types';
 
-/* One rule, used everywhere the catalogue is narrowed: nearby, search, the
-   hairstyle lists, the try-on picker and the recommendations. Keeping it in a
-   single place is what stops the home screen and the search screen quietly
-   disagreeing about what a customer should see. */
+/* One rule, used everywhere the catalogue is narrowed: the hairstyle lists,
+   the try-on picker and the recommendations. Keeping it in a single place is
+   what stops two screens quietly disagreeing about what a customer should
+   see. The salon lists it also narrowed — nearby and search — are gone. */
 
 /** The audience a customer belongs to, or null when they have not said. */
 export const audienceFor = (gender: Gender | undefined): Audience | null =>
@@ -16,8 +16,8 @@ export const servesGender = (audience: Audience, gender: Gender | undefined): bo
   return wanted === null || audience === 'unisex' || audience === wanted;
 };
 
-/** Narrow any audience-bearing list. `override` lets the search screen show
-    the other side on request without losing the customer's own default. */
+/** Narrow any audience-bearing list. `override` shows the other side on
+    request without losing the customer's own default. */
 export const forAudience = <T extends { audience: Audience }>(
   items: T[],
   gender: Gender | undefined,

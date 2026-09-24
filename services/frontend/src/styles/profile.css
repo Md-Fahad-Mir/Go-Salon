@@ -501,8 +501,15 @@
   margin-bottom: var(--space-6);
 }
 
-/* The counts sit under a hairline rather than in a second box. */
+/* The counts sit under a hairline rather than in a second box.
+
+   Two columns, not the base rule's three: the Saved tile went with the Saved
+   screen, and a three-column grid holding two children leaves the pair
+   squeezed left with a dead third of the row. Claimed here rather than by
+   editing the base rule, which `scripts/check-scope.mjs` protects — only the
+   customer renders `.pf-stats`, but the rule is still shared ground. */
 :root[data-app='customer'] .pf-identity .pf-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   overflow: visible;
   border: 0;
   border-radius: 0;

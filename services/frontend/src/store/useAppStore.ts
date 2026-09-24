@@ -23,8 +23,7 @@ import { tenantService } from '../utils/tenantService';
    Who is signed in comes from the backend — this store holds the tokens it
    issued and the account it described, and nothing else decides either.
 
-   The rest (bookings, favourites, try-on history) is still the app's local
-   mock data. It is parked in `archive` under the account's id on sign-out and
+   The rest (bookings, try-on history) is still the app's local mock data. It is parked in `archive` under the account's id on sign-out and
    restored when that account signs back in, so switching accounts on one
    device does not mix two people's screens together.
    -------------------------------------------------------------------------- */
@@ -32,7 +31,6 @@ import { tenantService } from '../utils/tenantService';
 export interface AccountData {
   user: User;
   bookings: Booking[];
-  favorites: string[];
   generations: AIGeneration[];
   notifications: AppNotification[];
   paymentAccounts: PaymentAccount[];
@@ -59,7 +57,6 @@ const welcomeNotification = (): AppNotification => ({
 /** A brand-new account starts empty, with one thing in its inbox. */
 const seedFor = (): Omit<AccountData, 'user'> => ({
   bookings: [],
-  favorites: [],
   generations: [],
   notifications: [welcomeNotification()],
   paymentAccounts: [],
@@ -211,10 +208,6 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   updateBooking: (id: string, patch: Partial<Booking>) => void;
   getBooking: (id: string) => Booking | undefined;
 
-  /* ---- favourites ---- */
-  toggleFavorite: (professionalId: string) => boolean;
-  isFavorite: (professionalId: string) => boolean;
-
   /* ---- try-on ---- */
   addGeneration: (generation: AIGeneration) => void;
   removeGeneration: (id: string) => void;
@@ -244,7 +237,6 @@ export interface AppStore extends Omit<AccountData, 'user'> {
 
 const EMPTY_ACCOUNT: Omit<AccountData, 'user'> = {
   bookings: [],
-  favorites: [],
   generations: [],
   notifications: [],
   paymentAccounts: [],
@@ -293,7 +285,6 @@ export const useAppStore = create<AppStore>()(
           activeTenantId: null,
           tenantsStatus: 'idle',
           bookings: data.bookings,
-          favorites: data.favorites,
           generations: data.generations,
           notifications: data.notifications,
           paymentAccounts: data.paymentAccounts,
@@ -314,7 +305,6 @@ export const useAppStore = create<AppStore>()(
           archive[state.user.id] = {
             user: state.user,
             bookings: state.bookings,
-            favorites: state.favorites,
             generations: state.generations,
             notifications: state.notifications,
             paymentAccounts: state.paymentAccounts,
@@ -483,18 +473,6 @@ export const useAppStore = create<AppStore>()(
 
       getBooking: (id) => get().bookings.find((b) => b.id === id),
 
-      /* ---- favourites ---- */
-      toggleFavorite: (professionalId) => {
-        const favorites = get().favorites;
-        const next = favorites.includes(professionalId)
-          ? favorites.filter((f) => f !== professionalId)
-          : [professionalId, ...favorites];
-        set({ favorites: next });
-        return next.includes(professionalId);
-      },
-
-      isFavorite: (professionalId) => get().favorites.includes(professionalId),
-
       /* ---- try-on ---- */
       addGeneration: (generation) => set({ generations: [generation, ...get().generations] }),
       removeGeneration: (id) => set({ generations: get().generations.filter((g) => g.id !== id) }),
@@ -554,6 +532,14 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: STORAGE_KEYS.app,
+      /* Still 1, and deliberately, after `favorites` was removed.
+         A blob written by an older build still has the key. Nothing reads it,
+         nothing is typed for it, and `partialize` does not write it — so the
+         first time anything touches the store it is written out without it
+         and the key is gone. A version bump would mean a `migrate` that could
+         only do the same thing more riskily: this store holds the session,
+         and a migrate that threw would sign everybody out to tidy a few bytes
+         of dead JSON. */
       version: 1,
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
@@ -574,7 +560,6 @@ export const useAppStore = create<AppStore>()(
         activeTenantId: state.activeTenantId,
         pendingRedirect: state.pendingRedirect,
         bookings: state.bookings,
-        favorites: state.favorites,
         generations: state.generations,
         notifications: state.notifications,
         paymentAccounts: state.paymentAccounts,

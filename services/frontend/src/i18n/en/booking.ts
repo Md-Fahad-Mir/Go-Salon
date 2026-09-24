@@ -1,10 +1,6 @@
 /* booking screens — English copy. */
 export const booking = {
   /* Professional detail */
-  'booking.unsave': 'Remove from saved',
-  'booking.savedToast': 'Saved',
-  'booking.unsavedToast': 'Removed from saved',
-  'booking.savedToastBody': '{name} is in your saved list.',
   'booking.proPhotos': '{name} photos',
   'booking.proPhotoAlt': '{name} photo {index}',
   'booking.proShareText': '{name} on Eureka — {tagline}',
@@ -222,7 +218,6 @@ export const booking = {
   'booking.copied': 'Copied',
   'booking.copiedBody': 'The details are on your clipboard.',
   'booking.viewBookings': 'View bookings',
-  'biz.coverAlt': '{name}',
   'biz.newHere': 'New here',
   'biz.noPricesYet': 'No prices listed yet',
   'booking.noReviewsYet': 'No reviews yet',

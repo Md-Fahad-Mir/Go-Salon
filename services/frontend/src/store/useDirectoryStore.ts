@@ -4,26 +4,23 @@ import { STORAGE_KEYS } from '../constants';
 import type { Professional, Service, StaffMember } from '../types';
 import type { DirectoryDetail } from '../utils/directoryService';
 
-/* Every salon and barber this device has seen.
+/* Every salon this device has opened.
 
-   The directory is fetched, but half the customer app looks a professional up
-   *by id, synchronously* — a saved card, a booking in the history, the wizard
-   working out what is on the menu. Those screens have no business each firing
-   their own request, and a booking made last week still has to render its
-   salon's name today.
+   One writer now — `rememberDetail`, from the one listing read that survives
+   — because the browsable directory that used to fill this in bulk is gone.
+   The readers are unchanged and are why it still exists: half the customer
+   app looks a salon up *by id, synchronously*, and a booking made last week
+   still has to render its salon's name today without firing a request to do
+   it.
 
-   So whatever the directory hands back is kept here, and the lookups below
-   read from it. It is persisted for the same reason: a favourite has to
-   survive a reload, and re-fetching every provider on boot to render one card
-   would be worse than remembering them. */
+   Persisted for that reason: re-fetching a salon on boot to put its name on
+   one card would be worse than remembering it. */
 
 interface DirectoryState {
   byId: Record<string, Professional>;
   servicesById: Record<string, Service[]>;
   staffById: Record<string, StaffMember[]>;
 
-  /** Keeps every listing a search or a nearby call returned. */
-  remember: (list: Professional[]) => void;
   /** Keeps a full listing, with the menu and the chairs that came with it. */
   rememberDetail: (detail: DirectoryDetail) => void;
   clear: () => void;
@@ -35,18 +32,6 @@ export const useDirectoryStore = create<DirectoryState>()(
       byId: {},
       servicesById: {},
       staffById: {},
-
-      remember: (list) =>
-        set((state) => {
-          if (list.length === 0) return {};
-          const byId = { ...state.byId };
-          for (const pro of list) {
-            // A list row carries less than a detail row, so what is already
-            // known is kept and only refreshed where the list is newer.
-            byId[pro.id] = { ...byId[pro.id], ...pro };
-          }
-          return { byId };
-        }),
 
       rememberDetail: ({ professional, services, staff }) =>
         set((state) => ({

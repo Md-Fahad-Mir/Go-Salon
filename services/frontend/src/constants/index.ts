@@ -33,7 +33,6 @@ export const ROUTES = {
      screen is where a signed-in admin is pointed at them. */
   adminHome: '/admin-console',
   home: '/home',
-  search: '/search',
   notifications: '/notifications',
   hairstyle: (id: string) => `/hairstyle/${id}`,
   professional: (id: string) => `/professional/${id}`,
@@ -86,7 +85,6 @@ export const ROUTES = {
   profile: '/profile',
   profileEdit: '/profile/edit',
   profileReviews: '/profile/reviews',
-  profileSaved: '/profile/saved',
   profileSettings: '/profile/settings',
   help: '/profile/help',
   terms: '/profile/terms',

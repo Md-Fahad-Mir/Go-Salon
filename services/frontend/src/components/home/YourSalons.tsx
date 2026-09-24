@@ -50,9 +50,8 @@ export function YourSalons() {
         <h2 id="home-salons">{t('tenant.homeTitle')}</h2>
         {/* Where F3b's scanner button belongs once it exists. Until then this
             says what to do rather than offering a control that is not built,
-            and it deliberately links nowhere: the only other place it could
-            point is the search screen, which no longer works for a salon
-            somebody has not joined. */}
+            and it deliberately links nowhere: there is no longer any screen
+            that shows a salon somebody has not joined. */}
         <EmptyState
           icon={<QrCode size={26} aria-hidden="true" />}
           tone="accent"

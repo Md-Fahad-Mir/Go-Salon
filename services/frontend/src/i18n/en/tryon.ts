@@ -133,8 +133,6 @@ export const tryon = {
   'tryon.like': 'Like',
   'tryon.liked': 'Liked',
   'tryon.notForMe': 'Not for me',
-  'tryon.prosTitle': 'Professionals who do this',
-  'tryon.prosEmpty': 'No one nearby lists this style yet. Search salons and ask for it by name.',
   'tryon.tryAnother': 'Try another',
   'tryon.bookLook': 'Book this look',
   'tryon.tryAnotherStyle': 'Try another style',

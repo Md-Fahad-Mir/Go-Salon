@@ -47,7 +47,7 @@ Any Bangladeshi mobile number works and the OTP is always `123456`.
 
 | Number | What you get |
 |---|---|
-| `01700 000000` | Ahmed Hassan — a returning customer with bookings, favourites, reviews and notifications |
+| `01700 000000` | Ahmed Hassan — a returning customer with bookings, reviews and notifications |
 | any other | The registration flow, then an empty account with 3 free try-on credits |
 
 Both constants live in `src/constants/index.ts` (`DEMO_PHONE`, `DEMO_OTP`).
@@ -80,12 +80,12 @@ src/
     layout/     AppFrame, Screen, Header, BottomNavigation, StickyFooter
     common/     Button, Input, PhoneInput, OTPInput, Card, Modal, BottomSheet,
                 ActionSheet, Calendar, TimeSlots, Carousel, Art, Rating,
-                ProfessionalCard, HairstyleCard, EmptyState, Toaster, …
-    auth/ home/ search/ booking/ ai-tryon/ profile/   screen-specific pieces
+                HairstyleCard, EmptyState, Toaster, …
+    auth/ home/ booking/ ai-tryon/ profile/   screen-specific pieces
     ErrorBoundary.tsx, RouteGuards.tsx, ScrollToTop.tsx
   pages/        one file per route (auth/, booking/, tryon/, profile/)
-  hooks/        useAuth, useBooking, useCamera, useGeolocation, useNearby,
-                usePhotoUrl, useCountdown, useDebounce, useOnline, useUi
+  hooks/        useAuth, useBooking, useCamera, useGeolocation,
+                usePhotoUrl, useCountdown, useOnline, useUi
   store/        useAppStore (session + account data), useBookingStore (wizard
                 draft), useTryOnStore (try-on session)
   mockData/     hairstyles, professionals + staff + services, reviews, bookings,
@@ -204,8 +204,9 @@ the customer-facing directory all come from the backend now.
 ## State and persistence
 
 `useAppStore` holds the session and everything belonging to the signed-in
-account: bookings, favourites, generations, reviews, notifications, payment
-accounts and preferences. Signing out parks that data in an `archive` keyed by
+account: bookings, generations, reviews, notifications, payment accounts and
+preferences. It also holds the salons the customer has joined, which is server
+state rather than demo data. Signing out parks that data in an `archive` keyed by
 user id and restores it when the same number signs back in, so the demo behaves
 like an account without a server.
 

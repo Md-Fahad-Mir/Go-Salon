@@ -141,13 +141,12 @@ export const profile = {
 
   /* ---- Profile ---- */
   'profile.signedOutTitle': 'আপনি লগ আউট আছেন',
-  'profile.signedOutBody': 'বুকিং আর সেভ করা স্যালন দেখতে সাইন ইন করুন।',
+  'profile.signedOutBody': 'আপনার বুকিং আর যোগ দেওয়া স্যালনগুলো দেখতে সাইন ইন করুন।',
   'profile.signedOutEditBody': 'প্রোফাইল এডিট করতে সাইন ইন করুন।',
   'profile.signIn': 'সাইন ইন',
   'profile.settingsTitle': 'সেটিংস',
   'profile.activityLabel': 'আপনার কার্যক্রম',
   'profile.statBookings': 'বুকিং',
-  'profile.statSaved': 'সেভ করা',
   'profile.statReviews': 'রিভিউ',
   'profile.account': 'অ্যাকাউন্ট',
   'profile.memberSince': 'কাস্টমার · {date} থেকে আছেন',
@@ -160,7 +159,6 @@ export const profile = {
   'profile.location': 'লোকেশন',
   'profile.more': 'আরও',
   'profile.myBookings': 'আমার বুকিং',
-  'profile.savedPros': 'সেভ করা স্যালন',
   'profile.myReviews': 'আমার রিভিউ',
   'profile.tryOnHistory': 'ট্রাই-অন হিস্ট্রি',
   'profile.help': 'সহায়তা',
@@ -211,16 +209,6 @@ export const profile = {
   'profile.reviewsNewest_one': '{count}টি রিভিউ · নতুনগুলো আগে',
   'profile.reviewsNewest_other': '{count}টি রিভিউ · নতুনগুলো আগে',
   'profile.reviewsListLabel': 'আপনার রিভিউ',
-
-  /* ---- Saved ---- */
-  'profile.savedTitle': 'সেভ করা',
-  'profile.nothingSavedTitle': 'এখনো কিছু সেভ করা নেই',
-  'profile.nothingSavedBody': 'স্যালনের হার্টে চাপ দিলে সেটি এখানে জমা থাকবে।',
-  'profile.explore': 'ঘুরে দেখুন',
-  'profile.savedCount_one': '{count}টি সেভ করা স্যালন',
-  'profile.savedCount_other': '{count}টি সেভ করা স্যালন',
-  'profile.removeFromSaved': '{name} সেভ থেকে সরান',
-  'profile.removedFromSaved': 'সেভ থেকে সরানো হয়েছে',
 
   /* ---- Help & support ---- */
   'profile.talkToUs': 'আমাদের সাথে কথা বলুন',

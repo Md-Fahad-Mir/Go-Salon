@@ -32,9 +32,7 @@ export const NAV_TABS: Record<UserRole, NavTab[]> = {
     /* Four, not five. The Search tab led to the cross-salon directory, which
        is withdrawn — and since Step 6g a customer can only read a salon they
        have joined, so the screen behind it now refuses most of what it lists.
-       Home is the honest entry point: the salons they can actually book at.
-       The screen itself is left in place for F5c to delete; this only stops
-       the app pointing at it. */
+       Home is the honest entry point: the salons they can actually book at. */
     { to: ROUTES.home, labelKey: 'nav.home', icon: Home, match: ['/home', '/hairstyle', '/professional', '/notifications'] },
     { to: ROUTES.tryOn, labelKey: 'nav.tryOn', icon: Sparkles, match: ['/ai-tryon'], hero: true },
     { to: ROUTES.bookings, labelKey: 'nav.bookings', icon: CalendarDays, match: ['/bookings', '/booking'] },

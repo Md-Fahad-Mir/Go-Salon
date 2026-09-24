@@ -1,10 +1,6 @@
 /* booking screens — Bangla copy. */
 export const booking = {
   /* Professional detail */
-  'booking.unsave': 'সেভ থেকে সরান',
-  'booking.savedToast': 'সেভ হয়েছে',
-  'booking.unsavedToast': 'সেভ থেকে সরানো হয়েছে',
-  'booking.savedToastBody': '{name} আপনার সেভ তালিকায় আছে।',
   'booking.proPhotos': '{name}-এর ছবি',
   'booking.proPhotoAlt': '{name}-এর ছবি {index}',
   'booking.proShareText': 'ইউরেকায় {name} — {tagline}',
@@ -222,7 +218,6 @@ export const booking = {
   'booking.copied': 'কপি হয়েছে',
   'booking.copiedBody': 'তথ্যগুলো ক্লিপবোর্ডে আছে।',
   'booking.viewBookings': 'বুকিং দেখুন',
-  'biz.coverAlt': '{name}',
   'biz.newHere': 'নতুন',
   'biz.noPricesYet': 'এখনও রেট দেওয়া হয়নি',
   'booking.noReviewsYet': 'এখনও কোনো রিভিউ নেই',

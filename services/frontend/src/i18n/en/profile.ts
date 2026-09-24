@@ -141,13 +141,12 @@ export const profile = {
 
   /* ---- Profile ---- */
   'profile.signedOutTitle': "You're signed out",
-  'profile.signedOutBody': 'Sign in to see your bookings and saved salons.',
+  'profile.signedOutBody': 'Sign in to see your bookings and the salons you have joined.',
   'profile.signedOutEditBody': 'Sign in to edit your profile.',
   'profile.signIn': 'Sign in',
   'profile.settingsTitle': 'Settings',
   'profile.activityLabel': 'Your activity',
   'profile.statBookings': 'Bookings',
-  'profile.statSaved': 'Saved',
   'profile.statReviews': 'Reviews',
   'profile.account': 'Account',
   'profile.memberSince': 'Customer · Member since {date}',
@@ -162,7 +161,6 @@ export const profile = {
   'profile.location': 'Location',
   'profile.more': 'More',
   'profile.myBookings': 'My bookings',
-  'profile.savedPros': 'Saved professionals',
   'profile.myReviews': 'My reviews',
   'profile.tryOnHistory': 'Try-on history',
   'profile.help': 'Help & support',
@@ -213,16 +211,6 @@ export const profile = {
   'profile.reviewsNewest_one': '{count} review · newest first',
   'profile.reviewsNewest_other': '{count} reviews · newest first',
   'profile.reviewsListLabel': 'Your reviews',
-
-  /* ---- Saved ---- */
-  'profile.savedTitle': 'Saved',
-  'profile.nothingSavedTitle': 'Nothing saved yet',
-  'profile.nothingSavedBody': 'Tap the heart on a salon to keep it here.',
-  'profile.explore': 'Explore',
-  'profile.savedCount_one': '{count} saved professional',
-  'profile.savedCount_other': '{count} saved professionals',
-  'profile.removeFromSaved': 'Remove {name} from saved',
-  'profile.removedFromSaved': 'Removed from saved',
 
   /* ---- Help & support ---- */
   'profile.talkToUs': 'Talk to us',

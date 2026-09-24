@@ -6,7 +6,6 @@ export const common = {
   'app.tagline': 'কাটার আগেই দেখে নিন।',
 
   'nav.home': 'হোম',
-  'nav.search': 'খুঁজুন',
   'nav.tryOn': 'ট্রাই অন',
   'nav.bookings': 'বুকিং',
   'nav.profile': 'প্রোফাইল',
@@ -24,7 +23,6 @@ export const common = {
   'action.retry': 'আবার চেষ্টা করুন',
   'action.seeAll': 'সব দেখুন',
   'action.viewAll': 'সব দেখুন',
-  'action.book': 'বুক করুন',
   'action.bookNow': 'এখনই বুক করুন',
   'action.call': 'কল',
   'action.directions': 'পথ দেখুন',

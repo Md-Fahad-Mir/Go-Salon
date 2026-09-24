@@ -46,7 +46,7 @@ export function Header({
 
   /* History first. `backTo` used to win here, which meant every screen that
      named one threw away where the person actually came from — tap a salon
-     from a scrolled search, press Back, land at the top of somewhere else. */
+     from a scrolled list, press Back, land at the top of somewhere else. */
   const handleBack = () => {
     if (onBack) return onBack();
     if (canPop) return navigate(-1);

@@ -6,7 +6,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Heart,
   Mail,
   MapPin,
   Navigation,
@@ -76,8 +75,6 @@ export default function ProfessionalDetailPage() {
   const hairstyleId = (location.state as { hairstyleId?: string } | null)?.hairstyleId;
   const hoursId = useId();
 
-  const saved = useAppStore((s) => s.favorites.includes(id));
-  const toggleFavorite = useAppStore((s) => s.toggleFavorite);
   const toast = useAppStore((s) => s.toast);
   const userLocation = useAppStore((s) => s.user?.location);
   const start = useBookingStore((s) => s.start);
@@ -149,14 +146,6 @@ export default function ProfessionalDetailPage() {
     start(pro.id, { staffId, serviceIds: [], hairstyleId });
     navigate(ROUTES.bookingStaff(pro.id));
   };
-  const onSave = () => {
-    const nowSaved = toggleFavorite(pro.id);
-    toast(
-      'success',
-      nowSaved ? t('booking.savedToast') : t('booking.unsavedToast'),
-      nowSaved ? t('booking.savedToastBody', { name: pro.name }) : undefined,
-    );
-  };
   const onShare = async () => {
     const result = await shareOrCopy({
       title: pro.name,
@@ -173,19 +162,13 @@ export default function ProfessionalDetailPage() {
         back
         transparent
         actions={
-          <>
-            <IconButton
-              label={saved ? t('booking.unsave') : t('action.save')}
-              variant="scrim"
-              active={saved}
-              onClick={onSave}
-            >
-              <Heart size={20} fill={saved ? 'currentColor' : 'none'} />
-            </IconButton>
-            <IconButton label={t('action.share')} variant="scrim" onClick={onShare}>
-              <Share2 size={20} />
-            </IconButton>
-          </>
+          /* The heart went with Saved. Favourites were a shortlist across
+             salons a customer had not joined, which is the shape of thing
+             this app no longer has — the salons they belong to *are* the
+             list, and they are on Home. */
+          <IconButton label={t('action.share')} variant="scrim" onClick={onShare}>
+            <Share2 size={20} />
+          </IconButton>
         }
       />
       <ScreenBody flush>

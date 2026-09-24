@@ -5,7 +5,6 @@ export const common = {
   'app.tagline': 'See the cut before the cut.',
 
   'nav.home': 'Home',
-  'nav.search': 'Search',
   'nav.tryOn': 'Try on',
   'nav.bookings': 'Bookings',
   'nav.profile': 'Profile',
@@ -23,7 +22,6 @@ export const common = {
   'action.retry': 'Try again',
   'action.seeAll': 'See all',
   'action.viewAll': 'View all',
-  'action.book': 'Book',
   'action.bookNow': 'Book now',
   'action.call': 'Call',
   'action.directions': 'Directions',

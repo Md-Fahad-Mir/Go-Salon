@@ -30,7 +30,7 @@ import { CREDIT_PACK_SIZE } from '../constants';
 import { mockHairstyles } from '../mockData';
 import { useDirectoryStore } from '../store/useDirectoryStore';
 import { bookingService } from './bookingService';
-import { directoryService, type DirectoryFilters } from './directoryService';
+import { directoryService } from './directoryService';
 import {
   analyzePhoto,
   generateHairstyle,
@@ -46,36 +46,13 @@ const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 export { ApiError } from './apiError';
 export { isRetryable } from './apiError';
 
-/** A listing with the distance worked out. The server computes it from the
-    point the caller sends, so it is undefined when either end has no pin. */
-export type NearbyProfessional = Professional;
-
-export type SearchFilters = DirectoryFilters;
 
 export const api = {
   professionals: {
-    /** The closest places to a point. Used by the home screen's shortlist. */
-    async nearby(
-      point: GeoPoint,
-      limit = 10,
-      audience?: Audience | 'all',
-    ): Promise<NearbyProfessional[]> {
-      const list = await directoryService.list(point, { audience, sort: 'distance', limit });
-      useDirectoryStore.getState().remember(list);
-      return list;
-    },
-
-    /** The search screen. Every filter here is applied by the server, so the
-        client never has to pull the whole catalogue down to narrow it. */
-    async search(point: GeoPoint, filters: SearchFilters): Promise<NearbyProfessional[]> {
-      const list = await directoryService.list(point, filters);
-      useDirectoryStore.getState().remember(list);
-      return list;
-    },
-
-    /** One listing, with its menu and its chairs. Everything it returns is
-        cached, which is what lets the booking wizard and the saved list look a
-        professional up by id without a request of their own. */
+    /** One salon, with its menu and its chairs — the booking wizard's only
+        source for any of it. Everything it returns is cached, which is what
+        lets a booking in the history render its salon's name without a
+        request of its own. */
     async get(id: string, point?: GeoPoint): Promise<Professional> {
       const detail = await directoryService.get(id, point);
       useDirectoryStore.getState().rememberDetail(detail);
