@@ -34,4 +34,21 @@ export const tenant = {
   'tenant.homeEmptyTitle': 'No salons yet',
   'tenant.homeEmptyBody': 'Scan the QR code in a salon to add it here. Ask at the counter — every salon on Eureka has one.',
   'tenant.bookAt': 'Book at {name}',
+
+  /* The shop's own QR code, on the owner's salon screen. */
+  'tenant.qrTitle': 'Your QR code',
+  'tenant.qrHint': 'Customers scan this to add your salon. Print it and keep it where they can reach it — the counter, the mirror, the door.',
+  'tenant.qrAlt': 'The QR code customers scan to add your salon',
+  'tenant.qrSave': 'Save the image',
+  'tenant.qrSaved': 'Saved to your device',
+  'tenant.qrErrTitle': 'We could not load your code',
+  'tenant.qrRegenerate': 'Make a new code',
+  'tenant.qrRegenerateTitle': 'Make a new code?',
+  'tenant.qrRegenerateBody': 'Every printed copy of your current code stops working the moment you do this. Anyone who scans one will be told it is not valid, and you will need to print and put up the new one everywhere the old one is. Customers who have already joined stay joined.',
+  /* Distinct from the button that opens the dialog, so the two are never the
+     same accessible name on screen at once — the same split F4b uses between
+     "Remove a salon" and "Remove". */
+  'tenant.qrRegenerateConfirm': 'Replace the code',
+  'tenant.qrRegenerated': 'Your new code is ready',
+  'tenant.qrRegenerateFailed': 'We could not make a new code. Your current one still works.',
 } as const;

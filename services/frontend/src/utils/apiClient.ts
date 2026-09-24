@@ -21,6 +21,9 @@ export interface RequestOptions {
   /** Send without the Authorization header: sign-in, sign-up, reset. */
   anonymous?: boolean;
   signal?: AbortSignal;
+  /** What the caller will accept back. Defaults to JSON, which is what every
+      endpoint but the QR code answers with. */
+  accept?: string;
 }
 
 interface ApiErrorBody {
@@ -225,7 +228,7 @@ function withRefresh(): Promise<string | null> {
 }
 
 async function send(path: string, options: RequestOptions, token: string | null): Promise<Response> {
-  const headers: Record<string, string> = { Accept: 'application/json' };
+  const headers: Record<string, string> = { Accept: options.accept ?? 'application/json' };
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
 
@@ -252,8 +255,10 @@ async function send(path: string, options: RequestOptions, token: string | null)
   });
 }
 
-/** Make a call. Resolves with the parsed body, throws `ApiValidationError`. */
-export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+/** The half every caller shares: the token on the request, one refresh if it
+    has expired, and the replay. What comes back is still a raw `Response`,
+    because what to do with the body depends on what was asked for. */
+async function exchange(path: string, options: RequestOptions): Promise<Response> {
   const token = options.anonymous ? null : useAppStore.getState().accessToken;
 
   let response: Response;
@@ -276,9 +281,46 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     }
   }
 
+  return response;
+}
+
+/** Make a call. Resolves with the parsed body, throws `ApiValidationError`. */
+export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const response = await exchange(path, options);
   const body = await parse(response);
   if (!response.ok) throw toError(response, body);
   return body as T;
+}
+
+/** Fetch binary. One endpoint needs this — the salon's QR code, which answers
+    with a PNG — and it is worth saying why it is not simply `request`.
+
+    A refusal from that endpoint is still JSON. `TenantContext` and `OwnsTenant`
+    raise DRF exceptions, which `Apps/users/exceptions.py` renders as
+    `{detail, code, errors}` like every other refusal in the API, so the whole
+    typed-error path above applies unchanged to the failure case. It is only
+    *success* that is not JSON. Parsing the body by status rather than by
+    endpoint is what lets a 403 here still arrive as a `TenantError`.
+
+    A 200 that is not an image is treated as a failure rather than handed back:
+    a proxy's sign-in page or an HTML error wrapper would otherwise reach an
+    `<img>` as a blob and render as a broken icon with nothing to explain it. */
+export async function requestBlob(path: string, options: RequestOptions = {}): Promise<Blob> {
+  const response = await exchange(path, { ...options, accept: options.accept ?? 'image/png' });
+
+  if (!response.ok) {
+    throw toError(response, await parse(response));
+  }
+
+  const blob = await response.blob();
+  if (!blob.type.startsWith('image/')) {
+    throw new ApiValidationError(
+      'not_an_image',
+      'That did not come back as an image.',
+      response.status,
+    );
+  }
+  return blob;
 }
 
 export const api = {

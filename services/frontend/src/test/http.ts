@@ -16,7 +16,24 @@ export const sent: Recorded[] = [];
 
 export const lastRequest = (): Recorded | undefined => sent[sent.length - 1];
 
-export type Answer = { status: number; body?: unknown } | 'unreachable';
+export type Answer =
+  | { status: number; body?: unknown }
+  /** A binary answer, for the one endpoint that sends a PNG. */
+  | { status: number; blob: Blob }
+  | 'unreachable';
+
+const respond = (answer: Exclude<Answer, 'unreachable'>): Response => {
+  if ('blob' in answer) {
+    return new Response(answer.blob, {
+      status: answer.status,
+      headers: { 'content-type': answer.blob.type || 'image/png' },
+    });
+  }
+  return new Response(answer.body === undefined ? null : JSON.stringify(answer.body), {
+    status: answer.status,
+    headers: answer.body === undefined ? {} : { 'content-type': 'application/json' },
+  });
+};
 
 /** Queue up what the server will say, in order. A call past the end of the
     queue fails loudly rather than reusing the last answer, so a test cannot
@@ -35,10 +52,7 @@ export function serve(...answers: Answer[]): void {
       const answer = queue.shift();
       if (answer === undefined) throw new Error(`unexpected request: ${String(input)}`);
       if (answer === 'unreachable') throw new TypeError('Failed to fetch');
-      return new Response(answer.body === undefined ? null : JSON.stringify(answer.body), {
-        status: answer.status,
-        headers: answer.body === undefined ? {} : { 'content-type': 'application/json' },
-      });
+      return respond(answer);
     }),
   );
 }
@@ -73,10 +87,7 @@ export function route(table: Array<[match: string, answer: Answer]>): void {
       if (!hit) throw new Error(`unexpected request: ${url}`);
       const answer = hit[1];
       if (answer === 'unreachable') throw new TypeError('Failed to fetch');
-      return new Response(answer.body === undefined ? null : JSON.stringify(answer.body), {
-        status: answer.status,
-        headers: answer.body === undefined ? {} : { 'content-type': 'application/json' },
-      });
+      return respond(answer);
     }),
   );
 }

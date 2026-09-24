@@ -21,7 +21,7 @@
    comes from the endpoint that already scopes it. */
 
 import type { Tenant } from '../types';
-import { api } from './apiClient';
+import { api, requestBlob } from './apiClient';
 
 /** The wire shape. `listing_id` is snake_case on the wire and camel in the
     app, which is the only field here that needs translating at all. */
@@ -62,6 +62,21 @@ export const tenantService = {
       "never show this one again" list would be a second opinion about
       membership, and it would be wrong the moment somebody re-scanned. */
   leave: (tenantId: number) => api.delete<null>(`/tenants/mine/${tenantId}/`),
+
+  /** `GET /api/salon/qr/` — the shop's own code, as a PNG.
+
+      Owner-only, and about whichever salon `X-Tenant-Id` names, so an owner
+      of two shops gets the code for the one the switcher has active. Made on
+      the way out and stored nowhere: the image is a pure function of the
+      token, and the server sends `Cache-Control: no-store` because the token
+      can rotate at any moment. Nothing here caches it either. */
+  qr: () => requestBlob('/salon/qr/'),
+
+  /** `POST /api/salon/qr/regenerate/` — a new token, and the new code.
+
+      Every printed copy of the old one stops working. Answers with the fresh
+      PNG, so the screen never has to re-ask for what it just changed. */
+  regenerateQr: () => requestBlob('/salon/qr/regenerate/', { method: 'POST' }),
 
   /** `POST /api/tenants/join/` — the token printed in a shop's QR code.
 

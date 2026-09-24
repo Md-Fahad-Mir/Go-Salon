@@ -23,6 +23,7 @@ import { Callout } from '../../components/common/Callout';
 import { Carousel } from '../../components/common/Carousel';
 import { EmptyState } from '../../components/common/EmptyState';
 import { ListCard, ListRow } from '../../components/common/ListRow';
+import { SalonQRSection } from '../../components/provider/salon/SalonQRSection';
 import { Price } from '../../components/common/Price';
 import { Rating } from '../../components/common/Rating';
 import { Spinner } from '../../components/common/Spinner';
@@ -212,6 +213,14 @@ export default function SalonProfilePage() {
             <span>{priceFrom === null ? t('salon.noPrices') : t('salon.glanceFrom')}</span>
           </div>
         </div>
+
+        {/* --- The code customers scan ---------------------------------------- */}
+        {/* Here rather than on a screen of its own: it is a fact about this
+            salon, like its number and its hours, and this page is where an
+            owner comes to look after those. It also inherits this page's
+            answer to "which salon" for free — every request from here carries
+            the active tenant. */}
+        <SalonQRSection />
 
         {/* --- Contact ------------------------------------------------------ */}
         <section className="section" aria-labelledby="sp-contact">
