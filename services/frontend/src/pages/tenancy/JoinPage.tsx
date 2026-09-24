@@ -12,7 +12,6 @@ import { useT } from '../../hooks/useLanguage';
 import { useAppStore } from '../../store/useAppStore';
 import { ApiValidationError } from '../../utils/apiClient';
 import type { Tenant } from '../../types';
-import { tenantService } from '../../utils/tenantService';
 
 /* What a shop's QR code opens.
 
@@ -88,19 +87,15 @@ export default function JoinPage() {
 
   useEffect(() => {
     if (!mayJoin) return;
-    inFlight.current ??= tenantService.join(token);
+    // The store's action, not the service call: the scanner joins through the
+    // same one, so what a token does after it is captured cannot differ
+    // between a code the phone's camera opened and one scanned in the app.
+    inFlight.current ??= useAppStore.getState().joinTenant(token);
 
     let live = true;
     void inFlight.current.then(
       (joined) => {
         if (!live) return;
-        const store = useAppStore.getState();
-        // Fold the answer in rather than re-reading the whole list: the
-        // server just told us what this salon is, and `setTenants` runs the
-        // same reconcile either way. Then make it active, because scanning a
-        // code in a shop is someone saying "this one, now".
-        store.setTenants([...store.tenants.filter((s) => s.id !== joined.id), joined]);
-        store.setActiveTenant(joined.id);
         setJoined(joined);
         setPhase('joined');
       },

@@ -44,6 +44,12 @@ const open = () =>
 describe('a customer with salons', () => {
   beforeEach(() => store().setTenants([ALPHA, BETA]));
 
+  it('offers the scanner under the list, for one more salon', () => {
+    open();
+    expect(screen.getByRole('link', { name: 'Add a salon' }))
+      .toHaveAttribute('href', '/join-salon');
+  });
+
   it('lists every salon they have joined', () => {
     open();
     expect(screen.getByText('Aurora Salon')).toBeInTheDocument();
@@ -87,15 +93,17 @@ describe('a customer with salons', () => {
 });
 
 describe('a customer with no salons', () => {
-  it('says how to add one, and links nowhere', () => {
+  it('says how to add one, and offers the scanner', () => {
     store().setTenants([]);
     const { container } = open();
 
     expect(screen.getByText('No salons yet')).toBeInTheDocument();
     expect(screen.getByText(/Scan the QR code in a salon/)).toBeInTheDocument();
-    // Nothing to offer until F3b builds the scanner — and the only other
-    // screen this could have pointed at is the withdrawn search.
-    expect(container.querySelectorAll('a')).toHaveLength(0);
+    // The one way out of this state, and the only link on it: there is no
+    // screen that shows a salon somebody has not joined.
+    expect(screen.getByRole('link', { name: 'Add a salon' }))
+      .toHaveAttribute('href', '/join-salon');
+    expect(container.querySelectorAll('a')).toHaveLength(1);
   });
 });
 

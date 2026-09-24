@@ -175,6 +175,13 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   /** Re-reads the list from the server, for the one role that has one.
       Safe to call for anybody: it decides for itself whether to ask. */
   loadTenants: () => Promise<void>;
+  /** Joins a salon from the token printed in its QR code, and makes it the
+      active one. Resolves with the salon; throws what the client threw.
+
+      Shared on purpose. Two things capture a token — the URL a phone's camera
+      app opens, and the in-app scanner — and what happens *after* the token is
+      captured has to be the same either way, or the two paths drift. */
+  joinTenant: (joinToken: string) => Promise<Tenant>;
   /** Leaves a salon. Resolves true when the server agreed.
 
       Customers only — the endpoint is theirs, and owning a shop is not
@@ -378,6 +385,18 @@ export const useAppStore = create<AppStore>()(
         }
         if (!get().tenants.some((t) => t.id === id)) return;
         set({ activeTenantId: id });
+      },
+
+      joinTenant: async (joinToken) => {
+        const joined = await tenantService.join(joinToken);
+        // Fold the answer in rather than re-reading the whole list: the server
+        // just told us what this salon is, and `setTenants` runs the same
+        // reconcile either way. Then make it active, because scanning a code
+        // in a shop is somebody saying "this one, now".
+        const { tenants, setTenants, setActiveTenant } = get();
+        setTenants([...tenants.filter((salon) => salon.id !== joined.id), joined]);
+        setActiveTenant(joined.id);
+        return joined;
       },
 
       /** Drops one salon from the list, once the server has agreed to it.

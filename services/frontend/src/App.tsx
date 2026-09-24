@@ -88,6 +88,9 @@ const TreatmentsPage = lazy(() => import('./pages/provider/TreatmentsPage'));
 const LookbookPage = lazy(() => import('./pages/provider/LookbookPage'));
 
 const JoinPage = lazy(() => import('./pages/tenancy/JoinPage'));
+/* Its own chunk, and the reason this one matters: the QR decoder rides in it,
+   and a customer who never scans anything never downloads it. */
+const ScanJoinPage = lazy(() => import('./pages/tenancy/ScanJoinPage'));
 
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const LegalPage = lazy(() => import('./pages/profile/LegalPage'));
@@ -162,6 +165,12 @@ export default function App() {
 
                     <Route path="/bookings" element={<BookingsPage />} />
                     <Route path="/bookings/:id" element={<BookingDetailPage />} />
+
+                    {/* Customer-only and signed-in: the scanner joins on
+                        behalf of the account using it. The URL a phone's
+                        camera opens is unguarded by contrast, because whoever
+                        scans it may have no account yet. */}
+                    <Route path="/join-salon" element={<ScanJoinPage />} />
 
                     <Route path="/ai-tryon" element={<TryOnHomePage />} />
                     <Route path="/ai-tryon/capture-360" element={<Capture360Page />} />

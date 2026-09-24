@@ -35,6 +35,18 @@ export const tenant = {
   'tenant.homeEmptyBody': 'Scan the QR code in a salon to add it here. Ask at the counter — every salon on Eureka has one.',
   'tenant.bookAt': 'Book at {name}',
 
+  /* The in-app scanner. */
+  'tenant.scanTitle': 'Add a salon',
+  'tenant.scanHint': 'Point your camera at the salon’s QR code.',
+  'tenant.scanAddSalon': 'Add a salon',
+  'tenant.scanCameraLabel': 'Camera, looking for a salon’s QR code',
+  'tenant.scanStarting': 'Opening the camera…',
+  'tenant.scanNotOurs': 'That is not a salon code. Try the one on the counter.',
+  'tenant.scanDeniedTitle': 'The camera is switched off',
+  'tenant.scanDeniedBody': 'Allow camera access in your browser settings, then come back. You can also scan the code with your phone’s own camera app — it opens the salon straight away.',
+  'tenant.scanUnsupportedTitle': 'This browser cannot open the camera',
+  'tenant.scanUnsupportedBody': 'Scan the code with your phone’s own camera app instead — it opens the salon straight away.',
+
   /* The shop's own QR code, on the owner's salon screen. */
   'tenant.qrTitle': 'Your QR code',
   'tenant.qrHint': 'Customers scan this to add your salon. Print it and keep it where they can reach it — the counter, the mirror, the door.',

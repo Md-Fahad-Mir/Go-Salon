@@ -1,11 +1,12 @@
-import { AlertTriangle, ChevronRight, QrCode } from 'lucide-react';
+import { AlertTriangle, ChevronRight, Plus, QrCode } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../constants';
 import { useT } from '../../hooks/useLanguage';
 import { useAppStore } from '../../store/useAppStore';
 import { Avatar } from '../common/Avatar';
-import { Button } from '../common/Button';
+import { Button, LinkButton } from '../common/Button';
 import { EmptyState } from '../common/EmptyState';
+import { ListRow } from '../common/ListRow';
 
 /* The salons a customer can book at, and the way in to booking one.
 
@@ -48,15 +49,14 @@ export function YourSalons() {
     return (
       <section className="section home-section" aria-labelledby="home-salons">
         <h2 id="home-salons">{t('tenant.homeTitle')}</h2>
-        {/* Where F3b's scanner button belongs once it exists. Until then this
-            says what to do rather than offering a control that is not built,
-            and it deliberately links nowhere: there is no longer any screen
-            that shows a salon somebody has not joined. */}
         <EmptyState
           icon={<QrCode size={26} aria-hidden="true" />}
           tone="accent"
           title={t('tenant.homeEmptyTitle')}
           description={t('tenant.homeEmptyBody')}
+          action={
+            <LinkButton to={ROUTES.joinScan}>{t('tenant.scanAddSalon')}</LinkButton>
+          }
         />
       </section>
     );
@@ -88,6 +88,15 @@ export function YourSalons() {
             </span>
           </Link>
         ))}
+        {/* A trailing row in the same card as the list, the way
+            `PaymentAccountsSection` puts "Add payment" under the cards it
+            manages. Somebody who already has salons and is standing in a new
+            one looks at their list of salons, which is this. */}
+        <ListRow
+          icon={<Plus size={18} aria-hidden="true" />}
+          title={t('tenant.scanAddSalon')}
+          to={ROUTES.joinScan}
+        />
       </div>
       <p className="small muted">{t('tenant.homeHint')}</p>
     </section>

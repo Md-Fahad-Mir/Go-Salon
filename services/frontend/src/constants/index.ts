@@ -46,6 +46,9 @@ export const ROUTES = {
      string from `JOIN_URL_BASE`, so the two have to agree character for
      character or every code already on a wall stops working. */
   join: (token: string) => `/join/${token}`,
+  /* The in-app scanner. A sibling of `/join/:token` rather than a child, so
+     the token route's pattern cannot swallow it. */
+  joinScan: '/join-salon',
   bookings: '/bookings',
   bookingDetail: (id: string) => `/bookings/${id}`,
 
