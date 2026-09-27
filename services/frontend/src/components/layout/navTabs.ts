@@ -17,16 +17,19 @@ export interface NavTab {
 /* The customer's bar is their own. The three professional bars share one
    shape, and differ only where the role genuinely differs:
 
-     Today  ->  Requests  ->  [ Staff  ->  Salon  |  Profile ]  ->  Settings
+     barber, employee:  Today  ->  Requests  ->  Profile  ->  Settings
+     salon owner:       Home   ->  Requests  ->  Staff    ->  Profile
 
-   **Staff** and **Salon** belong to whoever owns the place. A barber working
-   for themselves has no roster and no salon record; an employee has a chair in
-   somebody else's salon, not a salon. Both of them get **Profile** in that
-   space instead — themselves, since there is no business of their own to open.
+   **Staff** and the salon's profile belong to whoever owns the place. A barber
+   working for themselves has no roster and no salon record; an employee has a
+   chair in somebody else's salon, not a salon. Both of them get their own
+   **Profile** instead, since there is no business of their own to open.
 
-   Settings is last for all three. Everything a professional owns but does not
-   touch hourly — the calendar, the price list, takings, analytics — is reached
-   from there, so cutting the bar back did not cut anything off. */
+   Settings is the last tab for the barber and the employee. The owner opens it
+   from the gear on their Profile, the way a customer does. Everything a
+   professional owns but does not touch hourly — the calendar, the price list,
+   takings, analytics — is reached from there, so cutting the bar back did not
+   cut anything off. */
 export const NAV_TABS: Record<UserRole, NavTab[]> = {
   customer: [
     /* Four, not five. The Search tab led to the cross-salon directory, which
@@ -47,14 +50,15 @@ export const NAV_TABS: Record<UserRole, NavTab[]> = {
   ],
 
   salon_owner: [
-    { to: ROUTES.proSalonQueue, labelKey: 'nav.today', icon: CalendarDays, match: ['/pro/salon/queue'], hero: true },
+    { to: ROUTES.proSalonQueue, labelKey: 'nav.home', icon: Home, match: ['/pro/salon/queue'], hero: true },
     { to: ROUTES.proRequests, labelKey: 'nav.requests', icon: ListChecks, match: ['/pro/requests', '/pro/appointment'] },
     { to: ROUTES.proSalonStaff, labelKey: 'nav.staff', icon: Users, match: ['/pro/salon/staff'] },
     // The salon's whole portfolio: who it is, where, when it opens, the menu,
     // the team and the pictures. The gallery screen it links out to counts as
-    // part of it, so the tab stays lit there.
-    { to: ROUTES.proSalonProfile, labelKey: 'nav.salon', icon: Home, match: ['/pro/salon/profile', '/pro/portfolio', '/pro/salon/services', '/pro/salon/analytics'] },
-    { to: ROUTES.proSettings, labelKey: 'nav.settings', icon: Settings, match: ['/pro/settings'] },
+    // part of it, so the tab stays lit there. Settings is reached from the
+    // gear in this screen's header, as it is from the customer's Profile, so
+    // it counts as part of it too.
+    { to: ROUTES.proSalonProfile, labelKey: 'nav.profile', icon: UserRound, match: ['/pro/salon/profile', '/pro/portfolio', '/pro/salon/services', '/pro/salon/analytics', '/pro/settings'] },
   ],
 
   salon_employee: [

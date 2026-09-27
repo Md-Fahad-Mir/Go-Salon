@@ -8,6 +8,7 @@ import { LanguageSection } from '../../components/profile/LanguageSection';
 import { LogoutButton } from '../../components/profile/LogoutButton';
 import { SalonSection } from '../../components/profile/SalonSection';
 import { useT } from '../../hooks/useLanguage';
+import { useAppStore } from '../../store/useAppStore';
 
 /** The app's own business, and only that.
  *
@@ -24,10 +25,13 @@ import { useT } from '../../hooks/useLanguage';
  */
 export default function ProSettingsPage() {
   const t = useT();
+  /* A tab for the barber and the employee. The owner opens it from the gear on
+     their salon's Profile, so for them it is a screen with a way back. */
+  const isOwner = useAppStore((s) => s.user?.role === 'salon_owner');
 
   return (
     <Screen nav>
-      <Header title={t('nav.settings')} />
+      <Header title={t('nav.settings')} back={isOwner} backTo={isOwner ? ROUTES.proSalonProfile : undefined} />
       {/* The customer's Settings markup exactly: the same wrapper classes, the
           same chapter heads, the same ListCard rows — so the same design rules
           apply, mirrored onto this role's scope in profile.css. */}

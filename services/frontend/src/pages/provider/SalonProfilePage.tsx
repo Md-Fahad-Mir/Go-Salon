@@ -9,6 +9,7 @@ import {
   Phone,
   Pencil,
   Scissors,
+  Settings,
   Store,
   Users,
 } from 'lucide-react';
@@ -18,10 +19,11 @@ import { ROUTES, WEEKDAYS } from '../../constants';
 import { Art } from '../../components/common/Art';
 import { Avatar } from '../../components/common/Avatar';
 import { Badge } from '../../components/common/Badge';
-import { Button, LinkButton } from '../../components/common/Button';
+import { Button } from '../../components/common/Button';
 import { Callout } from '../../components/common/Callout';
 import { Carousel } from '../../components/common/Carousel';
 import { EmptyState } from '../../components/common/EmptyState';
+import { IconButton } from '../../components/common/IconButton';
 import { ListCard, ListRow } from '../../components/common/ListRow';
 import { SalonQRSection } from '../../components/provider/salon/SalonQRSection';
 import { Price } from '../../components/common/Price';
@@ -85,12 +87,22 @@ export default function SalonProfilePage() {
     }
   };
 
+  /* Settings is not a tab for the owner. It sits in this header, as it does on
+     the customer's Profile, so the gear is there even while the salon is
+     loading or missing — that is where signing out lives. */
+  const settingsButton = (
+    <IconButton label={t('nav.settings')} onClick={() => navigate(ROUTES.proSettings)}>
+      <Settings size={22} />
+    </IconButton>
+  );
+
   /* Still loading, failed, or genuinely nothing yet. All three keep the one
-     control that has nothing to do with the salon — signing out. */
+     control that has nothing to do with the salon — signing out, behind the
+     gear above. */
   if (!profile) {
     return (
       <Screen nav>
-        <Header title={t('salon.profileTitle')} />
+        <Header title={t('salon.profileTitle')} actions={settingsButton} />
         <ScreenBody className="fullscreen-center">
           {status === 'loading' ? (
             <Spinner size="lg" label={t('state.loading')} />
@@ -108,10 +120,6 @@ export default function SalonProfilePage() {
               description={t('pb.noProfileBody')}
             />
           )}
-          {/* Signing out lives in Settings now — one tab along — so somebody
-              stuck on an empty salon is pointed there rather than given a
-              second copy of the button. */}
-          <LinkButton variant="ghost" to={ROUTES.proSettings}>{t('nav.settings')}</LinkButton>
         </ScreenBody>
       </Screen>
     );
@@ -134,7 +142,7 @@ export default function SalonProfilePage() {
 
   return (
     <Screen nav>
-      <Header title={t('salon.profileTitle')} />
+      <Header title={t('salon.profileTitle')} actions={settingsButton} />
       <ScreenBody className="sp-shop">
         <div className="ps-cover sp-cover">
           {/* The shopfront: whatever the salon has uploaded, and a plain
