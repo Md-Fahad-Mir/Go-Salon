@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { AlertCircle, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../constants';
@@ -26,6 +27,10 @@ interface RegisterWizardProps {
   steps: WizardStep[];
   submitting: boolean;
   onSubmit: () => void;
+  /** Why the server turned the sign-up down, shown above the form until it
+      is dismissed or the person tries again. */
+  serverError?: string | null;
+  onDismissServerError?: () => void;
 }
 
 /** The shell every sign-up shares: the progress bar, the step the person is
@@ -33,12 +38,28 @@ interface RegisterWizardProps {
 
     Continue stays enabled on an incomplete step and reveals what is missing
     instead — a greyed-out button on a six-field form tells nobody why. */
-export function ProRegisterWizard({ accountType, steps, submitting, onSubmit }: RegisterWizardProps) {
+export function ProRegisterWizard({
+  accountType,
+  steps,
+  submitting,
+  onSubmit,
+  serverError,
+  onDismissServerError,
+}: RegisterWizardProps) {
   const t = useT();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [showErrors, setShowErrors] = useState(false);
   const hostRef = useRef<HTMLDivElement | null>(null);
+  const serverErrorRef = useRef<HTMLDivElement | null>(null);
+
+  /* The submit button is at the foot of the screen and the box at its head,
+     so the page is brought back up to it when it appears. */
+  useEffect(() => {
+    if (!serverError) return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    serverErrorRef.current?.focus({ preventScroll: true });
+  }, [serverError]);
 
   const total = steps.length;
   const current = steps[step - 1];
@@ -72,7 +93,7 @@ export function ProRegisterWizard({ accountType, steps, submitting, onSubmit }: 
   return (
     <Screen>
       <Header back onBack={back} title={t(ACCOUNT_TYPE_KEYS[accountType])} />
-      <ScreenBody className="auth-body">
+      <ScreenBody className="auth-body auth-signup">
         <ProgressSteps
           step={step}
           total={total}
@@ -82,6 +103,26 @@ export function ProRegisterWizard({ accountType, steps, submitting, onSubmit }: 
             label: t(current.labelKey),
           })}
         />
+
+        {serverError ? (
+          <div ref={serverErrorRef} className="auth-server-error" role="alert" tabIndex={-1}>
+            <AlertCircle size={18} aria-hidden="true" />
+            <div className="auth-server-error-body">
+              <strong>{t('auth.registerFailedTitle')}</strong>
+              <p>{serverError}</p>
+            </div>
+            {onDismissServerError ? (
+              <button
+                type="button"
+                className="auth-server-error-close"
+                aria-label={t('action.close')}
+                onClick={onDismissServerError}
+              >
+                <X size={16} aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
+        ) : null}
 
         <div ref={hostRef} key={step} className="auth-step-host">
           {current.render(showErrors)}

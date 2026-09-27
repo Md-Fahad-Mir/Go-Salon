@@ -8,7 +8,7 @@
    `required=False` with empty defaults. So the body is asserted key by key,
    including the keys that must NOT be there any more. */
 
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '../../../store/useAppStore';
@@ -87,7 +87,7 @@ describe('what the sign-up asks', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Complete sign up' }));
 
     const alert = screen.getByRole('alert');
-    expect(alert).toHaveTextContent('Accept the terms to create an account.');
+    expect(alert).toHaveTextContent('Please accept the Terms of Service and Privacy Policy to continue.');
     expect(sent).toHaveLength(0);
     // The wizard reveals a problem by focusing the first invalid field. The
     // box has to be one, and has to point at the reason.
@@ -153,8 +153,9 @@ describe('what goes on the wire', () => {
     /* The real shape, not a convenient one. `validate_phone` raises DRF's
        `Conflict`, which is not a `ValidationError`, so it escapes the
        per-field collection and the handler sends `errors: {}` — there is no
-       `errors.phone` to put under the field. What the person sees is the
-       toast that `authErrorMessage` maps `phone_taken` to. */
+       `errors.phone` to put under the field. What the person sees is the box
+       at the top of the form, saying what `authErrorMessage` maps
+       `phone_taken` to. */
     serve({
       status: 409,
       body: { detail: 'An account with this number already exists. Sign in instead.',
@@ -165,11 +166,14 @@ describe('what goes on the wire', () => {
     await userEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'Complete sign up' }));
 
-    await waitFor(() => expect(store().toasts).toHaveLength(1));
-    expect(store().toasts[0]).toMatchObject({
-      tone: 'error',
-      message: 'An account already uses that number. Sign in instead.',
-    });
+    const box = await screen.findByRole('alert');
+    expect(box).toHaveTextContent("We couldn't create your account");
+    expect(box).toHaveTextContent('This number already has an account. Please sign in instead.');
+    expect(store().toasts).toHaveLength(0);
+
+    // Closing it clears it.
+    await userEvent.click(within(box).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.queryByText('the code screen')).not.toBeInTheDocument();
     // Still on the form, able to fix it and try again.
     expect(screen.getByRole('button', { name: 'Complete sign up' })).toBeEnabled();

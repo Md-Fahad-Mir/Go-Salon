@@ -9,7 +9,6 @@ import { ROUTES } from '../../../constants';
 import { useAuth } from '../../../hooks/useAuth';
 import { useT } from '../../../hooks/useLanguage';
 import { useProRegistration } from '../../../hooks/useProRegistration';
-import { useAppStore } from '../../../store/useAppStore';
 import { ApiValidationError } from '../../../utils/apiClient';
 import type { Audience } from '../../../types';
 import { textProblem, yearsProblem } from '../../../utils/validators';
@@ -24,7 +23,6 @@ export default function BarberRegisterPage() {
   const navigate = useNavigate();
   const pro = useProRegistration();
   const { registerProfessional } = useAuth();
-  const toast = useAppStore((state) => state.toast);
 
   const [audience, setAudience] = useState<Audience | undefined>();
   const [businessName, setBusinessName] = useState('');
@@ -32,6 +30,7 @@ export default function BarberRegisterPage() {
   const [serviceIds, setServiceIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<ApiValidationError | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const workValid =
     Boolean(audience) &&
@@ -48,6 +47,7 @@ export default function BarberRegisterPage() {
     const base = pro.base();
     if (!base || !audience || submitting) return;
     setSubmitting(true);
+    setServerError(null);
     try {
       await registerProfessional({
         ...base,
@@ -63,7 +63,7 @@ export default function BarberRegisterPage() {
     } catch (error) {
       const failed = error instanceof ApiValidationError ? error : null;
       setFailure(failed);
-      toast('error', t('auth.registerFailedTitle'), authErrorMessage(t, error));
+      setServerError(authErrorMessage(t, error));
       setSubmitting(false);
     }
   };
@@ -121,6 +121,8 @@ export default function BarberRegisterPage() {
       steps={steps}
       submitting={submitting}
       onSubmit={() => void submit()}
+      serverError={serverError}
+      onDismissServerError={() => setServerError(null)}
     />
   );
 }

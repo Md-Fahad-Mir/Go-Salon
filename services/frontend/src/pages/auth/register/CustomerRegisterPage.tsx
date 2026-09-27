@@ -1,3 +1,4 @@
+import { AlertCircle } from 'lucide-react';
 import { useId, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ProRegisterWizard, type WizardStep } from '../../../components/auth/ProRegisterWizard';
@@ -9,7 +10,6 @@ import { ROUTES } from '../../../constants';
 import { useAuth } from '../../../hooks/useAuth';
 import { useProRegistration } from '../../../hooks/useProRegistration';
 import { useT } from '../../../hooks/useLanguage';
-import { useAppStore } from '../../../store/useAppStore';
 import { ApiValidationError } from '../../../utils/apiClient';
 
 /** The customer sign-up: the account, and then the code.
@@ -38,12 +38,12 @@ export default function CustomerRegisterPage() {
   const navigate = useNavigate();
   const shared = useProRegistration();
   const { registerCustomer } = useAuth();
-  const toast = useAppStore((state) => state.toast);
 
   const { terms, onTerms } = shared.where;
   const termsError = useId();
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<ApiValidationError | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   // An email is optional for a customer: receipts are a courtesy, not a
   // business record.
@@ -52,6 +52,7 @@ export default function CustomerRegisterPage() {
   const submit = async () => {
     if (!accountValid || !terms || submitting) return;
     setSubmitting(true);
+    setServerError(null);
     try {
       await registerCustomer({
         accountType: 'customer',
@@ -61,7 +62,7 @@ export default function CustomerRegisterPage() {
       navigate(ROUTES.otp);
     } catch (error) {
       setFailure(error instanceof ApiValidationError ? error : null);
-      toast('error', t('auth.registerFailedTitle'), authErrorMessage(t, error));
+      setServerError(authErrorMessage(t, error));
       setSubmitting(false);
     }
   };
@@ -104,7 +105,9 @@ export default function CustomerRegisterPage() {
               }
             />
             {showErrors && !terms ? (
-              <p className="field-error" id={termsError} role="alert">{t('auth.errTermsRequired')}</p>
+              <p className="field-error" id={termsError} role="alert">
+                <AlertCircle size={14} aria-hidden="true" /> {t('auth.errTermsRequired')}
+              </p>
             ) : null}
           </div>
         </div>
@@ -118,6 +121,8 @@ export default function CustomerRegisterPage() {
       steps={steps}
       submitting={submitting}
       onSubmit={() => void submit()}
+      serverError={serverError}
+      onDismissServerError={() => setServerError(null)}
     />
   );
 }

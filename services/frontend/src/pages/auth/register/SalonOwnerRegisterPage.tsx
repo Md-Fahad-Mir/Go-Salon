@@ -10,7 +10,6 @@ import { ROUTES } from '../../../constants';
 import { useAuth } from '../../../hooks/useAuth';
 import { useT } from '../../../hooks/useLanguage';
 import { useProRegistration } from '../../../hooks/useProRegistration';
-import { useAppStore } from '../../../store/useAppStore';
 import { ApiValidationError } from '../../../utils/apiClient';
 import { isValidPhone, textProblem, toE164 } from '../../../utils/validators';
 
@@ -24,7 +23,6 @@ export default function SalonOwnerRegisterPage() {
   const navigate = useNavigate();
   const pro = useProRegistration();
   const { registerProfessional } = useAuth();
-  const toast = useAppStore((state) => state.toast);
 
   const [kind, setKind] = useState<PlaceKind | undefined>();
   const [businessName, setBusinessName] = useState('');
@@ -32,6 +30,7 @@ export default function SalonOwnerRegisterPage() {
   const [businessPhone, setBusinessPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<ApiValidationError | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const businessValid =
     Boolean(kind) &&
@@ -47,6 +46,7 @@ export default function SalonOwnerRegisterPage() {
     const base = pro.base();
     if (!base || !kind || submitting) return;
     setSubmitting(true);
+    setServerError(null);
     try {
       await registerProfessional({
         ...base,
@@ -64,7 +64,7 @@ export default function SalonOwnerRegisterPage() {
     } catch (error) {
       const failed = error instanceof ApiValidationError ? error : null;
       setFailure(failed);
-      toast('error', t('auth.registerFailedTitle'), authErrorMessage(t, error));
+      setServerError(authErrorMessage(t, error));
       setSubmitting(false);
     }
   };
@@ -123,6 +123,8 @@ export default function SalonOwnerRegisterPage() {
       steps={steps}
       submitting={submitting}
       onSubmit={() => void submit()}
+      serverError={serverError}
+      onDismissServerError={() => setServerError(null)}
     />
   );
 }

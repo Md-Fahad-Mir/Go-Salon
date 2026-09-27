@@ -343,3 +343,119 @@
 .auth-employee-note { flex-direction: row; }
 .auth-employee-note p { margin-bottom: 0.375rem; }
 .auth-employee-note .link-btn { font-size: 0.875rem; }
+
+/* --- Sign-up errors --------------------------------------------------------
+   The three sign-up wizards only (`.auth-signup` is the wizard's body), so the
+   sign-in, reset and code screens keep the shared field styles.
+
+   A field's message sits right under it in a soft red with a small icon, and
+   the field itself takes a thin red edge. Both come from the field's own
+   `aria-invalid` / error state, so they clear the moment the input is fixed. */
+
+.auth-signup {
+  --signup-error: #d9534f;
+  --signup-error-bg: rgba(217, 83, 79, 0.08);
+}
+
+.auth-signup .field-error {
+  align-items: flex-start;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--signup-error);
+  animation: signup-error-in var(--speed-slow) var(--ease-out);
+}
+
+.auth-signup .field-error svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.auth-signup .input[aria-invalid='true'],
+.auth-signup .textarea[aria-invalid='true'],
+.auth-signup .input-group[data-invalid='true'] {
+  border: 1px solid var(--signup-error);
+}
+
+.auth-signup .input[aria-invalid='true']:focus,
+.auth-signup .textarea[aria-invalid='true']:focus,
+.auth-signup .input-group[data-invalid='true']:focus-within {
+  border-color: var(--signup-error);
+  box-shadow: 0 0 0 3px var(--signup-error-bg);
+}
+
+/* Inside a phone group the edge is the group's, not the input's. */
+.auth-signup .input-group .input[aria-invalid='true'] {
+  border: 0;
+  box-shadow: none;
+}
+
+.auth-signup .check input[aria-invalid='true'] + .check-box {
+  border-color: var(--signup-error);
+}
+
+/* The server's answer — a taken number, no connection — at the head of the
+   form, until it is closed or the person tries again. */
+.auth-server-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin-top: 1rem;
+  padding: 0.75rem 0.5rem 0.75rem 0.875rem;
+  border: 1px solid rgba(217, 83, 79, 0.35);
+  border-radius: var(--radius);
+  background-color: var(--signup-error-bg);
+  color: var(--text-primary);
+  animation: signup-error-in var(--speed-slow) var(--ease-out);
+}
+
+.auth-server-error:focus { outline: none; }
+.auth-server-error:focus-visible { box-shadow: 0 0 0 3px var(--ring); }
+
+.auth-server-error > svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: var(--signup-error);
+}
+
+.auth-server-error-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.auth-server-error-body strong {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.auth-server-error-body p {
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.auth-server-error-close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  margin: -0.625rem -0.25rem -0.625rem 0;
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  transition: background-color var(--speed) var(--ease), color var(--speed) var(--ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .auth-server-error-close:hover {
+    background-color: var(--signup-error-bg);
+    color: var(--text-primary);
+  }
+}
+
+@keyframes signup-error-in {
+  from { opacity: 0; transform: translateY(-0.25rem); }
+  to { opacity: 1; transform: none; }
+}

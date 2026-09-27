@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react';
+import { AlertCircle, Check } from 'lucide-react';
 import { useId } from 'react';
 
 interface Choice<T extends string> {
@@ -50,7 +50,9 @@ export function ChoiceList<T extends string>({
         ))}
       </div>
       {error ? (
-        <p className="field-error" role="alert">{error}</p>
+        <p className="field-error" role="alert">
+          <AlertCircle size={14} aria-hidden="true" /> {error}
+        </p>
       ) : hint ? (
         <p className="field-hint">{hint}</p>
       ) : null}
