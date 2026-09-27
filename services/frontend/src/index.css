@@ -26,3 +26,6 @@
    base rules in every provider sheet above. */
 @import './styles/crew.css';
 @import './styles/crew-sheets.css';
+/* The owner's salon profile screen, re-dressed. Scoped to `.sp-shop`, so it
+   changes that one screen and nothing else. */
+@import './styles/salon-profile.css';

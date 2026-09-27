@@ -1,0 +1,496 @@
+/* ==========================================================================
+   The salon owner's profile screen — "Maison"
+
+   A visual layer and nothing else. Every rule is scoped to the owner's
+   SalonProfilePage (`.sp-shop` is its <main>), so no other screen and no
+   other role changes. The page markup, its data and its behaviour are
+   untouched.
+
+   Ivory in the day mood, charcoal at night, one muted gold (#C9A96E).
+   Playfair Display for the salon's name and the section heads, Inter for
+   everything else. Figures stay on Inter: formatBdt writes ৳ and Bangla
+   renders Bengali numerals, and neither is in a Latin serif.
+
+   The owner-app rules from owner.css still hold here: nothing on .app-frame,
+   no overflow on .screen, and nothing on `.carousel-track` or its slides.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Palette
+
+   The page's own tokens are set on the screen, then mapped onto the app's
+   tokens for every child except the tab bar, which is shared by every owner
+   screen and would otherwise change colour as you switch tabs.
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .screen:has(> .sp-shop) {
+  --lux-gold: #c9a96e;
+  --lux-gold-deep: #a88a52;
+  --lux-bg: #faf7f0;
+  --lux-surface: #fffdf8;
+  --lux-muted: #f4efe4;
+  --lux-ink: #1f1c18;
+  --lux-ink-2: #4d463d;
+  --lux-ink-3: #6b6358;
+  --lux-gold-ink: #7d6230;
+  --lux-line: rgba(168, 138, 82, 0.2);
+  --lux-line-strong: rgba(168, 138, 82, 0.42);
+  --lux-shadow: 0 1px 2px rgba(60, 45, 20, 0.04), 0 12px 32px -12px rgba(60, 45, 20, 0.14);
+  --lux-hover: rgba(201, 169, 110, 0.08);
+  --lux-nav: rgba(250, 247, 240, 0.84);
+
+  --lux-serif: 'Playfair Display', 'Noto Serif Bengali', 'Kalpurush', 'SolaimanLipi', Georgia, serif;
+  --lux-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Noto Sans Bengali', sans-serif;
+
+  background-color: var(--lux-bg);
+}
+
+:root.dark-theme[data-app='salon_owner'] .screen:has(> .sp-shop) {
+  --lux-bg: #1a1917;
+  --lux-surface: #211f1c;
+  --lux-muted: #262320;
+  --lux-ink: #f3ede3;
+  --lux-ink-2: #cbc2b5;
+  --lux-ink-3: #9a9185;
+  --lux-gold-ink: #d9bf8c;
+  --lux-line: rgba(201, 169, 110, 0.14);
+  --lux-line-strong: rgba(201, 169, 110, 0.34);
+  --lux-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 36px -14px rgba(0, 0, 0, 0.55);
+  --lux-hover: rgba(201, 169, 110, 0.07);
+  --lux-nav: rgba(26, 25, 23, 0.8);
+}
+
+:root[data-app='salon_owner'] .screen:has(> .sp-shop) > :not(.bottom-nav) {
+  --bg-primary: var(--lux-bg);
+  --bg-secondary: var(--lux-surface);
+  --bg-elevated: var(--lux-surface);
+  --bg-muted: var(--lux-muted);
+  --bg-nav: var(--lux-nav);
+  --hover-bg: var(--lux-hover);
+  --text-primary: var(--lux-ink);
+  --text-secondary: var(--lux-ink-2);
+  --text-tertiary: var(--lux-ink-3);
+  --border-color: var(--lux-line-strong);
+  --border-light: var(--lux-line);
+  --border-strong: var(--lux-line-strong);
+  --accent: var(--lux-gold);
+  --accent-ink: var(--lux-gold-ink);
+  --accent-bg: rgba(201, 169, 110, 0.12);
+  --accent-bg-strong: rgba(201, 169, 110, 0.2);
+  --accent-gradient-soft: linear-gradient(145deg, rgba(201, 169, 110, 0.14), rgba(201, 169, 110, 0.05));
+  --rule-gradient: linear-gradient(90deg, var(--lux-line-strong), var(--lux-line) 60%, transparent);
+  --elev-card: var(--lux-shadow);
+  --bevel-top: 0 0 0 transparent;
+  --bevel-hair: 0 0 0 transparent;
+
+  font-family: var(--lux-sans);
+}
+
+/* --------------------------------------------------------------------------
+   2. The header
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .screen:has(> .sp-shop) > .header {
+  border-bottom: 1px solid var(--lux-line);
+  box-shadow: none;
+}
+
+:root[data-app='salon_owner'] .screen:has(> .sp-shop) > .header .header-title {
+  font-family: var(--lux-serif);
+  font-size: var(--fs-md);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* --------------------------------------------------------------------------
+   3. Rhythm — more air between sections
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop {
+  gap: var(--space-8);
+  padding-bottom: var(--space-12);
+}
+
+:root[data-app='salon_owner'] .sp-shop .section {
+  gap: var(--space-4);
+}
+
+/* The masthead (cover, name, bio, edit) stays one object: the tighter pull-up
+   provider-business.css gives the bio and the edit button is restated against
+   the wider gap above. */
+:root[data-app='salon_owner'] .sp-shop > .sp-identity {
+  margin-top: calc(-1 * var(--space-8));
+}
+
+:root[data-app='salon_owner'] .sp-shop > .sp-bio,
+:root[data-app='salon_owner'] .sp-shop > .sp-edit {
+  margin-top: calc(var(--space-4) - var(--space-8));
+}
+
+/* --------------------------------------------------------------------------
+   4. The cover and the signboard
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop .sp-cover .carousel::after {
+  height: 55%;
+  background-image: linear-gradient(to top, rgba(15, 13, 11, 0.55), transparent);
+}
+
+/* Top corner: the signboard rises onto the bottom-left of the cover and would
+   sit over the badges there. */
+:root[data-app='salon_owner'] .sp-shop .ps-cover-badges {
+  inset-block-start: var(--space-3);
+  inset-block-end: auto;
+  inset-inline-start: var(--space-4);
+  padding: 0;
+}
+
+:root[data-app='salon_owner'] .sp-shop .ps-cover-badges .badge {
+  font-family: var(--lux-sans);
+  font-size: var(--fs-2xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid rgba(201, 169, 110, 0.55);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-identity {
+  gap: var(--space-4);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-identity > .avatar {
+  box-shadow:
+    0 0 0 3px var(--lux-bg),
+    0 0 0 4px var(--lux-gold),
+    0 10px 24px -8px rgba(0, 0, 0, 0.35);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-name {
+  font-family: var(--lux-serif);
+  font-size: 1.75rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  color: var(--lux-ink);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-tagline {
+  font-family: var(--lux-serif);
+  font-style: italic;
+  font-size: var(--fs-base);
+  color: var(--lux-gold-ink);
+}
+
+:root[data-lang='bn'][data-app='salon_owner'] .sp-shop .sp-tagline {
+  font-style: normal;
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-identity .rating {
+  margin-top: var(--space-1);
+  font-size: var(--fs-sm);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-identity .rating .star {
+  color: var(--lux-gold);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-bio {
+  font-size: var(--fs-base);
+  line-height: 1.75;
+  color: var(--lux-ink-2);
+}
+
+/* --------------------------------------------------------------------------
+   5. Section heads — serif, with a hairline that fades out
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop .ps-edit-head,
+:root[data-app='salon_owner'] .sp-shop .ps-chapter {
+  padding-bottom: var(--space-3);
+}
+
+:root[data-app='salon_owner'] .sp-shop .ps-edit-head .label,
+:root[data-app='salon_owner'] .sp-shop .label {
+  font-family: var(--lux-serif);
+  font-size: var(--fs-lg);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.2;
+  color: var(--lux-ink);
+}
+
+/* "Manage" / "Edit": a quiet gold text link rather than a filled chip. The
+   44px target is untouched. */
+:root[data-app='salon_owner'] .sp-shop .ps-edit-head button {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lux-gold-ink);
+  background-color: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+  transition:
+    border-color var(--speed) var(--ease),
+    background-color var(--speed) var(--ease);
+}
+
+:root[data-lang='bn'][data-app='salon_owner'] .sp-shop .ps-edit-head button {
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='salon_owner'] .sp-shop .ps-edit-head button:hover {
+    border-color: var(--lux-line-strong);
+    background-color: var(--lux-hover);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. Surfaces — thin borders, soft shadows, subtle corners
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop .card,
+:root[data-app='salon_owner'] .sp-shop .list-card,
+:root.light-theme[data-app='salon_owner'] .sp-shop .card,
+:root:not(.dark-theme)[data-app='salon_owner'] .sp-shop .card,
+:root.light-theme[data-app='salon_owner'] .sp-shop .list-card,
+:root:not(.dark-theme)[data-app='salon_owner'] .sp-shop .list-card {
+  background-color: var(--lux-surface);
+  border: 1px solid var(--lux-line);
+  border-radius: var(--radius);
+  box-shadow: var(--lux-shadow);
+}
+
+:root[data-app='salon_owner'] .sp-shop .card-pad {
+  padding: var(--space-5);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-list .list-row {
+  padding-inline: var(--space-5);
+}
+
+:root[data-app='salon_owner'] .sp-shop .list-row-title {
+  font-weight: 500;
+}
+
+:root[data-app='salon_owner'] .sp-shop .list-row-sub {
+  color: var(--lux-ink-3);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-icons .list-row-icon {
+  background: transparent;
+  border: 1px solid var(--lux-line-strong);
+  color: var(--lux-gold-ink);
+  box-shadow: none;
+}
+
+:root[data-app='salon_owner'] .sp-shop .section > .muted {
+  background-color: transparent;
+  border: 1px dashed var(--lux-line-strong);
+  border-radius: var(--radius);
+  color: var(--lux-ink-3);
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+}
+
+/* --------------------------------------------------------------------------
+   7. Buttons on this page — outlined in gold
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop .btn-outline {
+  border: 1px solid var(--lux-gold);
+  background-color: transparent;
+  color: var(--lux-gold-ink);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='salon_owner'] .sp-shop .btn-outline:hover:not(:disabled) {
+    background-color: var(--lux-hover);
+    border-color: var(--lux-gold-deep);
+  }
+}
+
+:root[data-app='salon_owner'] .sp-shop .btn-secondary {
+  background-color: var(--lux-surface);
+  border: 1px solid var(--lux-line-strong);
+  color: var(--lux-ink);
+  font-weight: 500;
+  box-shadow: none;
+}
+
+:root[data-app='salon_owner'] .sp-shop .btn-danger-soft {
+  background-color: transparent;
+  border: 1px solid var(--lux-line-strong);
+  font-weight: 500;
+  box-shadow: none;
+}
+
+/* --------------------------------------------------------------------------
+   8. At a glance — three figures on a thin frame
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop .sp-glance {
+  gap: var(--space-3);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-glance > .pro-stat,
+:root.light-theme[data-app='salon_owner'] .sp-shop .sp-glance > .pro-stat,
+:root:not(.dark-theme)[data-app='salon_owner'] .sp-shop .sp-glance > .pro-stat {
+  padding: var(--space-5) var(--space-4);
+  align-items: center;
+  text-align: center;
+  background-color: var(--lux-surface);
+  background-image: none;
+  border: 1px solid var(--lux-line);
+  border-radius: var(--radius);
+  box-shadow: var(--lux-shadow);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-glance > .pro-stat strong {
+  font-family: var(--lux-sans);
+  font-size: var(--fs-2xl);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--lux-ink);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-glance > .pro-stat span {
+  margin-top: var(--space-1);
+  color: var(--lux-ink-3);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-glance > .pro-stat.pro-stat-accent,
+:root.light-theme[data-app='salon_owner'] .sp-shop .sp-glance > .pro-stat.pro-stat-accent,
+:root:not(.dark-theme)[data-app='salon_owner'] .sp-shop .sp-glance > .pro-stat.pro-stat-accent {
+  border-color: var(--lux-line-strong);
+  background-image: var(--accent-gradient-soft);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-glance > .pro-stat-accent strong {
+  color: var(--lux-gold-ink);
+}
+
+/* --------------------------------------------------------------------------
+   9. The QR code — framed like a print
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop [aria-labelledby='salon-qr'] .stack > img {
+  align-self: center;
+  padding: var(--space-4);
+  background-color: #fff;
+  border: 1px solid var(--lux-line-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--lux-shadow);
+}
+
+/* --------------------------------------------------------------------------
+   10. The menu and the week
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop .sp-menu .list-row-title {
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-menu .price {
+  font-weight: 500;
+  color: var(--lux-gold-ink);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-week dt {
+  color: var(--lux-ink-2);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-week [data-today='true'] dt,
+:root[data-app='salon_owner'] .sp-shop .sp-week [data-today='true'] dd {
+  background-color: rgba(201, 169, 110, 0.1);
+  color: var(--lux-gold-ink);
+}
+
+:root[data-app='salon_owner'] .sp-shop .sp-week [data-today='true'] dt {
+  border-inline-start-color: var(--lux-gold);
+}
+
+/* --------------------------------------------------------------------------
+   11. Location, the toggle and the gallery
+   -------------------------------------------------------------------------- */
+
+:root[data-app='salon_owner'] .sp-shop .sp-place svg {
+  color: var(--lux-gold) !important;
+}
+
+:root[data-app='salon_owner'] .sp-shop .switch-text strong {
+  font-weight: 500;
+}
+
+:root[data-app='salon_owner'] .sp-shop .switch input:checked + .switch-track {
+  background-color: var(--lux-gold);
+}
+
+:root[data-app='salon_owner'] .sp-shop .pb-tile {
+  border-radius: var(--radius-sm);
+}
+
+:root[data-app='salon_owner'] .sp-shop .pb-tile-photo {
+  transition: transform var(--speed-slower) var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :root[data-app='salon_owner'] .sp-shop .pb-tile:hover .pb-tile-photo {
+    transform: scale(1.03);
+  }
+
+  :root[data-app='salon_owner'] .sp-shop a.list-row:hover,
+  :root[data-app='salon_owner'] .sp-shop button.list-row:hover {
+    background-color: var(--lux-hover);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   12. Arrival — a soft fade up, one block after another
+
+   `backwards` rather than `both`, so no child keeps a transform once it has
+   arrived. base.css collapses the duration under reduced motion.
+   -------------------------------------------------------------------------- */
+
+@keyframes sp-lux-in {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to { opacity: 1; transform: none; }
+}
+
+:root[data-app='salon_owner'] .sp-shop > * {
+  animation: sp-lux-in 0.6s var(--ease-out) backwards;
+}
+
+:root[data-app='salon_owner'] .sp-shop > :nth-child(2) { animation-delay: 60ms; }
+:root[data-app='salon_owner'] .sp-shop > :nth-child(3) { animation-delay: 110ms; }
+:root[data-app='salon_owner'] .sp-shop > :nth-child(4) { animation-delay: 160ms; }
+:root[data-app='salon_owner'] .sp-shop > :nth-child(5) { animation-delay: 210ms; }
+:root[data-app='salon_owner'] .sp-shop > :nth-child(6) { animation-delay: 260ms; }
+:root[data-app='salon_owner'] .sp-shop > :nth-child(n + 7) { animation-delay: 300ms; }
+
+/* --------------------------------------------------------------------------
+   13. Narrow phones
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 380px) {
+  :root[data-app='salon_owner'] .sp-shop .sp-name {
+    font-size: 1.5rem;
+  }
+
+  :root[data-app='salon_owner'] .sp-shop .sp-glance > .pro-stat strong {
+    font-size: var(--fs-xl);
+  }
+
+  :root[data-app='salon_owner'] .sp-shop .card-pad,
+  :root[data-app='salon_owner'] .sp-shop .sp-list .list-row {
+    padding-inline: var(--space-4);
+  }
+}
