@@ -357,16 +357,6 @@
   background-image: var(--accent-gradient);
 }
 
-/* Today is the hero tab, and layout.css paints every hero icon in --accent
-   whatever screen you are on — so one icon in the bar sat gold while the other
-   four were grey, on every screen except the one it points at. The lit bar over
-   the current tab already says "you are here". `inherit` hands the icon back to
-   .nav-item's own colour, so Today behaves like Requests, Staff, Salon and
-   Settings: tertiary at rest, --accent-ink when it is the current tab. */
-:root[data-app='salon_owner'] .nav-item[data-hero='true'] svg {
-  color: inherit;
-}
-
 :root[data-app='salon_owner'] .sticky-footer {
   box-shadow: var(--elev-sheet);
 }

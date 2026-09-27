@@ -357,21 +357,6 @@
   background-image: var(--accent-gradient);
 }
 
-/* Today is the hero tab, and layout.css paints every hero icon in --accent
-   whatever tab you are on. In a four-tab bar that leaves one icon gold and two
-   grey for no reason a person standing at their chair could name — the gold is
-   supposed to mean "you are here", and the lit indicator above the tab already
-   says that. `inherit` hands the icon back to .nav-item's own colour, so Today
-   behaves exactly like Requests and Settings: tertiary at rest, --accent-ink
-   when it is the current tab.
-
-   Scoped to these two roles. The customer's hero is Try on and the owner's is
-   their own Today, and both of those are signed off. */
-:root[data-app='barber'] .nav-item[data-hero='true'] svg,
-:root[data-app='salon_employee'] .nav-item[data-hero='true'] svg {
-  color: inherit;
-}
-
 :root[data-app='barber'] .sticky-footer,
 :root[data-app='salon_employee'] .sticky-footer {
   box-shadow: var(--elev-sheet);

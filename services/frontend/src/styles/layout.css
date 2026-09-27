@@ -210,10 +210,6 @@
   background-color: var(--accent);
 }
 
-.nav-item[data-hero='true'] svg {
-  color: var(--accent);
-}
-
 /* --- Sticky footer (primary action) -------------------------------------- */
 
 .sticky-footer {
