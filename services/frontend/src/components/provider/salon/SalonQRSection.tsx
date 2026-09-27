@@ -123,7 +123,6 @@ export function SalonQRSection() {
       ) : (
         <div className="stack">
           <img src={src} alt={t('tenant.qrAlt')} width={240} height={240} />
-          <p className="small muted">{t('tenant.qrHint')}</p>
           <div className="grid-2">
             <Button
               variant="secondary"

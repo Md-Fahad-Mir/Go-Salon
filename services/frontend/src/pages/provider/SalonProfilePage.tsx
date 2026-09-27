@@ -393,7 +393,6 @@ export default function SalonProfilePage() {
               checked={profile.autoAccept}
               onChange={(on) => void setAutoAccept(on)}
               label={t('pro.autoAccept')}
-              hint={t('pro.autoAcceptHint')}
             />
           </div>
         </section>
@@ -419,7 +418,6 @@ export default function SalonProfilePage() {
             <ListRow
               icon={<BarChart3 size={18} aria-hidden="true" />}
               title={t('nav.analytics')}
-              sub={t('salon.numbersRowHint')}
               to={ROUTES.proSalonAnalytics}
             />
           </ListCard>

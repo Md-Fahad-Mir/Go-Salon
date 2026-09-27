@@ -60,7 +60,6 @@ export const tenant = {
 
   /* The shop's own QR code, on the owner's salon screen. */
   'tenant.qrTitle': 'Your QR code',
-  'tenant.qrHint': 'Customers scan this to add your salon. Print it and keep it where they can reach it — the counter, the mirror, the door.',
   'tenant.qrAlt': 'The QR code customers scan to add your salon',
   'tenant.qrSave': 'Save the image',
   'tenant.qrSaved': 'Saved to your device',

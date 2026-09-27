@@ -56,7 +56,6 @@ export const tenant = {
 
   /* The shop's own QR code, on the owner's salon screen. */
   'tenant.qrTitle': 'আপনার কিউআর কোড',
-  'tenant.qrHint': 'গ্রাহকেরা এটি স্ক্যান করে আপনার স্যালন যোগ করেন। ছাপিয়ে এমন জায়গায় রাখুন যেখানে তাঁদের হাত পৌঁছায় — কাউন্টার, আয়না, দরজা।',
   'tenant.qrAlt': 'গ্রাহকেরা যে কিউআর কোড স্ক্যান করে আপনার স্যালন যোগ করেন',
   'tenant.qrSave': 'ছবিটি সেভ করুন',
   'tenant.qrSaved': 'আপনার ডিভাইসে সেভ হয়েছে',
