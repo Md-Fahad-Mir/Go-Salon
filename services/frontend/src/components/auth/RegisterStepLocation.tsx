@@ -1,4 +1,5 @@
 import { AlertCircle, Check, LocateFixed } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { DHAKA_AREAS } from '../../constants';
 import type { GeoStatus } from '../../hooks/useGeolocation';
 import { useT } from '../../hooks/useLanguage';
@@ -25,6 +26,12 @@ interface RegisterStepLocationProps {
   titleKey?: TKey;
   subKey?: TKey;
   geoHintKey?: TKey;
+  /** A field of the caller's own, set under the heading — the salon's street
+      address, so an owner gives every part of where it is on this one step. */
+  children?: ReactNode;
+  /** The area chips, as the alternative to a device fix. On by default; the
+      salon owner's sign-up turns them off and places the salon by its fix. */
+  areaPicker?: boolean;
 }
 
 export function RegisterStepLocation({
@@ -39,6 +46,8 @@ export function RegisterStepLocation({
   titleKey = 'auth.locationTitle',
   subKey = 'auth.locationSub',
   geoHintKey = 'auth.geoHint',
+  children,
+  areaPicker = true,
 }: RegisterStepLocationProps) {
   const t = useT();
   const locating = geoStatus === 'locating';
@@ -59,6 +68,8 @@ export function RegisterStepLocation({
         <h2 tabIndex={-1}>{t(titleKey)}</h2>
         <p>{t(subKey)}</p>
       </div>
+
+      {children}
 
       <div className="stack-sm">
         <Button
@@ -88,16 +99,18 @@ export function RegisterStepLocation({
         </p>
       </div>
 
-      <div className="stack-sm">
-        <h3>{t('auth.pickArea')}</h3>
-        <ChipRow label={t('auth.areaGroup')}>
-          {DHAKA_AREAS.map((option) => (
-            <Chip key={option} active={area === option} onClick={() => onArea(option)}>
-              {t(AREA_KEYS[option])}
-            </Chip>
-          ))}
-        </ChipRow>
-      </div>
+      {areaPicker ? (
+        <div className="stack-sm">
+          <h3>{t('auth.pickArea')}</h3>
+          <ChipRow label={t('auth.areaGroup')}>
+            {DHAKA_AREAS.map((option) => (
+              <Chip key={option} active={area === option} onClick={() => onArea(option)}>
+                {t(AREA_KEYS[option])}
+              </Chip>
+            ))}
+          </ChipRow>
+        </div>
+      ) : null}
 
       <Checkbox
         checked={terms}

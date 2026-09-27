@@ -9,32 +9,27 @@ import type { PlaceKind } from './registerOptions';
 interface RegisterStepSalonProps {
   kind: PlaceKind | undefined;
   businessName: string;
-  address: string;
   businessPhone: string;
   onKind: (value: PlaceKind) => void;
   onBusinessName: (value: string) => void;
-  onAddress: (value: string) => void;
   onBusinessPhone: (value: string) => void;
 }
 
-/** The business itself: what it is, what it is called and where it is. */
+/** The business itself: what it is and what it is called. Where it is is
+    asked once, on the location step — see <SalonAddressField>. */
 export function RegisterStepSalon({
   kind,
   businessName,
-  address,
   businessPhone,
   onKind,
   onBusinessName,
-  onAddress,
   onBusinessPhone,
   showErrors,
 }: RegisterStepSalonProps & { showErrors: boolean }) {
   const t = useT();
   const [nameTouched, setNameTouched] = useState(false);
-  const [addressTouched, setAddressTouched] = useState(false);
 
   const nameIssue = textProblem(businessName, { max: 60 });
-  const addressIssue = textProblem(address, { min: 6, max: 120 });
   const phoneIssue = businessPhone.trim() && !isValidPhone(businessPhone);
 
   return (
@@ -71,17 +66,6 @@ export function RegisterStepSalon({
           placeholder={t('auth.businessNamePlaceholder')}
           maxLength={60}
         />
-        <Textarea
-          label={t('auth.addressLabel')}
-          value={address}
-          onChange={(event) => onAddress(event.target.value)}
-          onBlur={() => setAddressTouched(true)}
-          error={(addressTouched || showErrors) && addressIssue ? t('auth.errAddress') : undefined}
-          hint={t('auth.addressHint')}
-          placeholder={t('auth.addressPlaceholder')}
-          rows={2}
-          maxLength={120}
-        />
         <PhoneInput
           value={businessPhone}
           onChange={onBusinessPhone}
@@ -91,5 +75,37 @@ export function RegisterStepSalon({
         />
       </div>
     </div>
+  );
+}
+
+/** The salon's street address. It sits on the location step, beside the pin,
+    so an owner is asked where the salon is on one screen only. Optional: left
+    empty, the salon takes the address its pin resolves to. */
+export function SalonAddressField({
+  address,
+  onAddress,
+  showErrors,
+}: {
+  address: string;
+  onAddress: (value: string) => void;
+  showErrors: boolean;
+}) {
+  const t = useT();
+  const [addressTouched, setAddressTouched] = useState(false);
+  const addressIssue = address.trim() ? textProblem(address, { min: 6, max: 120 }) : undefined;
+
+  return (
+    <Textarea
+      label={t('auth.addressLabel')}
+      optional
+      value={address}
+      onChange={(event) => onAddress(event.target.value)}
+      onBlur={() => setAddressTouched(true)}
+      error={(addressTouched || showErrors) && addressIssue ? t('auth.errAddress') : undefined}
+      hint={t('auth.addressHint')}
+      placeholder={t('auth.addressPlaceholder')}
+      rows={2}
+      maxLength={120}
+    />
   );
 }

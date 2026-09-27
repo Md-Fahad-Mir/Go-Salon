@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ProRegisterWizard, type WizardStep } from '../../../components/auth/ProRegisterWizard';
 import { RegisterStepAccount } from '../../../components/auth/RegisterStepAccount';
 import { RegisterStepLocation } from '../../../components/auth/RegisterStepLocation';
-import { RegisterStepSalon } from '../../../components/auth/RegisterStepSalon';
+import { RegisterStepSalon, SalonAddressField } from '../../../components/auth/RegisterStepSalon';
 import { PLACE_KINDS, type PlaceKind } from '../../../components/auth/registerOptions';
 import { authErrorMessage, fieldMessage } from '../../../components/auth/errors';
 import { ROUTES } from '../../../constants';
@@ -36,8 +36,12 @@ export default function SalonOwnerRegisterPage() {
   const businessValid =
     Boolean(kind) &&
     !textProblem(businessName, { max: 60 }) &&
-    !textProblem(address, { min: 6, max: 120 }) &&
     (!businessPhone.trim() || isValidPhone(businessPhone));
+
+  /* Where the salon is, asked once: the pin that places it on the map, and an
+     optional street address, share one step. */
+  const whereValid =
+    pro.whereValid && (!address.trim() || !textProblem(address, { min: 6, max: 120 }));
 
   const submit = async () => {
     const base = pro.base();
@@ -49,7 +53,9 @@ export default function SalonOwnerRegisterPage() {
         accountType: 'salon_owner',
         ...PLACE_KINDS[kind],
         businessName: businessName.trim(),
-        address: address.trim(),
+        // The server requires an address. Left empty, it is the one the pin
+        // resolves to — the same fallback the server itself applies.
+        address: address.trim() || base.location.address,
         businessPhone: businessPhone.trim() ? toE164(businessPhone) : undefined,
       });
       // The account exists but its phone is unproved, so the next
@@ -86,11 +92,9 @@ export default function SalonOwnerRegisterPage() {
         <RegisterStepSalon
           kind={kind}
           businessName={businessName}
-          address={address}
           businessPhone={businessPhone}
           onKind={setKind}
           onBusinessName={setBusinessName}
-          onAddress={setAddress}
           onBusinessPhone={setBusinessPhone}
           showErrors={showErrors}
         />
@@ -98,14 +102,17 @@ export default function SalonOwnerRegisterPage() {
     },
     {
       labelKey: 'auth.stepWhere',
-      valid: pro.whereValid,
-      render: () => (
+      valid: whereValid,
+      render: (showErrors) => (
         <RegisterStepLocation
           {...pro.where}
           titleKey="auth.salonLocationTitle"
           subKey="auth.salonLocationSub"
           geoHintKey="auth.salonGeoHint"
-        />
+          areaPicker={false}
+        >
+          <SalonAddressField address={address} onAddress={setAddress} showErrors={showErrors} />
+        </RegisterStepLocation>
       ),
     },
   ];
