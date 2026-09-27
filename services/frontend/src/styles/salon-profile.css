@@ -7,9 +7,7 @@
    untouched.
 
    Ivory in the day mood, charcoal at night, one muted gold (#C9A96E).
-   Playfair Display for the salon's name and the section heads, Inter for
-   everything else. Figures stay on Inter: formatBdt writes ৳ and Bangla
-   renders Bengali numerals, and neither is in a Latin serif.
+   Jost throughout, like the rest of the app.
 
    The owner-app rules from owner.css still hold here: nothing on .app-frame,
    no overflow on .screen, and nothing on `.carousel-track` or its slides.
@@ -39,8 +37,8 @@
   --lux-hover: rgba(201, 169, 110, 0.08);
   --lux-nav: rgba(250, 247, 240, 0.84);
 
-  --lux-serif: 'Playfair Display', 'Noto Serif Bengali', 'Kalpurush', 'SolaimanLipi', Georgia, serif;
-  --lux-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', 'Noto Sans Bengali', sans-serif;
+  --lux-serif: 'Jost', Futura, 'Century Gothic', sans-serif;
+  --lux-sans: 'Jost', Futura, 'Century Gothic', sans-serif;
 
   background-color: var(--lux-bg);
 }

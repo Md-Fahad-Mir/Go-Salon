@@ -38,13 +38,10 @@
    -------------------------------------------------------------------------- */
 
 :root {
-  /* The display serif, with its Bengali fallbacks repeated: Latin picks up the
-     serif, Bangla keeps its own platform face. All system faces — no webfont,
-     no network, correct offline. */
+  /* The app's display face (Jost), with the same fallbacks if it is unset. */
   --tryon-display: var(
     --font-display,
-    'Iowan Old Style', 'Palatino Linotype', Palatino, 'Hoefler Text', Georgia,
-    'Noto Serif Bengali', 'Kalpurush', 'SolaimanLipi', serif
+    'Jost', Futura, 'Century Gothic', sans-serif
   );
 
   /* Depth. The bevel falls back to a no-op rather than to an invented colour:

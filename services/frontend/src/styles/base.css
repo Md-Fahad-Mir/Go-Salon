@@ -16,12 +16,9 @@ html {
 }
 
 body {
-  /* The Bengali faces sit after the Latin ones: Latin glyphs keep coming from
-     the system UI font, and Bangla falls through to whichever Bengali face the
-     platform ships (Apple, Windows, then Android/Noto). */
-  font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
-    'Kohinoor Bangla', 'Nirmala UI', 'Shonar Bangla', 'Noto Sans Bengali', sans-serif;
+  /* Jost, loaded from Google Fonts in index.html. It has no Bengali glyphs, so
+     Bangla falls through to the platform's own Bengali face. */
+  font-family: 'Jost', Futura, 'Century Gothic', sans-serif;
   font-size: 1rem;
   line-height: 1.5;
   color: var(--text-primary);
@@ -167,7 +164,7 @@ strong { color: var(--text-primary); font-weight: 600; }
   overflow: hidden;
 }
 .mono {
-  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-family: 'Jost', Futura, 'Century Gothic', sans-serif;
   font-size: 0.875em;
   letter-spacing: 0.02em;
 }

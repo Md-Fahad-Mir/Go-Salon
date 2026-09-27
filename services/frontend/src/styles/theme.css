@@ -351,17 +351,13 @@
   --stagger: 42ms;
 
   /* --- Type -------------------------------------------------------------
-     Two voices. `--font-ui` is the system stack the whole app already used;
-     `--font-display` is an old-style serif for headings and the word-mark.
-     Both are system faces — no webfont, no network, so the app still draws
-     correctly offline. The Bengali fallbacks are repeated in the display
-     stack: Latin picks up the serif, Bengali keeps its own face.
+     One voice. `--font-ui` inherits the body's Jost; `--font-display`, used
+     for headings and the word-mark, is Jost too.
 
      Scale is a major third (1.25) off 1rem, tightening its tracking as it
      grows the way metal type does. */
   --font-ui: inherit;
-  --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Hoefler Text',
-    Georgia, 'Noto Serif Bengali', 'Kalpurush', 'SolaimanLipi', serif;
+  --font-display: 'Jost', Futura, 'Century Gothic', sans-serif;
 
   --fs-2xs: 0.6875rem;   /* 11 */
   --fs-xs: 0.75rem;      /* 12 */
