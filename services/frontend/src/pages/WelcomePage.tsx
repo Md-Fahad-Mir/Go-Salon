@@ -71,7 +71,7 @@ export default function WelcomePage() {
             <p className="auth-welcome-sub">{t('auth.welcomeSub')}</p>
           </div>
 
-          <div className="stack-sm">
+          <div className="stack-sm auth-welcome-actions">
             <LinkButton to={ROUTES.register} block size="lg">
               {t('auth.getStarted')}
             </LinkButton>

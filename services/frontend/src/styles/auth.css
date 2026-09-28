@@ -34,8 +34,21 @@
 
 /* The page wears .dark-theme whatever the app does, so every token below is
    the night one. `color` is restated because body's ink was computed from the
-   day tokens and would otherwise inherit straight through. */
+   day tokens and would otherwise inherit straight through.
+
+   Quiet luxury: ivory ink, champagne hairlines, one satin control. The local
+   values are the few the night tokens do not already carry. */
 .auth-welcome {
+  --wl-ink: #f6f1ea;
+  --wl-ink-soft: #cbc1b5;
+  --wl-hair: rgba(228, 192, 142, 0.62);
+  --wl-hair-faint: rgba(228, 192, 142, 0.16);
+  --wl-satin: linear-gradient(180deg, #edcc9e 0%, #e0b47f 46%, #d5a870 100%);
+  --wl-satin-base: #dfb27b;
+  --wl-focus: #f4dcb6;
+  --wl-reveal: 1.15s;
+  --wl-lead: 0.26s;
+  --wl-step: 0.09s;
   position: relative;
   isolation: isolate;
   flex: 1;
@@ -70,7 +83,11 @@
    vertically centres it. Horizontally it is centred too, which keeps the man
    in the chair whole on a phone; the clamp stops an edge ever coming inside.
    The first declarations are the viewport-unit fallback for browsers without
-   container units. */
+   container units.
+
+   The film opens by rising out of the obsidian and settling from a 4% push-in
+   to rest. The scale is around the centre and never below 1, so it only ever
+   adds coverage — the bands stay outside throughout. */
 .auth-welcome-video {
   --film-w: max(104vw, 100dvh * 720 / 828);
   --film-w: max(104cqw, 100cqh * 720 / 828);
@@ -83,8 +100,10 @@
   max-width: none;
   object-fit: cover;
   pointer-events: none;
-  filter: saturate(1.08) brightness(0.9);
+  /* A quieter, warmer grade: a touch less colour, a touch more depth. */
+  filter: saturate(0.96) contrast(1.04) brightness(0.9);
   transition: opacity 0.55s var(--ease-out);
+  animation: welcome-film-in 2.4s var(--ease-out) backwards;
 }
 .auth-welcome-video[data-seam='true'] { opacity: 0.25; }
 
@@ -102,23 +121,28 @@
   mask-image: linear-gradient(to bottom, transparent 42%, #000 64%);
 }
 
-/* Cinematic grade: a light vignette up top for the status bar, clear through
-   the faces, then a deep warm fall-off where the copy sits. */
+/* Cinematic grade: a soft vignette up top for the status bar, clear through
+   the faces, then a long eased fall into warm obsidian where the copy sits.
+   The extra stops ease the ramp so it never shows a band. */
 .auth-welcome-bg::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 2;
   background:
-    radial-gradient(130% 80% at 50% 38%, transparent 55%, rgba(11, 10, 8, 0.45) 100%),
+    radial-gradient(130% 80% at 50% 36%, transparent 55%, rgba(11, 10, 8, 0.5) 100%),
     linear-gradient(
       to bottom,
-      rgba(11, 10, 8, 0.55) 0%,
-      rgba(11, 10, 8, 0.12) 16%,
-      rgba(11, 10, 8, 0.08) 34%,
-      rgba(11, 10, 8, 0.55) 56%,
-      rgba(11, 10, 8, 0.88) 74%,
-      rgba(11, 10, 8, 0.96) 100%
+      rgba(11, 10, 8, 0.58) 0%,
+      rgba(11, 10, 8, 0.24) 8%,
+      rgba(11, 10, 8, 0.08) 18%,
+      rgba(11, 10, 8, 0.05) 34%,
+      rgba(11, 10, 8, 0.2) 45%,
+      rgba(11, 10, 8, 0.5) 54%,
+      rgba(11, 10, 8, 0.76) 63%,
+      rgba(11, 10, 8, 0.9) 73%,
+      rgba(11, 10, 8, 0.965) 86%,
+      rgba(11, 10, 8, 0.98) 100%
     );
 }
 
@@ -127,42 +151,244 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  gap: 1.75rem;
-  padding: calc(1.5rem + var(--safe-top)) var(--screen-padding) calc(1rem + var(--safe-bottom));
+  /* Headline size: Bengali runs a step smaller, since its glyphs sit larger
+     than Latin at the same size. Set here so the short-screen rule below can
+     override both with one declaration each. */
+  --wl-h1: clamp(1.875rem, 1.3rem + 3vw, 2.375rem);
+  gap: 2rem;
+  padding:
+    calc(1.5rem + var(--safe-top))
+    calc(var(--screen-padding) + 0.5rem)
+    calc(1rem + var(--safe-bottom));
 }
 
 .auth-welcome-intro {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.75rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 4px 24px rgba(0, 0, 0, 0.35);
+  gap: 0.875rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32), 0 6px 28px rgba(0, 0, 0, 0.3);
 }
-.auth-welcome-intro .auth-brand { margin-bottom: 0.5rem; }
-.auth-welcome-intro .auth-brand-mark { text-shadow: none; }
+
+/* The signature: a smaller bevelled champagne tile, a quiet word-mark and a
+   hairline that runs on to the margin like a masthead rule. The headline, not
+   the logo, is the loudest thing on the page. BrandMark is shared with sign-in,
+   so all of this stays under .auth-welcome. */
+.auth-welcome .auth-brand {
+  align-self: stretch;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--wl-ink);
+}
+.auth-welcome .auth-brand::after {
+  content: '';
+  flex: 1 1 auto;
+  min-width: 1.5rem;
+  height: 1px;
+  margin-inline-start: 0.375rem;
+  background: linear-gradient(90deg, var(--wl-hair), var(--wl-hair-faint) 55%, transparent);
+  transform-origin: 0 50%;
+}
+.auth-welcome .auth-brand-xl .auth-brand-mark {
+  width: 2.625rem;
+  height: 2.625rem;
+  border-radius: 0.8125rem;
+  background-color: #dcae76;
+  background-image: var(--sheen), var(--accent-gradient);
+  --mark-hole: #dcae76;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 247, 230, 0.55),
+    inset 0 -1px 0 rgba(92, 60, 24, 0.3),
+    0 0 0 1px rgba(0, 0, 0, 0.16),
+    0 10px 22px -10px rgba(0, 0, 0, 0.7);
+  text-shadow: none;
+}
+/* The word-mark is small now and can land on the lit side of a face, so it
+   carries a wide, soft shadow of its own — a halo you feel rather than see. */
+.auth-welcome .auth-brand-xl .auth-brand-word {
+  font-size: 1.1875rem;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 14px rgba(0, 0, 0, 0.62), 0 0 28px rgba(0, 0, 0, 0.3);
+}
+/* Spaced capitals are Latin-only: Bengali has no case, and tracking breaks
+   its conjuncts. The negative end margin gives back the last letter's
+   trailing space so the rule starts an even step from the word. */
+:root[data-lang='en'] .auth-welcome .auth-brand-xl .auth-brand-word {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  word-spacing: -0.08em;
+  margin-inline-end: -0.28em;
+  text-transform: uppercase;
+}
 
 /* The heading voice the signed-in apps give h1 and .display (customer.css,
-   owner.css). Signed out there is no data-app scope, so without this the
-   splash would fall back to base.css's heavier 800. */
+   owner.css), set larger and lighter here: at this size a regular weight with
+   tightened tracking reads as couture, where a bold one reads as an app. */
+:root[data-lang='en'] .auth-welcome-body { --wl-h1: clamp(2rem, 1.5rem + 3.2vw, 2.75rem); }
+
 .auth-welcome-body .display {
-  max-width: 18ch;
+  max-width: 16ch;
   font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: var(--tracking-tighter);
-  line-height: var(--leading-tight);
+  font-size: var(--wl-h1);
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0;
+  color: var(--wl-ink);
+  text-wrap: balance;
 }
-.auth-welcome-sub { font-size: 1.0625rem; line-height: 1.5; max-width: 32ch; color: var(--text-secondary); }
+:root[data-lang='en'] .auth-welcome-body .display {
+  font-weight: 400;
+  line-height: 1.07;
+  letter-spacing: -0.028em;
+}
+
+.auth-welcome-sub {
+  max-width: 31ch;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--wl-ink-soft);
+  text-wrap: pretty;
+}
+:root[data-lang='en'] .auth-welcome-sub { line-height: 1.6; letter-spacing: 0.005em; }
+
+/* --- Actions --------------------------------------------------------------- */
+
+.auth-welcome-actions { gap: 0.5rem; }
+.auth-welcome-actions .btn { border-radius: var(--radius-pill); }
+
+/* Matte satin: a soft broad highlight up top, a bevel along both edges and a
+   grounded shadow with only a trace of warm light in it — gold as a
+   material, not a flat fill, and no halo. */
+.auth-welcome-actions .btn-primary {
+  isolation: isolate;
+  min-height: 3.5rem;
+  border-color: transparent;
+  background-color: var(--wl-satin-base);
+  background-image:
+    radial-gradient(120% 150% at 50% -55%, rgba(255, 248, 234, 0.4), rgba(255, 248, 234, 0) 62%),
+    var(--wl-satin);
+  color: var(--accent-on);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 249, 238, 0.62),
+    inset 0 -1px 0 rgba(92, 60, 24, 0.26),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 14px 28px -14px rgba(0, 0, 0, 0.7),
+    0 18px 34px -26px rgba(224, 176, 120, 0.4);
+}
+:root[data-lang='en'] .auth-welcome-actions .btn-primary {
+  padding-inline: calc(1.125rem + 0.16em) 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 550;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.auth-welcome-actions .btn-primary:hover:not(:disabled),
+.auth-welcome-actions .btn-primary:active:not(:disabled) { background-color: var(--wl-satin-base); }
+
+/* Hover lifts the satin with light rather than a colour swap (opacity only). */
+.auth-welcome-actions .btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.3), rgba(255, 250, 240, 0.08));
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-out);
+  pointer-events: none;
+}
+.auth-welcome-actions .btn-primary:hover::before { opacity: 1; }
+.auth-welcome-actions .btn-primary:active::before { opacity: 0.4; transition-duration: var(--speed-fast); }
+
+/* The way back in, said quietly: ivory text on a champagne hairline. */
+.auth-welcome-actions .btn-ghost {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--wl-ink-soft);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(228, 192, 142, 0.42);
+  text-underline-offset: 0.32em;
+  transition:
+    color 0.35s var(--ease-out),
+    text-decoration-color 0.35s var(--ease-out),
+    transform var(--speed) var(--ease-out);
+}
+:root[data-lang='en'] .auth-welcome-actions .btn-ghost { font-weight: 400; letter-spacing: 0.02em; }
+.auth-welcome-actions .btn-ghost:hover:not(:disabled) {
+  background-color: transparent;
+  color: var(--wl-ink);
+  text-decoration-color: rgba(228, 192, 142, 0.9);
+}
+
+.auth-welcome-actions .btn:focus-visible {
+  outline: 2px solid var(--wl-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-pill);
+}
+
+/* --- Reveal ---------------------------------------------------------------- */
+
+/* A calm fade-and-rise, one line after another, while the film comes up.
+   `backwards` rather than `both`: a filled animation would pin transform and
+   swallow the buttons' :active press once it had finished. */
+.auth-welcome-intro > *,
+.auth-welcome-actions > * {
+  animation: welcome-rise var(--wl-reveal) var(--ease-out) backwards;
+}
+.auth-welcome-intro > :nth-child(1) { animation-delay: var(--wl-lead); }
+.auth-welcome-intro > :nth-child(2) { animation-delay: calc(var(--wl-lead) + var(--wl-step) * 1.5); }
+.auth-welcome-intro > :nth-child(3) { animation-delay: calc(var(--wl-lead) + var(--wl-step) * 2.5); }
+.auth-welcome-actions > :nth-child(1) { animation-delay: calc(var(--wl-lead) + var(--wl-step) * 4); }
+.auth-welcome-actions > :nth-child(2) { animation-delay: calc(var(--wl-lead) + var(--wl-step) * 5); }
+.auth-welcome .auth-brand::after {
+  animation: welcome-rule 1.6s var(--ease-out) calc(var(--wl-lead) + var(--wl-step) * 3) backwards;
+}
+
+@keyframes welcome-film-in {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes welcome-rise {
+  from { opacity: 0; transform: translate3d(0, 0.75rem, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes welcome-rule {
+  from { opacity: 0; transform: scaleX(0); }
+  to { opacity: 1; transform: none; }
+}
 
 /* On a short screen the copy climbs into the bright upper film, so the whole
-   grade deepens a step (the colour sits under the gradients). */
+   grade deepens a step (the colour sits under the gradients) and the rhythm
+   tightens. */
 @media (max-height: 40rem) {
   .auth-welcome-bg::after { background-color: rgba(11, 10, 8, 0.35); }
-  .auth-welcome-body { gap: 1rem; }
-  .auth-welcome-body .display { font-size: 1.75rem; }
+  .auth-welcome-body { --wl-h1: 1.75rem; gap: 1.25rem; }
+  :root[data-lang='en'] .auth-welcome-body { --wl-h1: 1.875rem; }
+  .auth-welcome-intro { gap: 0.625rem; }
+  .auth-welcome .auth-brand { margin-bottom: 0.5rem; }
+  .auth-welcome-actions .btn-primary { min-height: 3.25rem; }
+}
+/* A phone on its side: the copy fills the whole height and sits on the bright
+   wall, so the grade takes one more step to keep every line legible. */
+@media (max-height: 30rem) {
+  .auth-welcome-bg::after { background-color: rgba(11, 10, 8, 0.52); }
 }
 
+/* Reduced motion: everything is simply there — no rise, no draw,
+   no push-in — and the film is the still poster (see WelcomePage). */
 @media (prefers-reduced-motion: reduce) {
-  .auth-welcome-video { transition: none; }
+  .auth-welcome-video { transition: none; animation: none; }
+  .auth-welcome-intro > *,
+  .auth-welcome-actions > *,
+  .auth-welcome .auth-brand::after { animation: none; }
+  .auth-welcome-actions .btn-primary::before,
+  .auth-welcome-actions .btn-ghost { transition: none; }
 }
 
 /* --- Shared page bits ------------------------------------------------------ */
