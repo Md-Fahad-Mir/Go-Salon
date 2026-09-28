@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { InstallBanner } from '../common/InstallBanner';
 import { OfflineBanner } from '../common/OfflineBanner';
 import { Toaster } from '../common/Toaster';
 import { useAppStore } from '../../store/useAppStore';
@@ -60,6 +61,8 @@ export function AppFrame({ children }: { children: ReactNode }) {
   return (
     <div className="app-frame">
       <OfflineBanner />
+      {/* Renders only on the join journey; see the component. */}
+      <InstallBanner />
       {children}
       <Toaster />
     </div>

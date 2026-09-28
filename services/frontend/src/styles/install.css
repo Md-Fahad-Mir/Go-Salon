@@ -1,0 +1,58 @@
+/* The "add to home screen" offer, on the join journey only (InstallBanner).
+
+   Its own file and its own namespace, .install-*. The journey runs signed out,
+   where `:root[data-app]` is not stamped, so this cannot live in a scoped
+   sheet — and the shared sheets take scoped additions only. Nothing else in
+   the app writes an .install-* class. */
+
+.install-banner {
+  position: sticky;
+  top: calc(var(--space-2) + var(--safe-top));
+  z-index: 39; /* under the offline banner, which says something more urgent */
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: var(--space-2) var(--space-4) 0;
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3);
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.install-icon {
+  flex: none;
+  border-radius: var(--radius);
+}
+
+.install-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.install-title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.install-text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.install-glyph {
+  display: inline-block;
+  vertical-align: -0.2em;
+  margin-inline: 0.15em;
+  color: var(--accent-ink);
+}
+
+.install-body .btn {
+  margin-top: var(--space-2);
+}

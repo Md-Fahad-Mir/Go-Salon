@@ -2,6 +2,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App';
+import { listenForInstall } from './store/useInstallStore';
+
+// Before the first render: Chrome can offer the install before any component
+// has mounted, and an offer nobody was listening for is gone for the session.
+listenForInstall();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

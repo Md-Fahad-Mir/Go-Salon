@@ -58,6 +58,15 @@ export const tenant = {
   'tenant.scanUnsupportedTitle': 'This browser cannot open the camera',
   'tenant.scanUnsupportedBody': 'Scan the code with your phone’s own camera app instead — it opens the salon straight away.',
 
+  /* The offer to add the app to the home screen — on the join journey only,
+     for somebody who scanned a code in a browser. `installIosSteps` names
+     Safari's own menu items, with their icons dropped in. */
+  'tenant.installTitle': 'Get the Eureka app',
+  'tenant.installBody': 'Add it to your home screen and this salon is one tap away next time — no app store needed.',
+  'tenant.installAction': 'Install',
+  'tenant.installIosSteps': 'Tap {share} Share, then {add} Add to Home Screen.',
+  'tenant.installDismiss': 'Not now',
+
   /* The shop's own QR code, on the owner's salon screen. */
   'tenant.qrTitle': 'Your QR code',
   'tenant.qrAlt': 'The QR code customers scan to add your salon',

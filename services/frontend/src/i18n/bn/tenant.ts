@@ -54,6 +54,15 @@ export const tenant = {
   'tenant.scanUnsupportedTitle': 'এই ব্রাউজারে ক্যামেরা খোলা যায় না',
   'tenant.scanUnsupportedBody': 'ফোনের নিজের ক্যামেরা অ্যাপ দিয়ে কোডটি স্ক্যান করুন — তাতে স্যালনটি সরাসরি খুলে যাবে।',
 
+  /* The offer to add the app to the home screen. Safari's menu item stays in
+     English, in quotes, because that is what the phone's own menu says unless
+     it is set to Bangla — and a translated label would not match the screen. */
+  'tenant.installTitle': 'ইউরেকা অ্যাপটি নিন',
+  'tenant.installBody': 'হোম স্ক্রিনে যোগ করে রাখুন — পরের বার এক চাপেই এই স্যালন খুলবে, অ্যাপ স্টোর লাগবে না।',
+  'tenant.installAction': 'ইনস্টল করুন',
+  'tenant.installIosSteps': '{share} শেয়ার-এ চাপ দিন, তারপর {add} "Add to Home Screen" বেছে নিন।',
+  'tenant.installDismiss': 'এখন না',
+
   /* The shop's own QR code, on the owner's salon screen. */
   'tenant.qrTitle': 'আপনার কিউআর কোড',
   'tenant.qrAlt': 'গ্রাহকেরা যে কিউআর কোড স্ক্যান করে আপনার স্যালন যোগ করেন',

@@ -52,7 +52,10 @@ def join_url(tenant: Tenant) -> str:
     at wherever the app really is, and that is not the same string in
     development as in production.
     """
-    base = getattr(settings, 'JOIN_URL_BASE', 'https://app.gosalon.com').rstrip('/')
+    # Read from the setting and only from there. `core/settings.py` always
+    # defines it, with the production default; a second default here was a
+    # second copy of the domain, which is one more place to forget to change.
+    base = settings.JOIN_URL_BASE.rstrip('/')
     return f'{base}/join/{tenant.join_token}'
 
 

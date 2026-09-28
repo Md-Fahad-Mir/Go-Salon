@@ -1,0 +1,5 @@
+# Local Cloudflare Tunnel configuration and credentials
+cloudflared/
+
+# Local development launch scripts
+scripts/

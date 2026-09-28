@@ -275,11 +275,26 @@ class SalonQRTests(BookingTestCase):
         self.assertIn('code', response.json())
 
     def test_the_link_it_encodes_is_the_join_url(self):
+        """The code names whatever `JOIN_URL_BASE` says, and nothing else.
+
+        It used to assert the production domain literally, which only passed
+        while no environment set the variable — the first `.env` pointing
+        QA at another domain turned the suite red for doing exactly what the
+        setting is for. So this pins the behaviour: the base comes from the
+        setting, whatever it is, and a trailing slash is not doubled.
+        """
+        from django.test import override_settings
+
         from Apps.tenants.views import join_url
 
-        self.assertEqual(
-            join_url(self.tenant),
-            f'https://app.gosalon.com/join/{self.tenant.join_token}')
+        token = self.tenant.join_token
+        for base, expected in (
+            ('https://salon.fahadmir.me', f'https://salon.fahadmir.me/join/{token}'),
+            ('https://app.gosalon.com/', f'https://app.gosalon.com/join/{token}'),
+            ('http://192.168.1.20:5174', f'http://192.168.1.20:5174/join/{token}'),
+        ):
+            with self.subTest(base=base), override_settings(JOIN_URL_BASE=base):
+                self.assertEqual(join_url(self.tenant), expected)
 
     def test_a_stylist_cannot_read_the_shops_code(self):
         """`IsProvider` would let them through; `OwnsTenant` is the narrow one."""
