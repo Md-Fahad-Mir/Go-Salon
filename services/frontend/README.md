@@ -1,6 +1,6 @@
-# Eureka Hair App — customer PWA
+# Go Salon Hair App — customer PWA
 
-The mobile app Eureka customers use: try a hairstyle on your own photo, then
+The mobile app Go Salon customers use: try a hairstyle on your own photo, then
 book the chair that can do it. Dhaka-first, dark theme, installable.
 
 **The AI try-on is real; everything else is still mock.** `api.tryOn` calls the

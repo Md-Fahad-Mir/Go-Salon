@@ -111,7 +111,7 @@ export const profile = {
   'bookings.paidWith': 'যেভাবে দিয়েছেন',
   'bookings.datePaid': 'পেমেন্টের তারিখ',
   'bookings.stylist': 'স্টাইলিস্ট',
-  'bookings.receiptShareTitle': 'Eureka রসিদ',
+  'bookings.receiptShareTitle': 'Go Salon রসিদ',
   'bookings.receiptLineRef': 'রসিদ · {id}',
   'bookings.receiptLineWhen': '{day} · {time}',
   'bookings.receiptLineTotal': 'মোট {total}, {method}-এ',
@@ -166,7 +166,7 @@ export const profile = {
   'profile.logOutTitle': 'লগ আউট করবেন?',
   'profile.logOutBody': 'আবার সাইন ইন করতে আপনার ফোন নম্বর আর পাসওয়ার্ড লাগবে।',
   'profile.staySignedIn': 'লগ ইনই থাকি',
-  'profile.appVersion': 'Eureka হেয়ার অ্যাপ · v0.1.0',
+  'profile.appVersion': 'Go Salon হেয়ার অ্যাপ · v0.1.0',
 
   /* ---- Edit profile ---- */
   'profile.editTitle': 'প্রোফাইল এডিট',
@@ -294,11 +294,11 @@ export const profile = {
   'settings.defaultUpdated': 'ডিফল্ট বদলেছে',
   'settings.paymentRemoved': 'পেমেন্ট মেথড সরানো হয়েছে',
   'legal.lastUpdated': 'সর্বশেষ হালনাগাদ ১৭ সেপ্টেম্বর ২০২৬',
-  'legal.contact': 'দুটি নথির যেকোনোটি নিয়ে প্রশ্ন থাকলে support@eureka.app-এ লিখুন।',
+  'legal.contact': 'দুটি নথির যেকোনোটি নিয়ে প্রশ্ন থাকলে support@gosalon.app-এ লিখুন।',
 
   'legal.termsWhoHead': 'আমরা কারা',
   'legal.termsWhoBody':
-    'ইউরেকা একটি বুকিং অ্যাপ। চুল কাটার কাজটি আমাদের নয় — এখানকার প্রতিটি স্যালন, পার্লার ও বারবার নিজের ব্যবসা নিজে চালান, নিজের দাম ঠিক করেন এবং নিজের কাজ নিজে করেন। আমরা কেবল পরিচয় করিয়ে দিই আর সময়সূচি রাখি।',
+    'গো স্যালন একটি বুকিং অ্যাপ। চুল কাটার কাজটি আমাদের নয় — এখানকার প্রতিটি স্যালন, পার্লার ও বারবার নিজের ব্যবসা নিজে চালান, নিজের দাম ঠিক করেন এবং নিজের কাজ নিজে করেন। আমরা কেবল পরিচয় করিয়ে দিই আর সময়সূচি রাখি।',
   'legal.termsBookingHead': 'বুকিং মানে একটি অনুরোধ',
   'legal.termsBookingBody1':
     'বেশির ভাগ স্যালন প্রতিটি বুকিং নিজে দেখে উত্তর দেন, তাই বুকিং শুরু হয় অনুরোধ হিসেবে এবং তাঁরা হ্যাঁ বললে সেটি অ্যাপয়েন্টমেন্ট হয়। কেউ কেউ স্বয়ংক্রিয়ভাবে গ্রহণ করেন; তাঁদের প্রোফাইলে সেটি লেখা থাকে।',
@@ -345,5 +345,5 @@ export const profile = {
     'বিজ্ঞাপনদাতার কাছে নয়, কারও কাছেই নয়। আপনার তথ্য কেবল সেই স্যালনই পান যেখানে আপনি নিজে বুক করেছেন।',
   'legal.privacyAskHead': 'তথ্য চাওয়া বা মুছে ফেলা',
   'legal.privacyAskBody':
-    'অ্যাকাউন্টের নম্বর থেকে support@eureka.app-এ লিখুন, আমরা যা রেখেছি তা পাঠিয়ে দেব বা মুছে দেব। স্যালনের নিজের হিসাবের জন্য দরকারি বুকিংয়ের রেকর্ড তার পরেও থাকতে পারে।',
+    'অ্যাকাউন্টের নম্বর থেকে support@gosalon.app-এ লিখুন, আমরা যা রেখেছি তা পাঠিয়ে দেব বা মুছে দেব। স্যালনের নিজের হিসাবের জন্য দরকারি বুকিংয়ের রেকর্ড তার পরেও থাকতে পারে।',
 } as const;

@@ -52,7 +52,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           E
         </span>
         <span className="sidebar-wordmark">
-          Eureka <span>ADMIN</span>
+          Go Salon <span>ADMIN</span>
         </span>
         <button type="button" className="sidebar-close" onClick={onClose} aria-label="Close menu">
           <X size={20} />

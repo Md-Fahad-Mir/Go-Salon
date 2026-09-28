@@ -70,7 +70,7 @@ export function SalonQRSection() {
 
   const save = () => {
     if (!blob) return;
-    downloadBlob('eureka-join-code.png', blob);
+    downloadBlob('gosalon-join-code.png', blob);
     toast('success', t('tenant.qrSaved'));
   };
 

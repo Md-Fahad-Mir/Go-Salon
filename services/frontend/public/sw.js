@@ -1,8 +1,8 @@
-/* Eureka Hair App — service worker.
+/* Go Salon Hair App — service worker.
    App shell is precached on install; hashed build assets are cached on first
    use; navigations go network-first and fall back to the cached shell so the
    app still opens offline. Bump CACHE whenever the shell list changes. */
-const CACHE = 'eureka-shell-v3';
+const CACHE = 'gosalon-shell-v3';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 /* Every build asset is hashed, so the list cannot be hardcoded. Vite's build

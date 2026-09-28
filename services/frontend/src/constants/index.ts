@@ -234,15 +234,15 @@ export const FEASIBILITY_LABELS = {
 } as const;
 
 export const STORAGE_KEYS = {
-  app: 'eureka.app',
-  booking: 'eureka.booking-draft',
-  tryOn: 'eureka.tryon',
+  app: 'gosalon.app',
+  booking: 'gosalon.booking-draft',
+  tryOn: 'gosalon.tryon',
   /* Read by the inline script in index.html before React mounts, so the app
      never flashes the wrong ground. Keep the two in step. */
-  theme: 'eureka.theme',
-  language: 'eureka.language',
-  provider: 'eureka.provider',
-  directory: 'eureka.directory',
+  theme: 'gosalon.theme',
+  language: 'gosalon.language',
+  provider: 'gosalon.provider',
+  directory: 'gosalon.directory',
 } as const;
 
 /** The browser chrome colour per mood, mirroring --bg-primary. */

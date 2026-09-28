@@ -22,7 +22,7 @@ const SEEDS: Seed[] = [
   { actionType: 'create', resourceType: 'Hairstyle', resourceId: 'HS-114', details: 'Added “Mehndi party waves” to the catalogue' },
   { actionType: 'update', resourceType: 'Hairstyle', resourceId: 'HS-113', details: 'Deactivated “Ash grey highlights” — low success rate', before: 'active', after: 'inactive' },
   { actionType: 'approve', resourceType: 'Booking', resourceId: 'BKG-3014', details: 'Manually approved booking on behalf of Bindiya Salon', before: 'pending', after: 'approved' },
-  { actionType: 'update', resourceType: 'Settings', resourceId: 'ai-model', details: 'Switched image model', before: 'eureka-hair-v2', after: 'eureka-hair-v3' },
+  { actionType: 'update', resourceType: 'Settings', resourceId: 'ai-model', details: 'Switched image model', before: 'gosalon-hair-v2', after: 'gosalon-hair-v3' },
   { actionType: 'delete', resourceType: 'Service', resourceId: 'SVC-094', details: 'Removed duplicate “Hair spa” service', status: 'success' },
   { actionType: 'update', resourceType: 'Business', resourceId: 'BIZ-214', details: 'Payout account update rejected by provider', status: 'failed' },
   { actionType: 'login', resourceType: 'Session', resourceId: 'admin', details: 'Admin sign-in from a new device' },

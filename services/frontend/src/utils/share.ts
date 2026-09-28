@@ -34,9 +34,9 @@ export const buildIcs = (event: {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Eureka Hair App//EN',
+    'PRODID:-//Go Salon Hair App//EN',
     'BEGIN:VEVENT',
-    `UID:${Date.now()}@eureka.app`,
+    `UID:${Date.now()}@gosalon.app`,
     `DTSTAMP:${stamp(new Date())}`,
     `DTSTART:${stamp(event.start)}`,
     `DTEND:${stamp(event.end)}`,

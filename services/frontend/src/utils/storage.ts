@@ -30,7 +30,7 @@ export const safeLocal = {
   },
 };
 
-const DB_NAME = 'eureka-photos';
+const DB_NAME = 'gosalon-photos';
 const STORE = 'photos';
 const memory = new Map<string, Blob>();
 

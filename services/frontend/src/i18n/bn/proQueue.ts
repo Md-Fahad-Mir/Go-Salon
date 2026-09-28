@@ -57,7 +57,7 @@ export const proQueue = {
   'proQueue.payTip': 'বকশিশ',
   'proQueue.payTipHint': 'বকশিশ না থাকলে খালি রাখুন। বকশিশ পুরোটাই স্টাইলিস্টের।',
   'proQueue.payConfirm': '{amount} নিন',
-  'proQueue.payBreakdown': 'সেবার জন্য {services}, ইউরেকা বুকিং ফি {fee}।',
+  'proQueue.payBreakdown': 'সেবার জন্য {services}, গো স্যালন বুকিং ফি {fee}।',
   'proQueue.payDone': '{name}-এর কাজ শেষ',
   'proQueue.payDoneBody': '{method}-এ {amount} নেওয়া হয়েছে।',
 

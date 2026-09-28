@@ -33,7 +33,7 @@ export const tenant = {
   'tenant.homeTitle': 'আপনার স্যালন',
   'tenant.homeHint': 'বুক করতে একটিতে চাপ দিন।',
   'tenant.homeEmptyTitle': 'এখনো কোনো স্যালন নেই',
-  'tenant.homeEmptyBody': 'স্যালনে গিয়ে কিউআর কোড স্ক্যান করলে এখানে যুক্ত হবে। কাউন্টারে জিজ্ঞেস করুন — ইউরেকার প্রতিটি স্যালনেই কোড আছে।',
+  'tenant.homeEmptyBody': 'স্যালনে গিয়ে কিউআর কোড স্ক্যান করলে এখানে যুক্ত হবে। কাউন্টারে জিজ্ঞেস করুন — গো স্যালনের প্রতিটি স্যালনেই কোড আছে।',
   'tenant.homeEmptyAction': 'সেটিংসে গিয়ে স্যালন যোগ করুন',
   'tenant.homePickTitle': 'আপনি কোন স্যালনে যাচ্ছেন?',
   'tenant.homePickBody': 'একটিতে চাপ দিলে সেটি খুলবে। সেটিংস থেকে যেকোনো সময় বদলাতে পারবেন।',
@@ -44,7 +44,7 @@ export const tenant = {
   'tenant.scanHint': 'স্যালনের কিউআর কোডের দিকে ক্যামেরা ধরুন।',
   'tenant.scanAddSalon': 'স্যালন যোগ করুন',
   'tenant.scanRow': 'স্যালনের কিউআর কোড স্ক্যান করুন',
-  'tenant.scanRowHint': 'কাউন্টারে জিজ্ঞেস করুন — ইউরেকার প্রতিটি স্যালনেই কোড আছে।',
+  'tenant.scanRowHint': 'কাউন্টারে জিজ্ঞেস করুন — গো স্যালনের প্রতিটি স্যালনেই কোড আছে।',
   'tenant.backToSettings': 'সেটিংসে ফিরে যান',
   'tenant.scanCameraLabel': 'ক্যামেরা, স্যালনের কিউআর কোড খুঁজছে',
   'tenant.scanStarting': 'ক্যামেরা চালু হচ্ছে…',
@@ -57,7 +57,7 @@ export const tenant = {
   /* The offer to add the app to the home screen. Safari's menu item stays in
      English, in quotes, because that is what the phone's own menu says unless
      it is set to Bangla — and a translated label would not match the screen. */
-  'tenant.installTitle': 'ইউরেকা অ্যাপটি নিন',
+  'tenant.installTitle': 'গো স্যালন অ্যাপটি নিন',
   'tenant.installBody': 'হোম স্ক্রিনে যোগ করে রাখুন — পরের বার এক চাপেই এই স্যালন খুলবে, অ্যাপ স্টোর লাগবে না।',
   'tenant.installAction': 'ইনস্টল করুন',
   'tenant.installIosSteps': '{share} শেয়ার-এ চাপ দিন, তারপর {add} "Add to Home Screen" বেছে নিন।',

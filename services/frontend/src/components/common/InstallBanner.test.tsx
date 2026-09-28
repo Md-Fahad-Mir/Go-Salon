@@ -45,7 +45,7 @@ const open = (at: string) =>
     </LanguageProvider>,
   );
 
-const banner = () => screen.queryByRole('complementary', { name: 'Get the Eureka app' });
+const banner = () => screen.queryByRole('complementary', { name: 'Get the Go Salon app' });
 
 describe('Android: the browser offers the install', () => {
   beforeEach(() => fakeDevice(UA.android));

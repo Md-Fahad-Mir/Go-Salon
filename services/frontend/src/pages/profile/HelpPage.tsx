@@ -38,7 +38,7 @@ export default function HelpPage() {
               sub={t('profile.whatsappHours')}
               href="https://wa.me/8801700000000"
             />
-            <ListRow icon={<Mail size={18} aria-hidden="true" />} title={t('profile.emailUs')} sub="support@eureka.app" href="mailto:support@eureka.app" />
+            <ListRow icon={<Mail size={18} aria-hidden="true" />} title={t('profile.emailUs')} sub="support@gosalon.app" href="mailto:support@gosalon.app" />
             <ListRow icon={<Phone size={18} aria-hidden="true" />} title={t('profile.callSupport')} sub="+880 1700-000000" href="tel:+8801700000000" />
           </ListCard>
         </section>

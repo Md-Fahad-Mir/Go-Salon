@@ -8,7 +8,7 @@ interface BrandMarkProps {
   className?: string;
 }
 
-/** The Eureka mark: a gold tile with an "E" and the word-mark beside it.
+/** The Go Salon mark: a gold tile with an "E" and the word-mark beside it.
     Mirrors the header brand so the splash, sign-in and home all agree. */
 export function BrandMark({ size = 'md', markOnly, className }: BrandMarkProps) {
   const t = useT();

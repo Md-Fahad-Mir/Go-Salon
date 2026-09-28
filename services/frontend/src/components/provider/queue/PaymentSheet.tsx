@@ -45,7 +45,7 @@ export function PaymentSheet({ appointment, onClose, onConfirm }: PaymentSheetPr
       }
     >
       {/* The bill is the whole of it — the customer hands over the services
-          plus Eureka's booking fee. The line underneath splits the two so the
+          plus Go Salon's booking fee. The line underneath splits the two so the
           fee is not mistaken for the salon's money later, on a screen that
           reports only the services. Not `.caption`: inside `.pq-due` every
           provider theme uppercases that with wide tracking, which is right for

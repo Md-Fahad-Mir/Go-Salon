@@ -346,7 +346,7 @@ describe('leaving a salon', () => {
     // may argue with that — a "removed, never show again" list would.
     store().setTenants([ALPHA, BETA]);
     expect(store().tenants).toEqual([ALPHA, BETA]);
-    const persisted = JSON.parse(localStorage.getItem('eureka.app') ?? '{}');
+    const persisted = JSON.parse(localStorage.getItem('gosalon.app') ?? '{}');
     expect(JSON.stringify(persisted)).not.toMatch(/removed|dismissed|hidden/i);
   });
 });

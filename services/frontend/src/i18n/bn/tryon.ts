@@ -149,8 +149,8 @@ export const tryon = {
   'tryon.toastCopiedBody': 'যেখানে খুশি পেস্ট করে শেয়ার করুন।',
   'tryon.toastShareFailed': 'শেয়ার করা গেল না',
   'tryon.toastShareFailedBody': 'ছবিটা সেভ করে গ্যালারি থেকে শেয়ার করুন।',
-  'tryon.shareTitle': '{name} · ইউরেকা',
-  'tryon.shareText': 'ইউরেকা দিয়ে {name} লুকে নিজেকে দেখলাম।',
+  'tryon.shareTitle': '{name} · গো স্যালন',
+  'tryon.shareText': 'গো স্যালন দিয়ে {name} লুকে নিজেকে দেখলাম।',
 
   /* Before / after slider */
   'tryon.beforeAlt': 'আগের ছবি',

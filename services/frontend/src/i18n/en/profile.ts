@@ -111,7 +111,7 @@ export const profile = {
   'bookings.paidWith': 'Paid with',
   'bookings.datePaid': 'Date paid',
   'bookings.stylist': 'Stylist',
-  'bookings.receiptShareTitle': 'Eureka receipt',
+  'bookings.receiptShareTitle': 'Go Salon receipt',
   'bookings.receiptLineRef': 'Receipt · {id}',
   'bookings.receiptLineWhen': '{day} · {time}',
   'bookings.receiptLineTotal': 'Total {total} via {method}',
@@ -168,7 +168,7 @@ export const profile = {
   'profile.logOutTitle': 'Log out?',
   'profile.logOutBody': 'You will need your phone number and password to sign back in.',
   'profile.staySignedIn': 'Stay signed in',
-  'profile.appVersion': 'Eureka Hair App · v0.1.0',
+  'profile.appVersion': 'Go Salon Hair App · v0.1.0',
 
   /* ---- Edit profile ---- */
   'profile.editTitle': 'Edit profile',
@@ -299,11 +299,11 @@ export const profile = {
      are a request a salon answers, money changes hands at the chair, and a
      try-on photo lives on the phone but is sent away to be rendered. */
   'legal.lastUpdated': 'Last updated 17 September 2026',
-  'legal.contact': 'Questions about either document? Write to support@eureka.app.',
+  'legal.contact': 'Questions about either document? Write to support@gosalon.app.',
 
   'legal.termsWhoHead': 'Who we are',
   'legal.termsWhoBody':
-    'Eureka is a booking app. The haircut is not ours — every salon, parlour and barber on it runs their own business, sets their own prices and does their own work. We introduce you to them and keep the diary.',
+    'Go Salon is a booking app. The haircut is not ours — every salon, parlour and barber on it runs their own business, sets their own prices and does their own work. We introduce you to them and keep the diary.',
   'legal.termsBookingHead': 'Booking is a request',
   'legal.termsBookingBody1':
     'Most salons answer each booking by hand, so a booking starts as a request and becomes an appointment when they say yes. Some accept automatically; their profile says which.',
@@ -350,5 +350,5 @@ export const profile = {
     'Not to advertisers, not to anybody. The only people who receive your details are the salon you chose to book.',
   'legal.privacyAskHead': 'Asking for your data, or its deletion',
   'legal.privacyAskBody':
-    'Write to support@eureka.app from the number on your account and we will send you what we hold, or delete it. Bookings a salon needs for its own records may outlive the request.',
+    'Write to support@gosalon.app from the number on your account and we will send you what we hold, or delete it. Bookings a salon needs for its own records may outlive the request.',
 } as const;

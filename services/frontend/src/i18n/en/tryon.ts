@@ -151,8 +151,8 @@ export const tryon = {
   'tryon.toastCopiedBody': 'Paste it anywhere to share.',
   'tryon.toastShareFailed': "Couldn't share",
   'tryon.toastShareFailedBody': 'Save the photo and share it from your gallery.',
-  'tryon.shareTitle': '{name} · Eureka',
-  'tryon.shareText': "Here's me with a {name} — previewed with Eureka.",
+  'tryon.shareTitle': '{name} · Go Salon',
+  'tryon.shareText': "Here's me with a {name} — previewed with Go Salon.",
 
   /* Before / after slider */
   'tryon.beforeAlt': 'Your photo before',

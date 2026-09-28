@@ -1,6 +1,6 @@
-# Eureka backend
+# Go Salon backend
 
-Django + DRF service behind the Eureka app. Today it holds the authentication
+Django + DRF service behind the Go Salon app. Today it holds the authentication
 system: accounts, roles, phone verification, JWT sessions and the salon
 owner's staff.
 

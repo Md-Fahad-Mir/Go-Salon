@@ -115,7 +115,7 @@ describe('saving it', () => {
     // mechanism the try-on results already use.
     expect(click).toHaveBeenCalledTimes(1);
     const anchor = click.mock.instances[0] as HTMLAnchorElement;
-    expect(anchor.download).toBe('eureka-join-code.png');
+    expect(anchor.download).toBe('gosalon-join-code.png');
     // Saving is local: nothing is asked of the server.
     expect(sent).toHaveLength(1);
   });

@@ -17,7 +17,7 @@ export interface BeforeInstallPromptEvent extends Event {
   readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 }
 
-const DISMISSED_KEY = 'eureka.install.dismissed';
+const DISMISSED_KEY = 'gosalon.install.dismissed';
 
 /** Whether "not now" was said in this browsing session. Storage can throw — a
     private window, blocked site data — and then the answer is simply no. */

@@ -1,7 +1,7 @@
 /* Shared vocabulary: navigation, generic actions, statuses, units.
    Keys are namespaced by area. Placeholders look like {name}. */
 export const common = {
-  'app.name': 'Eureka',
+  'app.name': 'Go Salon',
   'app.tagline': 'See the cut before the cut.',
 
   'nav.home': 'Home',

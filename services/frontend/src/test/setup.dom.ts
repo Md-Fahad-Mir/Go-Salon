@@ -21,7 +21,7 @@ let objectUrls = 0;
 const handedOut = new Set<string>();
 
 URL.createObjectURL = () => {
-  const url = `blob:eureka/${++objectUrls}`;
+  const url = `blob:gosalon/${++objectUrls}`;
   handedOut.add(url);
   return url;
 };

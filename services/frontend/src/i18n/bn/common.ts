@@ -2,7 +2,7 @@
    would use, not formal/literary Bangla. Loanwords that Dhaka actually says
    (স্যালন, বুকিং, ক্রেডিট) are kept rather than forced into Sanskritised forms. */
 export const common = {
-  'app.name': 'ইউরেকা',
+  'app.name': 'গো স্যালন',
   'app.tagline': 'কাটার আগেই দেখে নিন।',
 
   'nav.home': 'হোম',

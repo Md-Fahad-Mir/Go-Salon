@@ -52,7 +52,7 @@ export default function ConfirmationPage() {
       start,
       end: addMinutes(start, booking.duration),
     });
-    downloadText('eureka-booking.ics', ics);
+    downloadText('gosalon-booking.ics', ics);
     toast('success', t('booking.calendarSaved'), t('booking.calendarSavedBody'));
   };
 

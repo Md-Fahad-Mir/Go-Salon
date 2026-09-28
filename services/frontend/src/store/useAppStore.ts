@@ -48,7 +48,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
 const welcomeNotification = (): AppNotification => ({
   id: nextId('NTF'),
   kind: 'system',
-  title: 'Welcome to Eureka',
+  title: 'Welcome to Go Salon',
   body: `Your first ${STARTING_CREDITS} try-ons are on us. See the cut before the cut.`,
   createdAt: new Date().toISOString(),
   read: false,

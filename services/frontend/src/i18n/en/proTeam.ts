@@ -117,7 +117,7 @@ export const proTeam = {
   'pt.lengthMedium': 'Medium',
   'pt.lengthLong': 'Long',
   'pt.privateTitle': 'Contact her through the app only',
-  'pt.privateBody': 'This client asked not to be phoned or texted. Message her inside Eureka instead.',
+  'pt.privateBody': 'This client asked not to be phoned or texted. Message her inside Go Salon instead.',
   'pt.sendSms': 'Send SMS',
   'pt.hairHistory': 'Hair history',
   'pt.hairHistoryHint': 'Colour, treatments and anything that shapes the next sitting.',

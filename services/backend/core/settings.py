@@ -321,11 +321,11 @@ TIME_ZONE = 'UTC'
 BUSINESS_TIME_ZONE = env('BUSINESS_TIME_ZONE', 'Asia/Dhaka')
 
 # Booking. The slot grid, how soon is too soon, how far ahead the diary opens,
-# and the flat fee Eureka adds to a booking.
+# and the flat fee Go Salon adds to a booking.
 BOOKING_SLOT_MINUTES = env_int('BOOKING_SLOT_MINUTES', 15)
 BOOKING_LEAD_MINUTES = env_int('BOOKING_LEAD_MINUTES', 45)
 BOOKING_HORIZON_DAYS = env_int('BOOKING_HORIZON_DAYS', 60)
-# The flat fee Eureka adds to a booking. The server is what charges it, and
+# The flat fee Go Salon adds to a booking. The server is what charges it, and
 # the frontend quotes it on the summary screen before the booking exists — so
 # `PLATFORM_FEE` in services/frontend/src/constants must be the same number.
 BOOKING_PLATFORM_FEE = env_int('BOOKING_PLATFORM_FEE', 50)

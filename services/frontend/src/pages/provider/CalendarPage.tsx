@@ -74,7 +74,7 @@ export default function CalendarPage() {
   const dayList = onDay(mine, selected).filter((a) => a.stage !== 'cancelled');
   /* What was taken on the day being looked at, on the same basis the reports
      use: the services at the shop's own prices. Not the customer's bill — that
-     carries Eureka's booking fee, which is not the shop's money — and not the
+     carries Go Salon's booking fee, which is not the shop's money — and not the
      tips, which are the stylist's in full and belong to no takings figure.
 
      Counted over the whole diary rather than over the rows listed underneath,

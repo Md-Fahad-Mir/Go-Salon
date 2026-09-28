@@ -11,7 +11,7 @@ const slug = (value: string) =>
     .replace(/(^-|-$)/g, '');
 
 export const fileNameFor = (generation: AIGeneration): string =>
-  `eureka-${slug(generation.hairstyleName) || 'look'}.jpg`;
+  `gosalon-${slug(generation.hairstyleName) || 'look'}.jpg`;
 
 /** Saves the rendered result to the device. False when the blob is gone. */
 export async function downloadGeneration(generation: AIGeneration): Promise<boolean> {

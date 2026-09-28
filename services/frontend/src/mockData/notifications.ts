@@ -23,7 +23,7 @@ export const demoNotifications: AppNotification[] = [
     createdAt: isoDaysAgo(9, 18, 30), read: true, link: '/bookings/BOOK-C',
   },
   {
-    id: 'NTF-5', kind: 'system', title: 'Welcome to Eureka',
+    id: 'NTF-5', kind: 'system', title: 'Welcome to Go Salon',
     body: 'Your first three try-ons are on us. See the cut before the cut.',
     createdAt: isoDaysAgo(20, 9, 0), read: true, link: '/ai-tryon',
   },

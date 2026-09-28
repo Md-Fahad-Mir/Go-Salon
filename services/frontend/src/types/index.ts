@@ -1,4 +1,4 @@
-/* Domain model for the Eureka Hair App customer PWA.
+/* Domain model for the Go Salon Hair App customer PWA.
    Frontend-only: every record is seeded from src/mockData, mutated in the
    Zustand stores and persisted to localStorage / IndexedDB. */
 

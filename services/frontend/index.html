@@ -10,12 +10,12 @@
     <meta name="color-scheme" content="light dark" />
     <meta
       name="description"
-      content="Eureka Hair App — see the cut before the cut. Try hairstyles on your own photo and book a salon or barber in Dhaka."
+      content="Go Salon Hair App — see the cut before the cut. Try hairstyles on your own photo and book a salon or barber in Dhaka."
     />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Eureka" />
+    <meta name="apple-mobile-web-app-title" content="Go Salon" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -27,13 +27,13 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,100..900;1,100..900&display=swap"
     />
-    <title>Eureka Hair App</title>
+    <title>Go Salon Hair App</title>
     <script>
       // Paint the saved mood before React mounts, so the app never flashes the
       // wrong ground. Mirrors ThemeProvider; STORAGE_KEYS.theme must match.
       (function () {
         try {
-          var saved = JSON.parse(localStorage.getItem('eureka.theme'));
+          var saved = JSON.parse(localStorage.getItem('gosalon.theme'));
           var theme =
             saved === 'light' || saved === 'dark'
               ? saved

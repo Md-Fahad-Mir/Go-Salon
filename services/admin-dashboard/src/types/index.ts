@@ -1,4 +1,4 @@
-/* Domain model for the Eureka admin console. Frontend-only: every record here
+/* Domain model for the Go Salon admin console. Frontend-only: every record here
    is seeded from src/mockData and mutated in the Zustand store. */
 
 export type UserType = 'customer' | 'barber' | 'salon' | 'employee' | 'admin';

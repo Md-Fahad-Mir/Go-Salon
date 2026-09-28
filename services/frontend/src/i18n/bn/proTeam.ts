@@ -111,7 +111,7 @@ export const proTeam = {
   'pt.lengthMedium': 'মাঝারি',
   'pt.lengthLong': 'লম্বা',
   'pt.privateTitle': 'শুধু অ্যাপেই যোগাযোগ করুন',
-  'pt.privateBody': 'এই ক্লায়েন্ট ফোন বা এসএমএস চান না। ইউরেকা অ্যাপ থেকেই মেসেজ দিন।',
+  'pt.privateBody': 'এই ক্লায়েন্ট ফোন বা এসএমএস চান না। গো স্যালন অ্যাপ থেকেই মেসেজ দিন।',
   'pt.sendSms': 'এসএমএস পাঠান',
   'pt.hairHistory': 'চুলের ইতিহাস',
   'pt.hairHistoryHint': 'কালার, ট্রিটমেন্ট আর যা পরের বসাটা ঠিক করে দেয়।',

@@ -21,7 +21,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('Eureka crashed:', error, info.componentStack);
+    console.error('Go Salon crashed:', error, info.componentStack);
   }
 
   render() {

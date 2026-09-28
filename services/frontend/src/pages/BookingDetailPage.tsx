@@ -170,7 +170,7 @@ export default function BookingDetailPage() {
       start,
       end: addMinutes(start, booking.duration),
     });
-    downloadText(`eureka-${booking.id}.ics`, ics);
+    downloadText(`gosalon-${booking.id}.ics`, ics);
     toast('success', t('bookings.calendarSaved'), t('bookings.calendarSavedBody'));
   };
 

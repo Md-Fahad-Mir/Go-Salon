@@ -392,8 +392,8 @@ export const useStore = create<AdminStore>((set, get) => ({
             type,
             content:
               status === 'approved'
-                ? `Eureka: your booking at ${before?.businessName} is confirmed for ${before?.appointmentTime}.`
-                : `Eureka: ${before?.businessName} could not take your slot. ${reason ?? ''}`.trim(),
+                ? `Go Salon: your booking at ${before?.businessName} is confirmed for ${before?.appointmentTime}.`
+                : `Go Salon: ${before?.businessName} could not take your slot. ${reason ?? ''}`.trim(),
             sentTime: new Date().toISOString(),
             status: 'sent',
             deliveryStatus: 'delivered',

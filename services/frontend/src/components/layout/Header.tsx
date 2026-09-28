@@ -22,7 +22,7 @@ interface HeaderProps {
   /** Float over a cover image with a gradient instead of a solid bar. */
   transparent?: boolean;
   border?: boolean;
-  /** Replace the title with the Eureka word-mark (home screen). */
+  /** Replace the title with the Go Salon word-mark (home screen). */
   brand?: boolean;
   align?: 'center' | 'start';
 }

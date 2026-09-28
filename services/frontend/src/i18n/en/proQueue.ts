@@ -60,7 +60,7 @@ export const proQueue = {
   'proQueue.payTip': 'Tip',
   'proQueue.payTipHint': "Leave it empty if there was none. A tip is the stylist's in full.",
   'proQueue.payConfirm': 'Take {amount}',
-  'proQueue.payBreakdown': '{services} for the services, {fee} Eureka booking fee.',
+  'proQueue.payBreakdown': '{services} for the services, {fee} Go Salon booking fee.',
   'proQueue.payDone': '{name} is done',
   'proQueue.payDoneBody': '{amount} taken by {method}.',
 

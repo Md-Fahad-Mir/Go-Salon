@@ -7,7 +7,7 @@ import { useLocation, useNavigationType } from 'react-router-dom';
  *  is two entries with two positions, which is what Back actually means. Kept
  *  in sessionStorage so a reload mid-session does not lose it, and dropped
  *  when the tab closes — the same lifetime the history itself has. */
-const STORE_KEY = 'eureka.scroll';
+const STORE_KEY = 'gosalon.scroll';
 
 const read = (): Record<string, number> => {
   try {

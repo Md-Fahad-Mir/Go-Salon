@@ -79,7 +79,7 @@ def issue_otp(user: User, purpose: str, *, enforce_rate: bool = True) -> OTPCode
     )
 
     message = (
-        f'Your Eureka verification code is {code}. '
+        f'Your Go Salon verification code is {code}. '
         f'It expires in {settings.OTP_EXPIRATION_MINUTES} minutes.'
     )
     try:

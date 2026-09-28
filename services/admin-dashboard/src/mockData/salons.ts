@@ -58,7 +58,7 @@ export const mockSalons: Salon[] = BUSINESS_NAMES.map((name, index) => {
     phone: phoneNumber(),
     email: chance(0.7) ? emailFor(name) : undefined,
     location: makeLocation(),
-    bio: `${name} is a ${businessType === 'barber' ? 'neighbourhood barbershop' : 'full-service salon'} in Dhaka offering cuts, colour and grooming with online booking through Eureka.`,
+    bio: `${name} is a ${businessType === 'barber' ? 'neighbourhood barbershop' : 'full-service salon'} in Dhaka offering cuts, colour and grooming with online booking through Go Salon.`,
     verificationStatus,
     activeStaffCount: 0,
     totalServices: 0,

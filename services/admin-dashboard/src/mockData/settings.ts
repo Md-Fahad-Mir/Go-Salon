@@ -11,7 +11,7 @@ export const defaultSettings: PlatformSettings = {
   autoVerifyBusinesses: false,
   smsEnabled: true,
   emailEnabled: false,
-  aiModel: 'eureka-hair-v3',
+  aiModel: 'gosalon-hair-v3',
   aiMaxConcurrent: 24,
   aiTimeoutSeconds: 45,
   aiRateLimitPerHour: 60,
@@ -60,4 +60,4 @@ export const SUBSCRIPTION_TIERS = [
   },
 ] as const;
 
-export const AI_MODELS = ['eureka-hair-v3', 'eureka-hair-v2', 'eureka-hair-lite'] as const;
+export const AI_MODELS = ['gosalon-hair-v3', 'gosalon-hair-v2', 'gosalon-hair-lite'] as const;

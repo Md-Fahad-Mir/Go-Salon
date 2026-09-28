@@ -28,7 +28,7 @@ export const ADMIN_USER = {
   name: 'Farhana Ahmed',
   initials: 'FA',
   role: 'Platform admin',
-  email: 'farhana@eureka.app',
+  email: 'farhana@gosalon.app',
 } as const;
 
 export const HAIRSTYLE_CATEGORIES = [

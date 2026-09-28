@@ -34,7 +34,7 @@ export const tenant = {
   'tenant.homeTitle': 'Your salons',
   'tenant.homeHint': 'Tap one to book.',
   'tenant.homeEmptyTitle': 'No salons yet',
-  'tenant.homeEmptyBody': 'Scan the QR code in a salon to add it here. Ask at the counter — every salon on Eureka has one.',
+  'tenant.homeEmptyBody': 'Scan the QR code in a salon to add it here. Ask at the counter — every salon on Go Salon has one.',
   'tenant.homeEmptyAction': 'Add a salon in Settings',
   'tenant.homePickTitle': 'Which salon are you visiting?',
   'tenant.homePickBody': 'Tap one to open it. You can switch any time from Settings.',
@@ -47,7 +47,7 @@ export const tenant = {
   /* The row in Settings that opens the scanner, under a heading that already
      says "Add a salon" — so the row says what to do, not what it is. */
   'tenant.scanRow': 'Scan a salon’s QR code',
-  'tenant.scanRowHint': 'Ask at the counter — every salon on Eureka has one.',
+  'tenant.scanRowHint': 'Ask at the counter — every salon on Go Salon has one.',
   /* Where the scanner and the join screen send someone back to. */
   'tenant.backToSettings': 'Back to Settings',
   'tenant.scanCameraLabel': 'Camera, looking for a salon’s QR code',
@@ -61,7 +61,7 @@ export const tenant = {
   /* The offer to add the app to the home screen — on the join journey only,
      for somebody who scanned a code in a browser. `installIosSteps` names
      Safari's own menu items, with their icons dropped in. */
-  'tenant.installTitle': 'Get the Eureka app',
+  'tenant.installTitle': 'Get the Go Salon app',
   'tenant.installBody': 'Add it to your home screen and this salon is one tap away next time — no app store needed.',
   'tenant.installAction': 'Install',
   'tenant.installIosSteps': 'Tap {share} Share, then {add} Add to Home Screen.',

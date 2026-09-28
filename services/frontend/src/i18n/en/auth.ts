@@ -8,7 +8,7 @@ export const auth = {
   'auth.welcomeFoot': 'Salons and barbers across Dhaka',
 
   /* --- Sign in ------------------------------------------------------------ */
-  'auth.signInTitle': 'Sign in to Eureka',
+  'auth.signInTitle': 'Sign in to Go Salon',
   'auth.signInSub': 'We’ll text you a code. No password to remember.',
   'auth.mobileNumber': 'Mobile number',
   'auth.or': 'or',
@@ -122,7 +122,7 @@ export const auth = {
   'auth.employeeNoteAction': 'Sign in with the details you were given',
   'auth.alreadyHaveAccount': 'Already have an account?',
   'auth.signIn': 'Sign in',
-  'auth.noAccount': 'New to Eureka?',
+  'auth.noAccount': 'New to Go Salon?',
   'auth.createAccount': 'Create an account',
   'auth.creatingAs': 'Creating a {type} account',
   'auth.changeType': 'Change',
@@ -268,6 +268,6 @@ export const auth = {
 
   /* --- Admin ----------------------------------------------------------------- */
   'auth.adminTitle': 'Administrator',
-  'auth.adminBody': 'Eureka is administered from the backend admin site — accounts, salons and verification all live there. This app is for customers and the professionals who serve them.',
+  'auth.adminBody': 'Go Salon is administered from the backend admin site — accounts, salons and verification all live there. This app is for customers and the professionals who serve them.',
   'auth.adminOpenConsole': 'Open the admin site',
 } as const;
