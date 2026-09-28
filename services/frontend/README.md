@@ -1,4 +1,4 @@
-# Go Salon Hair App — customer PWA
+# Go Salon — customer PWA
 
 The mobile app Go Salon customers use: try a hairstyle on your own photo, then
 book the chair that can do it. Dhaka-first, dark theme, installable.

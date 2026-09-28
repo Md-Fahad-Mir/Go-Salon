@@ -168,7 +168,7 @@ export const profile = {
   'profile.logOutTitle': 'Log out?',
   'profile.logOutBody': 'You will need your phone number and password to sign back in.',
   'profile.staySignedIn': 'Stay signed in',
-  'profile.appVersion': 'Go Salon Hair App · v0.1.0',
+  'profile.appVersion': 'Go Salon · v0.1.0',
 
   /* ---- Edit profile ---- */
   'profile.editTitle': 'Edit profile',

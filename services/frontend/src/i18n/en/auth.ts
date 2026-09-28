@@ -1,11 +1,9 @@
 /* auth screens — English copy. */
 export const auth = {
   /* --- Welcome ------------------------------------------------------------ */
-  'auth.welcomeArtAlt': 'A fresh haircut, seen from the side',
   'auth.welcomeSub': 'Try any hairstyle on your own photo, then book the chair that can do it.',
   'auth.getStarted': 'Get started',
   'auth.haveAccount': 'I already have an account',
-  'auth.welcomeFoot': 'Salons and barbers across Dhaka',
 
   /* --- Sign in ------------------------------------------------------------ */
   'auth.signInTitle': 'Sign in to Go Salon',

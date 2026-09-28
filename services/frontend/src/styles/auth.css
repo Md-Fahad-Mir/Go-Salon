@@ -20,52 +20,149 @@
   border-radius: 0.625rem;
   background-color: var(--accent);
   color: var(--accent-on);
-  font-size: 1.25rem;
-  font-weight: 800;
+  --mark-hole: var(--accent);
   box-shadow: var(--shadow-sm);
 }
+.auth-brand-mark svg { width: 82%; height: 82%; }
 .auth-brand-word { font-size: 1.375rem; }
-.auth-brand-lg .auth-brand-mark { width: 3rem; height: 3rem; border-radius: 0.875rem; font-size: 1.625rem; }
+.auth-brand-lg .auth-brand-mark { width: 3rem; height: 3rem; border-radius: 0.875rem; }
 .auth-brand-lg .auth-brand-word { font-size: 1.75rem; }
-.auth-brand-xl .auth-brand-mark { width: 3.5rem; height: 3.5rem; border-radius: 1rem; font-size: 1.875rem; }
+.auth-brand-xl .auth-brand-mark { width: 3.5rem; height: 3.5rem; border-radius: 1rem; }
 .auth-brand-xl .auth-brand-word { font-size: 2rem; }
 
 /* --- Welcome --------------------------------------------------------------- */
 
+/* The page wears .dark-theme whatever the app does, so every token below is
+   the night one. `color` is restated because body's ink was computed from the
+   day tokens and would otherwise inherit straight through. */
 .auth-welcome {
+  position: relative;
+  isolation: isolate;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
 }
 
-.auth-welcome-art {
-  flex: 0 0 auto;
-  height: 52dvh;
-  min-height: 15rem;
-  max-height: 34rem;
+/* Background film. Clipping lives here, never on .screen (see customer.css). */
+.auth-welcome-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  container-type: size;
+  background-color: var(--bg-deep);
 }
 
-.auth-welcome-overlay {
-  padding: 1.25rem var(--screen-padding);
-  background: linear-gradient(to top, var(--bg-primary) 0%, color-mix(in srgb, var(--bg-primary) 60%, transparent) 35%, transparent 70%);
+/* The clip is 720×1280, but only rows 201–1078 are picture: the rest is two
+   white bands (carrying stray generated lettering near the end). A phone is
+   taller than that picture, so `object-fit: cover` on the whole frame would
+   leave the bands on screen. Instead the video is sized so its picture —
+   taken as rows 226–1054, a 25-row margin clear of the bands' edge fringe —
+   covers the box, and the bands always fall outside it.
+
+     picture width  = --film-w                       ≥ 100% of the box width
+     picture height = --film-w × 828 / 720           ≥ 100% of the box height
+
+   The picture is centred on the frame (row 640), so centring the video
+   vertically centres it. Horizontally it is centred too, which keeps the man
+   in the chair whole on a phone; the clamp stops an edge ever coming inside.
+   The first declarations are the viewport-unit fallback for browsers without
+   container units. */
+.auth-welcome-video {
+  --film-w: max(104vw, 100dvh * 720 / 828);
+  --film-w: max(104cqw, 100cqh * 720 / 828);
+  position: absolute;
+  top: calc(50% - var(--film-w) * 640 / 720);
+  left: clamp(100vw - var(--film-w), 50vw - var(--film-w) * 0.5, 0px);
+  left: clamp(100cqw - var(--film-w), 50cqw - var(--film-w) * 0.5, 0px);
+  width: var(--film-w);
+  height: calc(var(--film-w) * 1280 / 720);
+  max-width: none;
+  object-fit: cover;
+  pointer-events: none;
+  filter: saturate(1.08) brightness(0.9);
+  transition: opacity 0.55s var(--ease-out);
+}
+.auth-welcome-video[data-seam='true'] { opacity: 0.25; }
+
+/* The upper film stays sharp — faces and the new cut read in full detail.
+   The blur only rises under the copy, faded in by the mask so there is no
+   line where it starts. */
+.auth-welcome-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 42%, #000 64%);
+  mask-image: linear-gradient(to bottom, transparent 42%, #000 64%);
+}
+
+/* Cinematic grade: a light vignette up top for the status bar, clear through
+   the faces, then a deep warm fall-off where the copy sits. */
+.auth-welcome-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    radial-gradient(130% 80% at 50% 38%, transparent 55%, rgba(11, 10, 8, 0.45) 100%),
+    linear-gradient(
+      to bottom,
+      rgba(11, 10, 8, 0.55) 0%,
+      rgba(11, 10, 8, 0.12) 16%,
+      rgba(11, 10, 8, 0.08) 34%,
+      rgba(11, 10, 8, 0.55) 56%,
+      rgba(11, 10, 8, 0.88) 74%,
+      rgba(11, 10, 8, 0.96) 100%
+    );
 }
 
 .auth-welcome-body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding: 0.5rem var(--screen-padding) calc(1rem + var(--safe-bottom));
+  justify-content: flex-end;
+  gap: 1.75rem;
+  padding: calc(1.5rem + var(--safe-top)) var(--screen-padding) calc(1rem + var(--safe-bottom));
 }
 
-.auth-welcome-body .display { max-width: 18ch; }
-.auth-welcome-sub { font-size: 1.0625rem; line-height: 1.5; max-width: 32ch; }
-.auth-welcome-foot { margin-top: auto; padding-top: 0.5rem; }
+.auth-welcome-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+.auth-welcome-intro .auth-brand { margin-bottom: 0.5rem; }
+.auth-welcome-intro .auth-brand-mark { text-shadow: none; }
 
+/* The heading voice the signed-in apps give h1 and .display (customer.css,
+   owner.css). Signed out there is no data-app scope, so without this the
+   splash would fall back to base.css's heavier 800. */
+.auth-welcome-body .display {
+  max-width: 18ch;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+.auth-welcome-sub { font-size: 1.0625rem; line-height: 1.5; max-width: 32ch; color: var(--text-secondary); }
+
+/* On a short screen the copy climbs into the bright upper film, so the whole
+   grade deepens a step (the colour sits under the gradients). */
 @media (max-height: 40rem) {
-  .auth-welcome-art { height: 40dvh; }
+  .auth-welcome-bg::after { background-color: rgba(11, 10, 8, 0.35); }
   .auth-welcome-body { gap: 1rem; }
+  .auth-welcome-body .display { font-size: 1.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-welcome-video { transition: none; }
 }
 
 /* --- Shared page bits ------------------------------------------------------ */

@@ -1,6 +1,6 @@
 # Go Salon Admin Dashboard
 
-Frontend-only admin console for the Go Salon Hair App — hairstyle catalogue, users,
+Frontend-only admin console for the Go Salon — hairstyle catalogue, users,
 salons and barbers, bookings, payments, moderation, notifications, platform
 settings and an audit trail.
 

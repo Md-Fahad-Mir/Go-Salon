@@ -166,7 +166,7 @@ export const profile = {
   'profile.logOutTitle': 'লগ আউট করবেন?',
   'profile.logOutBody': 'আবার সাইন ইন করতে আপনার ফোন নম্বর আর পাসওয়ার্ড লাগবে।',
   'profile.staySignedIn': 'লগ ইনই থাকি',
-  'profile.appVersion': 'Go Salon হেয়ার অ্যাপ · v0.1.0',
+  'profile.appVersion': 'গো স্যালন · v0.1.0',
 
   /* ---- Edit profile ---- */
   'profile.editTitle': 'প্রোফাইল এডিট',

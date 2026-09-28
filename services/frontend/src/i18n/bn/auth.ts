@@ -1,11 +1,9 @@
 /* auth screens — Bangla copy. Plain, warm Dhaka register; আপনি throughout. */
 export const auth = {
   /* --- Welcome ------------------------------------------------------------ */
-  'auth.welcomeArtAlt': 'পাশ থেকে দেখা একটি নতুন হেয়ারকাট',
   'auth.welcomeSub': 'নিজের ছবিতে যেকোনো হেয়ারস্টাইল দেখে নিন, তারপর যে চেয়ারে সেটা হবে সেখানেই বুকিং দিন।',
   'auth.getStarted': 'শুরু করুন',
   'auth.haveAccount': 'আমার অ্যাকাউন্ট আছে',
-  'auth.welcomeFoot': 'ঢাকা জুড়ে স্যালন আর বারবারশপ',
 
   /* --- Sign in ------------------------------------------------------------ */
   'auth.signInTitle': 'গো স্যালনে সাইন ইন',

@@ -27,3 +27,4 @@ coverage
 # Local env
 .env
 .env.local
+media

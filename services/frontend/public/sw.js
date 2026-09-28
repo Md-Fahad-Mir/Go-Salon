@@ -1,9 +1,10 @@
-/* Go Salon Hair App — service worker.
+/* Go Salon — service worker.
    App shell is precached on install; hashed build assets are cached on first
    use; navigations go network-first and fall back to the cached shell so the
-   app still opens offline. Bump CACHE whenever the shell list changes. */
-const CACHE = 'gosalon-shell-v3';
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg', '/icons/icon-192.png', '/icons/icon-512.png'];
+   app still opens offline. Bump CACHE whenever the shell list or a shell file
+   changes (v4: the icons were redrawn), or an installed app keeps the old one. */
+const CACHE = 'gosalon-shell-v4';
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/favicon.svg?v=2', '/icons/favicon-64.png?v=2', '/icons/icon-192.png', '/icons/icon-512.png'];
 
 /* Every build asset is hashed, so the list cannot be hardcoded. Vite's build
    manifest names them all; parsing index.html is the fallback, and it at least
@@ -80,6 +81,12 @@ self.addEventListener('fetch', (event) => {
    * `/admin` and `/static` belong to Django. All of them are the server's,
    * not this cache's. */
   if (/^\/(api|ws|ai|admin|static)(\/|$)/.test(url.pathname)) return;
+
+  /* Video goes straight to the network. The player asks for byte ranges and
+     Safari will not play a file that is answered without a 206; the branches
+     below would hand back a cached whole-file 200 (or fail to cache the 206),
+     and the welcome film would sit on its poster. */
+  if (request.destination === 'video' || request.headers.has('range')) return;
 
   // App navigations: try the network, fall back to the cached shell.
   if (request.mode === 'navigate') {

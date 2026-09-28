@@ -34,7 +34,7 @@ export const buildIcs = (event: {
   return [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Go Salon Hair App//EN',
+    'PRODID:-//Go Salon//EN',
     'BEGIN:VEVENT',
     `UID:${Date.now()}@gosalon.app`,
     `DTSTAMP:${stamp(new Date())}`,

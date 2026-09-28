@@ -820,7 +820,7 @@
 }
 
 /* Deliberately NOT micro-caps. `profile.appVersion` is
-   "Go Salon Hair App · v0.1.0" — uppercasing it shouts the wordmark and turns
+   "Go Salon · v0.1.0" — uppercasing it shouts the wordmark and turns
    the version into "V0.1.0", and the Bangla string is half Latin, so it would
    shout there too. A colophon is quiet: small, tracked, dim. */
 :root[data-app='customer'] .pf-version {
