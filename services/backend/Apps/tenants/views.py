@@ -126,7 +126,7 @@ class JoinView(GenericAPIView):
         if not created and not membership.is_active:
             # Re-scanning a salon they had removed. Reactivating the row they
             # already have rather than making a second one is what keeps their
-            # bookings and reviews attached to one membership.
+            # bookings attached to one membership.
             membership.is_active = True
             membership.save(update_fields=['is_active'])
 
@@ -220,7 +220,7 @@ class MyTenantView(APIView):
             # rather than a 403 that confirms it exists.
             return _not_found('You have not joined that salon.')
 
-        # Soft. Their bookings and reviews there are facts about things that
+        # Soft. Their bookings there are facts about things that
         # happened, and deleting the membership would orphan every one of
         # them; re-scanning the code brings this row back rather than making
         # a second.

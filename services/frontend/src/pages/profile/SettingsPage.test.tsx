@@ -1,4 +1,5 @@
-/* Settings holds no salon controls and no language picker for a customer.
+/* Settings holds no salon controls, no language picker and no light/dark
+   switch for a customer.
 
    Adding, switching and removing a salon all live on Home, behind the salon's
    avatar in the header, and a customer with no salon is sent from Home's
@@ -7,18 +8,12 @@
    beside Home's bell, so it is not here either. */
 
 import { screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { useAppStore } from '../../store/useAppStore';
 import { serve } from '../../test/http';
 import { mount } from '../../test/render';
 import type { Tenant, User } from '../../types';
 import SettingsPage from './SettingsPage';
-
-/* Appearance reads the theme, and the theme provider reads `matchMedia`,
-   which jsdom does not have. Nothing here is about the theme. */
-vi.mock('../../components/profile/AppearanceSection', () => ({
-  AppearanceSection: () => null,
-}));
 
 const ALPHA: Tenant = { id: 4, slug: 'alpha', listingId: 'salon-4', name: 'Aurora Salon', avatar: '' };
 
@@ -65,5 +60,29 @@ describe('language', () => {
     expect(screen.queryByRole('heading', { name: 'Language' })).not.toBeInTheDocument();
     expect(screen.queryByRole('radio', { name: /English/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('radio', { name: /বাংলা/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('appearance', () => {
+  it('is not changed here — Home has its own light/dark button', () => {
+    open();
+    expect(screen.queryByRole('heading', { name: 'Appearance' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: /Light|Dark|System/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('what was taken out', () => {
+  it('has no offers switch and no "rate the app" row', () => {
+    open();
+    expect(screen.queryByText(/Offers and new styles/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Rate the app')).not.toBeInTheDocument();
+    // SMS reminders and booking updates, plus "save my results".
+    expect(screen.getAllByRole('switch')).toHaveLength(3);
+  });
+
+  it('offers no way into "clear history" when nothing is saved', () => {
+    open();
+    expect(screen.queryByRole('button', { name: /Clear try-on history/ })).not.toBeInTheDocument();
+    expect(screen.getByText('Clear try-on history')).toBeInTheDocument();
   });
 });

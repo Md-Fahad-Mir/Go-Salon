@@ -152,6 +152,11 @@
    bell and used to back the share button it replaces. */
 .home-avatar-link[data-scrim='true'] { background-color: var(--scrim-mid); }
 
+/* Home's header carries four or five buttons now (bell, light/dark, language,
+   salon, profile), and on a 320px phone that squeezed the word-mark onto two
+   lines. One line, always; the buttons are what give way first. */
+:root[data-app='customer'] .header-brand { white-space: nowrap; padding-inline-start: 0.25rem; }
+
 /* --- Salon switcher sheet — the header's Gmail-style account list. The
    rows are the ordinary `list-row`s every Settings list uses; these rules
    only split each row into its two controls (the salon, and the bin beside

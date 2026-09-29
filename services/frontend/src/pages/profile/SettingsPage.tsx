@@ -1,12 +1,11 @@
-import { FileText, History, KeyRound, Shield, Star, Trash2 } from 'lucide-react';
+import { FileText, History, KeyRound, Shield, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import { ROUTES } from '../../constants';
+import { APP_VERSION, ROUTES } from '../../constants';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { ListCard, ListRow } from '../../components/common/ListRow';
 import { Toggle } from '../../components/common/Toggle';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
-import { AppearanceSection } from '../../components/profile/AppearanceSection';
 import { LogoutButton } from '../../components/profile/LogoutButton';
 import { PaymentAccountsSection } from '../../components/profile/PaymentAccountsSection';
 import { useT } from '../../hooks/useLanguage';
@@ -55,12 +54,9 @@ export default function SettingsPage() {
           </ListCard>
         </section>
 
-        {/* No salon or language section here. Switching, adding and removing a
-            salon live on Home behind the salon's avatar (`SalonSwitchButton`),
-            and the language is changed from the button beside Home's bell
-            (`LanguageSwitchButton`). */}
-        <AppearanceSection />
-
+        {/* No salon, language or appearance section here: all three live in
+            Home's header (`SalonSwitchButton`, `LanguageSwitchButton`,
+            `ThemeSwitchButton`). */}
         <section className="section" aria-labelledby="pf-notifications">
           <h3 className="label" id="pf-notifications">{t('settings.notifications')}</h3>
           <ListCard>
@@ -80,14 +76,6 @@ export default function SettingsPage() {
                 onChange={(on) => setPreference('bookingUpdates', on)}
               />
             </div>
-            <div className="list-row pf-toggle-row">
-              <Toggle
-                label={t('settings.offers')}
-                hint={t('settings.offersHint')}
-                checked={preferences.promoNotifications}
-                onChange={(on) => setPreference('promoNotifications', on)}
-              />
-            </div>
           </ListCard>
         </section>
 
@@ -102,11 +90,14 @@ export default function SettingsPage() {
                 onChange={(on) => setPreference('saveHistory', on)}
               />
             </div>
+            {/* Only a button when there is something to clear — with nothing
+                saved it is a plain row saying so, not a way into a confirm
+                dialog that would delete nothing. */}
             <ListRow
               icon={<History size={18} aria-hidden="true" />}
               title={t('settings.clearHistory')}
               sub={generations.length ? t('settings.results', { count: resultCount }) : t('settings.nothingSaved')}
-              onClick={() => setDialog('clear')}
+              onClick={generations.length ? () => setDialog('clear') : undefined}
             />
           </ListCard>
         </section>
@@ -116,16 +107,11 @@ export default function SettingsPage() {
         <section className="section" aria-labelledby="pf-about">
           <h3 className="label" id="pf-about">{t('settings.about')}</h3>
           <ListCard className="pf-list">
-            <ListRow icon={<Shield size={18} aria-hidden="true" />} title={t('settings.version')} end="0.1.0" />
+            <ListRow icon={<Shield size={18} aria-hidden="true" />} title={t('settings.version')} end={APP_VERSION} />
             {/* In the app rather than out of it: these used to be `href="#"`,
                 which opened a blank tab. */}
             <ListRow icon={<FileText size={18} aria-hidden="true" />} title={t('settings.terms')} to={ROUTES.terms} />
             <ListRow icon={<FileText size={18} aria-hidden="true" />} title={t('settings.privacyPolicy')} to={ROUTES.privacy} />
-            <ListRow
-              icon={<Star size={18} aria-hidden="true" />}
-              title={t('settings.rateApp')}
-              onClick={() => toast('info', t('settings.rateAppToast'), t('settings.rateAppToastBody'))}
-            />
           </ListCard>
         </section>
 

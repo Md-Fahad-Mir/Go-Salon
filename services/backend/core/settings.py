@@ -126,7 +126,6 @@ INSTALLED_APPS = [
     'Apps.portfolio',
     'Apps.directory',
     'Apps.bookings',
-    'Apps.reviews',
 ]
 
 MIDDLEWARE = [

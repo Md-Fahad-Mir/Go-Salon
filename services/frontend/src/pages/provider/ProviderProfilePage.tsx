@@ -6,7 +6,8 @@ import type { ChangeEvent } from 'react';
 import { Avatar } from '../../components/common/Avatar';
 import { Badge } from '../../components/common/Badge';
 import { BottomSheet } from '../../components/common/BottomSheet';
-import { Button, LinkButton } from '../../components/common/Button';
+import { Button } from '../../components/common/Button';
+import { AccountSection } from '../../components/profile/AccountSection';
 import { Callout } from '../../components/common/Callout';
 import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
@@ -14,18 +15,17 @@ import { Input, Textarea } from '../../components/common/Input';
 import { ListCard, ListRow } from '../../components/common/ListRow';
 import { PhoneInput } from '../../components/common/PhoneInput';
 import { Price } from '../../components/common/Price';
-import { Rating } from '../../components/common/Rating';
 import { Spinner } from '../../components/common/Spinner';
 import { Toggle } from '../../components/common/Toggle';
 import { GalleryGrid } from '../../components/provider/business/GalleryGrid';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
+import { PreferenceButtons } from '../../components/home/PreferenceButtons';
 import { WeekHoursList } from '../../components/provider/hours/WeekHoursList';
 import { WeekHoursSheet } from '../../components/provider/hours/WeekHoursSheet';
 import { ROLE_KEYS, VERIFICATION } from '../../components/provider/business/labels';
 import { ROUTES } from '../../constants';
 import { useT } from '../../hooks/useLanguage';
-import { useMyReviews } from '../../hooks/useReviews';
 import type { TranslationKey } from '../../i18n';
 import { useProviderProfile, useRole } from '../../hooks/useRole';
 import { useAppStore } from '../../store/useAppStore';
@@ -90,10 +90,6 @@ export default function ProviderProfilePage() {
   const { isEmployee, servesWomen } = useRole();
   const navigate = useNavigate();
   const profile = useProviderProfile();
-  /* Whatever this account's reviews are: the salon's for an owner, this
-     chair's for an employee, this barber's own work for a barber. The server
-     decides which, so the screen does not have to branch on role. */
-  const { summary: reviews } = useMyReviews();
   const user = useAppStore((state) => state.user);
   const updateProfile = useProviderStore((state) => state.updateProfile);
   const setAutoAccept = useProviderStore((state) => state.setAutoAccept);
@@ -151,7 +147,7 @@ export default function ProviderProfilePage() {
   if (!profile) {
     return (
       <Screen nav>
-        <Header title={t(isEmployee ? 'pb.profileTitleEmployee' : 'pb.profileTitle')} />
+        <Header title={t(isEmployee ? 'pb.profileTitleEmployee' : 'pb.profileTitle')} actions={<PreferenceButtons />} />
         <ScreenBody className="pb-screen fullscreen-center">
           {status === 'loading' ? (
             <Spinner size="lg" label={t('state.loading')} />
@@ -170,7 +166,7 @@ export default function ProviderProfilePage() {
             />
           )}
           {user ? <p className="caption dim">{t('pb.signedInAs', { name: user.name })}</p> : null}
-          <LinkButton variant="ghost" to={ROUTES.proSettings}>{t('nav.settings')}</LinkButton>
+          <AccountSection />
         </ScreenBody>
       </Screen>
     );
@@ -265,7 +261,7 @@ export default function ProviderProfilePage() {
 
   return (
     <Screen nav>
-      <Header title={t(isEmployee ? 'pb.profileTitleEmployee' : 'pb.profileTitle')} />
+      <Header title={t(isEmployee ? 'pb.profileTitleEmployee' : 'pb.profileTitle')} actions={<PreferenceButtons />} />
       <ScreenBody className="pb-screen pb-hub">
         <Card className="pb-profile-head">
           <Avatar name={profile.businessName} src={profile.avatar || undefined} size="xl" ring />
@@ -278,9 +274,6 @@ export default function ProviderProfilePage() {
               {isEmployee && profile.title ? profile.title : t(ROLE_KEYS[profile.role])}
             </p>
             <div className="row-sm pb-profile-badges">
-              {reviews && reviews.count > 0 && reviews.average !== null ? (
-                <Rating value={reviews.average} count={reviews.count} />
-              ) : null}
               {/* Verification is a statement about a *business* — its licence,
                   its standing. For an employee it is their salon's, and a
                   stylist reading "verification pending" under her own name is
@@ -516,7 +509,7 @@ export default function ProviderProfilePage() {
         </section>
 
         {/* The day-to-day screens that are not portfolio, hung off the person
-            they belong to rather than off Settings, which is the app's own. */}
+            they belong to. */}
         <section className="section" aria-labelledby="pb-work">
           <h3 className="label" id="pb-work">{t('pr.manageSection')}</h3>
           <ListCard>
@@ -531,6 +524,8 @@ export default function ProviderProfilePage() {
             ))}
           </ListCard>
         </section>
+
+        <AccountSection />
       </ScreenBody>
 
       <BottomSheet

@@ -56,7 +56,7 @@ export const tenantService = {
   /** `DELETE /api/tenants/mine/<id>/` — take a salon off the list.
 
       Soft on the server: the membership row is deactivated rather than
-      deleted, so the bookings and reviews hanging off it stay attached to
+      deleted, so the bookings hanging off it stay attached to
       something. Scanning the shop's code again reactivates that same row —
       which is why nothing here records that a salon was removed. A local
       "never show this one again" list would be a second opinion about

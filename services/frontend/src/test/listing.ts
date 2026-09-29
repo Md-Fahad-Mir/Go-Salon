@@ -47,8 +47,6 @@ export const listingWire = (over: Record<string, unknown> = {}): Record<string, 
   staff_count: 2,
   hours: week(),
   open_now: true,
-  rating: 4.6,
-  review_count: 12,
   services: [
     { id: 's1', name: 'Haircut', category: 'hair', description: '', price: 350, duration: 30, buffer_minutes: 5,
       audience: 'all', includes: [], steps: [], popular: true, eligible_employee_ids: ['e1', 'e2'] },
@@ -59,28 +57,9 @@ export const listingWire = (over: Record<string, unknown> = {}): Record<string, 
   ],
   staff: [
     { id: 'e1', name: 'Rafi Ahmed', title: 'Senior barber', avatar: '', specialties: ['Fades', 'Beards'],
-      experience_years: 6, chair_status: 'open', rating: 4.8, review_count: 9, hours: week() },
+      experience_years: 6, chair_status: 'open', hours: week() },
     { id: 'e2', name: 'Nadia Islam', title: 'Colourist', avatar: '', specialties: ['Colour'],
-      experience_years: 2, chair_status: 'open', rating: null, review_count: 0, hours: week('sun') },
+      experience_years: 2, chair_status: 'open', hours: week('sun') },
   ],
   ...over,
-});
-
-/** The first page of that salon's reviews, as `/api/reviews/listing/{id}/` sends it. */
-export const reviewsWire = (professionalId = 'salon-4', professionalName = 'Aurora Salon') => ({
-  results: [
-    { id: 71, professional_id: professionalId, professional_name: professionalName, booking_id: 'B1',
-      user_id: 'U9', user_name: 'Tanvir H.', rating: 5, text: 'Clean fade, exactly what I asked for.',
-      service_name: 'Haircut', staff_name: 'Rafi Ahmed', reply: '', replied_at: null, replied_by_name: '',
-      can_reply: false, created_at: '2026-09-20T09:00:00Z' },
-    { id: 70, professional_id: professionalId, professional_name: professionalName, booking_id: 'B2',
-      user_id: 'U8', user_name: 'Maliha R.', rating: 4, text: 'Good colour, ran a little late.',
-      service_name: 'Hair colour', staff_name: 'Nadia Islam', reply: 'Sorry about the wait!',
-      replied_at: '2026-09-19T12:00:00Z', replied_by_name: 'Aurora Salon', can_reply: false,
-      created_at: '2026-09-18T15:30:00Z' },
-  ],
-  summary: { average: 4.6, count: 12, breakdown: { 5: 8, 4: 3, 3: 1, 2: 0, 1: 0 } },
-  page: 1,
-  pages: 4,
-  count: 12,
 });

@@ -13,7 +13,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '../store/useAppStore';
 import { useDirectoryStore } from '../store/useDirectoryStore';
 import { requestsTo, route, sent, serve } from '../test/http';
-import { listingWire, reviewsWire } from '../test/listing';
+import { listingWire } from '../test/listing';
 import { mount } from '../test/render';
 import type { Tenant, User } from '../types';
 import HomePage from './HomePage';
@@ -42,13 +42,11 @@ const settled = (tenants: Tenant[]) => {
   useAppStore.setState({ tenantsStatus: 'ready' });
 };
 
-/** Both salons' listings and reviews, so any switch can be answered. */
+/** Both salons' listings, so any switch can be answered. */
 const serveSalons = () =>
   route([
     ['/listings/salon-4/', { status: 200, body: listingWire() }],
-    ['/reviews/listing/salon-4/', { status: 200, body: reviewsWire() }],
     ['/listings/salon-5/', { status: 200, body: listingWire({ id: 'salon-5', name: 'Bluebell Parlour' }) }],
-    ['/reviews/listing/salon-5/', { status: 200, body: reviewsWire('salon-5', 'Bluebell Parlour') }],
   ]);
 
 const open = () =>
@@ -91,6 +89,17 @@ describe('with one salon, which is therefore the active one', () => {
     await screen.findByRole('heading', { name: 'Aurora Salon' });
     await userEvent.click(screen.getByRole('button', { name: /notifications/i }));
     expect(screen.getByText('the notifications screen')).toBeInTheDocument();
+  });
+
+  it('switches light and dark from the header, beside the bell', async () => {
+    open();
+    await screen.findByRole('heading', { name: 'Aurora Salon' });
+    await userEvent.click(screen.getByRole('button', { name: 'Appearance' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Dark' }));
+    expect(document.documentElement).toHaveClass('dark-theme');
+    await userEvent.click(screen.getByRole('button', { name: 'Appearance' }));
+    await userEvent.click(screen.getByRole('radio', { name: 'Light' }));
+    expect(document.documentElement).toHaveClass('light-theme');
   });
 });
 
@@ -145,7 +154,6 @@ describe('while the active salon’s listing is loading or has failed', () => {
   it('offers to try again, not to go "back to home" from Home', async () => {
     route([
       ['/listings/salon-4/', { status: 500 }],
-      ['/reviews/listing/salon-4/', { status: 200, body: reviewsWire() }],
     ]);
     open();
 

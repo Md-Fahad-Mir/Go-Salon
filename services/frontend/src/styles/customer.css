@@ -105,8 +105,7 @@
    -------------------------------------------------------------------------- */
 
 :root[data-app='customer'] .card,
-:root[data-app='customer'] .list-card,
-:root[data-app='customer'] .review {
+:root[data-app='customer'] .list-card {
   border-radius: var(--radius-xl);
   border-color: var(--border-light);
   box-shadow: var(--bevel-top), var(--elev-card);

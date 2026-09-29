@@ -5,10 +5,10 @@ import { ROUTES } from '../../constants';
 import { Avatar } from '../../components/common/Avatar';
 import { Button } from '../../components/common/Button';
 import { EmptyState } from '../../components/common/EmptyState';
-import { Rating } from '../../components/common/Rating';
 import { Toggle } from '../../components/common/Toggle';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
+import { PreferenceButtons } from '../../components/home/PreferenceButtons';
 import { StickyFooter } from '../../components/layout/StickyFooter';
 import {
   StaffFormSheet,
@@ -16,7 +16,6 @@ import {
 } from '../../components/provider/salon/StaffFormSheet';
 import { Spinner } from '../../components/common/Spinner';
 import { useT } from '../../hooks/useLanguage';
-import { useMyReviews } from '../../hooks/useReviews';
 import { useAppStore } from '../../store/useAppStore';
 import { useProviderStore } from '../../store/useProviderStore';
 import { fieldMessageOf, messageOf } from '../../utils/errorMessage';
@@ -25,10 +24,6 @@ import { formatNumber } from '../../utils/format';
 export default function StaffRosterPage() {
   const t = useT();
   const navigate = useNavigate();
-  /* A score under each stylist's name. `by_staff` comes back only for an
-     owner — a stylist reading this endpoint gets their own reviews and no
-     comparison with the chair beside them. */
-  const { byStaff } = useMyReviews();
   const staff = useProviderStore((s) => s.staff);
   const services = useProviderStore((s) => s.services);
   const addStaff = useProviderStore((s) => s.addStaff);
@@ -38,10 +33,6 @@ export default function StaffRosterPage() {
   const error = useProviderStore((s) => s.error);
   const load = useProviderStore((s) => s.load);
   const toast = useAppStore((s) => s.toast);
-  const scores = useMemo(
-    () => new Map(byStaff.map((row) => [row.employeeId, row])),
-    [byStaff],
-  );
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetKey, setSheetKey] = useState(0);
@@ -109,7 +100,7 @@ export default function StaffRosterPage() {
 
   return (
     <Screen nav>
-      <Header title={t('nav.staff')} />
+      <Header title={t('nav.staff')} actions={<PreferenceButtons />} />
       <ScreenBody>
         {status === 'loading' && staff.length === 0 ? (
           <div className="fullscreen-center">
@@ -158,12 +149,6 @@ export default function StaffRosterPage() {
                           {member.active ? null : (
                             <span className="pro-pill pro-pill-neutral">{t('salon.notTakingBookings')}</span>
                           )}
-                          {scores.get(member.id) ? (
-                            <Rating
-                              value={scores.get(member.id)!.rating}
-                              count={scores.get(member.id)!.reviewCount}
-                            />
-                          ) : null}
                           {member.phoneVerified ? null : (
                             <span className="pro-pill pro-pill-warning">
                               {t('salon.awaitingFirstSignIn')}

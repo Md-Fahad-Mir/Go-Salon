@@ -12,35 +12,32 @@ import {
   Navigation,
   Phone,
   Share2,
-  Zap,
 } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ProfessionalLoading, ProfessionalNotFound } from '../booking/WizardShell';
-import { ReviewCard } from '../booking/ReviewCard';
 import { Art } from '../common/Art';
 import { Avatar } from '../common/Avatar';
 import { Badge } from '../common/Badge';
 import { BottomSheet } from '../common/BottomSheet';
-import { Button, LinkButton } from '../common/Button';
+import { Button } from '../common/Button';
 import { Callout } from '../common/Callout';
 import { Carousel } from '../common/Carousel';
 import { EmptyState } from '../common/EmptyState';
 import { IconButton } from '../common/IconButton';
 import { Price } from '../common/Price';
-import { Rating } from '../common/Rating';
 import { SectionHead } from '../common/SectionHead';
 import { ListSkeleton } from '../common/Skeleton';
 import { Spinner } from '../common/Spinner';
 import { HomeFrame } from '../home/HomeFrame';
 import { LanguageSwitchButton } from '../home/LanguageSwitchButton';
 import { SalonSwitchButton } from '../home/SalonSwitchButton';
+import { ThemeSwitchButton } from '../home/ThemeSwitchButton';
 import { Header } from '../layout/Header';
 import { Screen, ScreenBody } from '../layout/Screen';
 import { StickyFooter } from '../layout/StickyFooter';
 import { DEFAULT_LOCATION, ROUTES, WEEKDAYS } from '../../constants';
 import { useT } from '../../hooks/useLanguage';
-import { useListingReviews } from '../../hooks/useReviews';
 import type { TKey } from '../../i18n';
 import type { Weekday } from '../../types';
 import { todaysHours, weekdayOf } from '../../mockData';
@@ -52,7 +49,6 @@ import { useBookingStore } from '../../store/useBookingStore';
 import { directionsUrl, distanceKm } from '../../utils/geo';
 import {
   firstNameOf,
-  formatBdt,
   formatDistance,
   formatDuration,
   formatNumber,
@@ -108,11 +104,6 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
 
   const [hoursOpen, setHoursOpen] = useState(false);
   const [photo, setPhoto] = useState<number | null>(null);
-
-  /* The three most recent reviews, from the server. The star and the count
-     beside them come off the listing itself, which the same database counted
-     — so the two figures on this screen cannot drift apart. */
-  const { reviews: latest, loading: reviewsLoading } = useListingReviews(id);
 
   /* The listing is fetched, and cached as it arrives. A second visit renders
      from the cache immediately and refreshes underneath, so coming back from
@@ -180,7 +171,6 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
   const covers = pro.gallery.length
     ? pro.gallery
     : [{ id: 0, image: pro.coverImage || pro.avatar, caption: '' }];
-  const reviewsRoute = ROUTES.professionalReviews(pro.id);
 
   const book = () => {
     start(pro.id, { hairstyleId });
@@ -224,6 +214,7 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
               >
                 <Bell size={22} />
               </IconButton>
+              <ThemeSwitchButton variant="scrim" />
               <LanguageSwitchButton variant="scrim" />
               <SalonSwitchButton variant="scrim" />
             </>
@@ -275,18 +266,6 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
                 <Badge tone="success" pill>{t('status.openNow')}</Badge>
               ) : (
                 <Badge tone="neutral" pill>{t('status.closedNow')}</Badge>
-              )}
-            </div>
-            <div className="pro-rating-row">
-              {pro.reviewCount > 0 && pro.rating !== null ? (
-                <>
-                  <Rating value={pro.rating} count={pro.reviewCount} size={15} />
-                  <LinkButton to={reviewsRoute} variant="ghost" size="xs" className="link-btn">
-                    {t('booking.seeReviews')}
-                  </LinkButton>
-                </>
-              ) : (
-                <span className="caption dim">{t('booking.noReviewsYet')}</span>
               )}
             </div>
             <p className="caption pro-tagline">{pro.tagline}</p>
@@ -384,11 +363,6 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
             ) : null}
           </div>
 
-          <section className="section">
-            <SectionHead title={t('booking.about')} />
-            <p className="pro-about muted">{pro.bio}</p>
-          </section>
-
           {/* Three different things, said differently. Still arriving is a
               skeleton; a menu that could not be fetched says so and offers to
               try again; a salon that has genuinely priced nothing says that.
@@ -444,15 +418,10 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
             <div className="hscroll bleed pro-team">
               {staff.map((member) => (
                 <article key={member.id} className="pro-staff-card">
-                  <Avatar name={member.name} accent size="lg" />
+                  <Avatar name={member.name} src={member.avatar} accent={!member.avatar} size="lg" />
                   <div className="stack-xs">
                     <strong className="pro-staff-name">{member.name}</strong>
                     <span className="small muted">{member.title}</span>
-                    {member.reviewCount > 0 && member.rating !== null ? (
-                      <Rating value={member.rating} count={member.reviewCount} size={12} />
-                    ) : (
-                      <span className="tiny dim">{t('biz.newHere')}</span>
-                    )}
                     <span className="tiny dim clamp-2">{member.specialties.join(' · ')}</span>
                   </div>
                   <Button size="xs" variant="accent-soft" onClick={() => bookWith(member.id)}>
@@ -494,27 +463,8 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
           </section>
 
           <section className="section">
-            <SectionHead title={t('booking.reviews')} action={{ label: t('action.seeAll'), to: reviewsRoute }} />
-            {pro.reviewCount > 0 && pro.rating !== null ? (
-              <div className="row-sm">
-                <Rating value={pro.rating} size={16} />
-                <span className="caption">· {t('biz.reviews', { count: formatNumber(pro.reviewCount) })}</span>
-              </div>
-            ) : null}
-            {reviewsLoading ? (
-              <ListSkeleton rows={2} />
-            ) : latest.length ? (
-              <div className="stack-sm">
-                {latest.slice(0, 3).map((review) => <ReviewCard key={review.id} review={review} />)}
-              </div>
-            ) : (
-              <p className="caption">{t('booking.noWrittenReviews')}</p>
-            )}
-            {pro.reviewCount > 0 ? (
-              <LinkButton to={reviewsRoute} variant="outline" block>
-                {t('booking.seeAllReviews', { count: formatNumber(pro.reviewCount) })}
-              </LinkButton>
-            ) : null}
+            <SectionHead title={t('booking.about')} />
+            <p className="pro-about muted">{pro.bio}</p>
           </section>
 
           <section className="section">
@@ -528,21 +478,7 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
         </div>
       </ScreenBody>
 
-      <StickyFooter
-        meta={
-          <>
-            <span>
-              {pro.priceFrom === null
-                ? t('biz.noPricesYet')
-                : <>{t('biz.from')} <strong>{formatBdt(pro.priceFrom)}</strong></>}
-            </span>
-            <span className="row-xs">
-              {pro.acceptance === 'auto' ? <Zap size={14} aria-hidden="true" /> : <Clock size={14} aria-hidden="true" />}
-              {pro.acceptance === 'auto' ? t('biz.instantConfirm') : t('biz.manualApproval')}
-            </span>
-          </>
-        }
-      >
+      <StickyFooter>
         <Button block size="lg" onClick={book}>{t('booking.bookAppointment')}</Button>
       </StickyFooter>
 

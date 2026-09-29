@@ -254,42 +254,6 @@
 
 .pf-lost { min-height: 100dvh; }
 
-/* --- Appearance picker ----------------------------------------------------- */
-
-.pf-theme {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.pf-theme-option {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  min-height: 4.5rem;
-  padding: 0.625rem 0.375rem;
-  border: 1.5px solid var(--border-light);
-  border-radius: var(--radius);
-  background-color: var(--bg-muted);
-  color: var(--text-secondary);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  transition:
-    border-color var(--speed) var(--ease),
-    background-color var(--speed) var(--ease),
-    color var(--speed) var(--ease);
-}
-
-.pf-theme-option:hover { border-color: var(--border-strong); color: var(--text-primary); }
-
-.pf-theme-option[aria-checked='true'] {
-  border-color: var(--accent);
-  background-color: var(--accent-bg);
-  color: var(--accent-ink);
-}
-
 /* ==========================================================================
    The customer's account — "Atelier"
 
@@ -503,13 +467,13 @@
 
 /* The counts sit under a hairline rather than in a second box.
 
-   Two columns, not the base rule's three: the Saved tile went with the Saved
-   screen, and a three-column grid holding two children leaves the pair
-   squeezed left with a dead third of the row. Claimed here rather than by
+   One column, not the base rule's three: the Saved tile went with the Saved
+   screen and the Reviews tile with reviews, and a three-column grid holding
+   one child leaves it squeezed left with two dead thirds of the row. Claimed here rather than by
    editing the base rule, which `scripts/check-scope.mjs` protects — only the
    customer renders `.pf-stats`, but the rule is still shared ground. */
 :root[data-app='customer'] .pf-identity .pf-stats {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   overflow: visible;
   border: 0;
   border-radius: 0;
@@ -716,10 +680,6 @@
   box-shadow: var(--bevel-top), var(--elev-raised);
 }
 
-:root[data-app='customer'] .pf-settings .pf-theme {
-  gap: var(--space-3);
-}
-
 /* The base `.list-card` clips, and customer.css draws focus as a 2px outline
    plus a 5px halo — on the first or last row of a card that halo is eaten and
    a keyboard loses the edge of the list. The clip is released and the card's
@@ -791,32 +751,6 @@
   width: 0.6875rem;
   height: 0.6875rem;
   box-shadow: var(--bevel-hair);
-}
-
-/* Appearance picker, in the customer's scope only. The base rules stay as
-   they are for ProSettingsPage, which imports the same component. */
-:root[data-app='customer'] .pf-theme-option {
-  border-width: 1px;
-  border-radius: var(--radius-lg);
-  background-color: var(--bg-secondary);
-  box-shadow: var(--bevel-top), var(--elev-card);
-  font-size: var(--fs-xs);
-}
-
-:root[data-app='customer'] .pf-theme-option svg {
-  color: var(--text-tertiary);
-  transition: color var(--speed) var(--ease);
-}
-
-:root[data-app='customer'] .pf-theme-option[aria-checked='true'] {
-  border-color: var(--accent-line);
-  background-image: var(--accent-gradient-soft);
-  color: var(--accent-ink);
-  box-shadow: var(--bevel-top), var(--elev-raised), var(--glow-accent);
-}
-
-:root[data-app='customer'] .pf-theme-option[aria-checked='true'] svg {
-  color: var(--accent-ink);
 }
 
 /* Deliberately NOT micro-caps. `profile.appVersion` is
@@ -945,102 +879,12 @@
   }
 }
 
-/* --------------------------------------------------------------------------
-   Saved and My reviews
-
-   Near-empty for most customers, so the empty state is the experience rather
-   than an afterthought: a lit gold medallion, a serif line, and room.
-   -------------------------------------------------------------------------- */
-
-:root[data-app='customer'] .empty.pf-empty {
-  gap: var(--space-3);
-  padding: var(--space-12) var(--space-5);
-}
-
-:root[data-app='customer'] .pf-empty .icon-circle {
-  width: 5rem;
-  height: 5rem;
-  margin-bottom: var(--space-5);
-  background-color: var(--bg-secondary);
-  background-image: var(--accent-gradient-soft);
-  color: var(--accent-ink);
-  box-shadow: var(--bevel-top), var(--bevel-hair), var(--elev-card);
-}
-
-:root[data-app='customer'] .pf-empty h3 {
-  font-family: var(--font-display);
-  font-size: var(--fs-xl);
-  font-weight: 600;
-  letter-spacing: var(--tracking-tighter);
-  line-height: var(--leading-tight);
-}
-
-:root[data-app='customer'] .pf-empty p {
-  max-width: 20rem;
-  font-size: var(--fs-base);
-  line-height: var(--leading-relaxed);
-  color: var(--text-secondary);
-}
-
-:root[data-app='customer'] .pf-empty .btn {
-  margin-top: var(--space-5);
-}
-
 /* The count line above a list, as an eyebrow rather than a sentence. It
    belongs to the list under it, not to the chapter gap above it, so it takes
    back most of `.pf-screen`'s 2rem. */
-:root[data-app='customer'] .pf-count {
-  margin-bottom: calc(-1 * var(--space-6));
-  font-size: var(--fs-2xs);
-  font-weight: 600;
-  letter-spacing: var(--tracking-widest);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
 
 :root[data-app='customer'] .pf-saved-list {
   gap: var(--space-4);
-}
-
-:root[data-app='customer'] .pf-reviews {
-  gap: var(--space-3);
-}
-
-/* booking.css dresses the identical `.review` on the professional's page and
-   on the reviews page at `--radius-lg`, `--space-4 --space-5`, name at
-   `--fs-md` on the display face. Same component, same app, same treatment —
-   a customer should not meet two kinds of review card. */
-:root[data-app='customer'] .pf-reviews .review {
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-lg);
-}
-
-:root[data-app='customer'] .pf-reviews .review-head {
-  padding-bottom: var(--space-3);
-  background-image: var(--rule-gradient);
-  background-repeat: no-repeat;
-  background-position: bottom;
-  background-size: 100% 1px;
-}
-
-:root[data-app='customer'] .pf-reviews .review-name {
-  font-family: var(--font-display);
-  font-size: var(--fs-md);
-  font-weight: 600;
-  letter-spacing: var(--tracking-tight);
-  color: var(--text-primary);
-}
-
-:root[data-app='customer'] .pf-reviews .review-meta {
-  font-size: var(--fs-xs);
-  color: var(--text-tertiary);
-}
-
-:root[data-app='customer'] .pf-reviews .review-text {
-  font-size: var(--fs-base);
-  line-height: var(--leading-relaxed);
-  color: var(--text-secondary);
 }
 
 /* --------------------------------------------------------------------------
@@ -1189,14 +1033,6 @@
   color: var(--accent-ink);
 }
 
-:root[data-app='customer'] .pf-review-form {
-  gap: var(--space-5);
-}
-
-:root[data-app='customer'] .pf-review-form .star-btn[data-on='true'] {
-  filter: drop-shadow(0 2px 6px var(--ring));
-}
-
 :root[data-app='customer'] .pf-cancel {
   gap: var(--space-4);
 }
@@ -1232,7 +1068,6 @@
 :root[data-lang='bn'][data-app='customer'] .pf-identity .pf-stat span,
 :root[data-lang='bn'][data-app='customer'] .pf-choice > .pf-field-label,
 :root[data-lang='bn'][data-app='customer'] .pf-edit-form > .field > .field-label,
-:root[data-lang='bn'][data-app='customer'] .pf-count,
 :root[data-lang='bn'][data-app='customer'] .pf-version {
   letter-spacing: 0.02em;
 }
@@ -1240,9 +1075,7 @@
 /* base.css flattens heading tracking to 0 under `bn` for the same reason, and
    the display-face headings added above out-specify it. Bengali conjuncts are
    drawn to their own fit and a -0.035em pull closes them onto each other. */
-:root[data-lang='bn'][data-app='customer'] .pf-identity .pf-header h2,
-:root[data-lang='bn'][data-app='customer'] .pf-empty h3,
-:root[data-lang='bn'][data-app='customer'] .pf-reviews .review-name {
+:root[data-lang='bn'][data-app='customer'] .pf-identity .pf-header h2 {
   letter-spacing: 0;
 }
 
@@ -1442,11 +1275,6 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--bevel-top), var(--elev-raised);
 }
-:root[data-app='salon_owner'] .pf-settings .pf-theme,
-:root[data-app='barber'] .pf-settings .pf-theme,
-:root[data-app='salon_employee'] .pf-settings .pf-theme {
-  gap: var(--space-3);
-}
 :root[data-app='salon_owner'] .pf-settings .list-card.pf-card-keep,
 :root[data-app='barber'] .pf-settings .list-card.pf-card-keep,
 :root[data-app='salon_employee'] .pf-settings .list-card.pf-card-keep {
@@ -1511,34 +1339,6 @@
   height: 0.6875rem;
   box-shadow: var(--bevel-hair);
 }
-:root[data-app='salon_owner'] .pf-theme-option,
-:root[data-app='barber'] .pf-theme-option,
-:root[data-app='salon_employee'] .pf-theme-option {
-  border-width: 1px;
-  border-radius: var(--radius-lg);
-  background-color: var(--bg-secondary);
-  box-shadow: var(--bevel-top), var(--elev-card);
-  font-size: var(--fs-xs);
-}
-:root[data-app='salon_owner'] .pf-theme-option svg,
-:root[data-app='barber'] .pf-theme-option svg,
-:root[data-app='salon_employee'] .pf-theme-option svg {
-  color: var(--text-tertiary);
-  transition: color var(--speed) var(--ease);
-}
-:root[data-app='salon_owner'] .pf-theme-option[aria-checked='true'],
-:root[data-app='barber'] .pf-theme-option[aria-checked='true'],
-:root[data-app='salon_employee'] .pf-theme-option[aria-checked='true'] {
-  border-color: var(--accent-line);
-  background-image: var(--accent-gradient-soft);
-  color: var(--accent-ink);
-  box-shadow: var(--bevel-top), var(--elev-raised), var(--glow-accent);
-}
-:root[data-app='salon_owner'] .pf-theme-option[aria-checked='true'] svg,
-:root[data-app='barber'] .pf-theme-option[aria-checked='true'] svg,
-:root[data-app='salon_employee'] .pf-theme-option[aria-checked='true'] svg {
-  color: var(--accent-ink);
-}
 :root[data-app='salon_owner'] .pf-version,
 :root[data-app='barber'] .pf-version,
 :root[data-app='salon_employee'] .pf-version {
@@ -1558,21 +1358,18 @@
 :root[data-lang='bn'][data-app='salon_owner'] .pf-identity .pf-stat span,
 :root[data-lang='bn'][data-app='salon_owner'] .pf-choice > .pf-field-label,
 :root[data-lang='bn'][data-app='salon_owner'] .pf-edit-form > .field > .field-label,
-:root[data-lang='bn'][data-app='salon_owner'] .pf-count,
 :root[data-lang='bn'][data-app='salon_owner'] .pf-version,
 :root[data-lang='bn'][data-app='barber'] .pf-screen .section > .label,
 :root[data-lang='bn'][data-app='barber'] .pf-identity .pf-header .caption,
 :root[data-lang='bn'][data-app='barber'] .pf-identity .pf-stat span,
 :root[data-lang='bn'][data-app='barber'] .pf-choice > .pf-field-label,
 :root[data-lang='bn'][data-app='barber'] .pf-edit-form > .field > .field-label,
-:root[data-lang='bn'][data-app='barber'] .pf-count,
 :root[data-lang='bn'][data-app='barber'] .pf-version,
 :root[data-lang='bn'][data-app='salon_employee'] .pf-screen .section > .label,
 :root[data-lang='bn'][data-app='salon_employee'] .pf-identity .pf-header .caption,
 :root[data-lang='bn'][data-app='salon_employee'] .pf-identity .pf-stat span,
 :root[data-lang='bn'][data-app='salon_employee'] .pf-choice > .pf-field-label,
 :root[data-lang='bn'][data-app='salon_employee'] .pf-edit-form > .field > .field-label,
-:root[data-lang='bn'][data-app='salon_employee'] .pf-count,
 :root[data-lang='bn'][data-app='salon_employee'] .pf-version {
   letter-spacing: 0.02em;
 }

@@ -13,7 +13,6 @@ const FAQ_KEYS: Array<{ q: TKey; a: TKey[] }> = [
   { q: 'profile.faqTryOnQ', a: ['profile.faqTryOnA1', 'profile.faqTryOnA2'] },
   { q: 'profile.faqPayQ', a: ['profile.faqPayA1', 'profile.faqPayA2'] },
   { q: 'profile.faqMoveQ', a: ['profile.faqMoveA1'] },
-  { q: 'profile.faqReviewsQ', a: ['profile.faqReviewsA1', 'profile.faqReviewsA2'] },
 ];
 
 export default function HelpPage() {

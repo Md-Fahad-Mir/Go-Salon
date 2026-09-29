@@ -40,7 +40,6 @@ export interface AccountData {
 
 const DEFAULT_PREFERENCES: UserPreferences = {
   smsReminders: true,
-  promoNotifications: true,
   bookingUpdates: true,
   saveHistory: true,
 };

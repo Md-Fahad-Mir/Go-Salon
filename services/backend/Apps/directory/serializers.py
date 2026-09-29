@@ -59,7 +59,7 @@ def _service(service: Service) -> dict:
     }
 
 
-def _staff(employment: SalonEmployee, salon_week: list[dict], score=None) -> dict:
+def _staff(employment: SalonEmployee, salon_week: list[dict]) -> dict:
     """One chair, including the week it actually works.
 
     A chair with no hours of its own keeps the salon's — the same inheritance
@@ -79,24 +79,10 @@ def _staff(employment: SalonEmployee, salon_week: list[dict], score=None) -> dic
         'specialties': profile.specialties if profile else [],
         'experience_years': profile.experience_years if profile else 0,
         'hours': week_payload(own) if own else salon_week,
-        **(score or {'rating': None, 'review_count': 0}),
     }
 
 
-def _score(scores, listing_id: str) -> dict:
-    """The star and the count, or the honest absence of both.
-
-    `scores` is built once per request by `Apps.reviews.ratings.scores_for` and
-    handed in, so a page of forty listings is two queries rather than forty.
-    A business nobody has reviewed is not in the map, and reports `None` — a
-    listing with no score is not a listing scoring zero.
-    """
-    found = (scores or {}).get(listing_id)
-    return found or {'rating': None, 'review_count': 0}
-
-
-def salon_listing(salon: Salon, *, point=None, detail=False, scores=None,
-                  chair_scores=None) -> dict:
+def salon_listing(salon: Salon, *, point=None, detail=False) -> dict:
     services = [s for s in salon.services.all()]
     week = week_payload(salon.working_days.all())
     latitude, longitude = (point or (None, None))
@@ -132,20 +118,18 @@ def salon_listing(salon: Salon, *, point=None, detail=False, scores=None,
         'staff_count': sum(1 for e in salon.employees.all() if e.is_active),
         'hours': week,
         'open_now': is_open_at(week),
-        **_score(scores, f'salon-{salon.id}'),
         'joined_at': salon.created_at,
     }
 
     if detail:
         payload['services'] = [_service(s) for s in services if s.is_active]
         payload['staff'] = [
-            _staff(e, week, (chair_scores or {}).get(e.id))
-            for e in salon.employees.all() if e.is_active
+            _staff(e, week) for e in salon.employees.all() if e.is_active
         ]
     return payload
 
 
-def barber_listing(profile, *, point=None, detail=False, scores=None) -> dict:
+def barber_listing(profile, *, point=None, detail=False) -> dict:
     services = [s for s in profile.services.all()]
     week = week_payload(profile.working_days.all())
     latitude, longitude = (point or (None, None))
@@ -181,7 +165,6 @@ def barber_listing(profile, *, point=None, detail=False, scores=None) -> dict:
         'staff_count': 0,
         'hours': week,
         'open_now': is_open_at(week),
-        **_score(scores, f'barber-{profile.id}'),
         'joined_at': profile.user.date_joined,
     }
 

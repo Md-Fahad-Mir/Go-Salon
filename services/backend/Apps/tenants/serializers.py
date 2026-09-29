@@ -9,7 +9,7 @@ already exists. This is not that.
   id      what every later request names in `X-Tenant-Id`. Without it the
           client cannot act on the membership it just made.
   listing_id
-          `salon-3` / `barber-9` — the same handle bookings, reviews and
+          `salon-3` / `barber-9` — the same handle bookings and
           availability already use for this business. Here for the same reason
           `id` is: without it a client holding a membership cannot open the
           one screen the membership is for. The salon list is what a customer
@@ -18,8 +18,8 @@ already exists. This is not that.
           cannot be opened.
 
           It discloses nothing: a customer learns this exact string from every
-          booking they hold at the salon, every availability call they make
-          there, and every review they write. What it removes is the need to
+          booking they hold at the salon and every availability call they make
+          there. What it removes is the need to
           have made a booking *first* in order to make one.
   slug    the readable handle, for a URL or a log line. Not a secret and not
           a credential: nothing routes or authorises on it.

@@ -603,20 +603,6 @@
 .rating { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.875rem; }
 .rating .star { color: var(--accent); }
 .rating .rating-value { font-weight: 700; color: var(--text-primary); font-variant-numeric: tabular-nums; }
-.rating .rating-count { color: var(--text-tertiary); }
-
-.stars { display: inline-flex; gap: 0.125rem; }
-.stars-lg { gap: 0.375rem; }
-.star-btn {
-  display: grid;
-  place-items: center;
-  width: var(--touch-target);
-  height: var(--touch-target);
-  color: var(--border-strong);
-  transition: color var(--speed) var(--ease), transform var(--speed) var(--ease-out);
-}
-.star-btn[data-on='true'] { color: var(--accent); }
-.star-btn:active { transform: scale(1.15); }
 
 /* --- Cards ----------------------------------------------------------------- */
 
@@ -1147,20 +1133,6 @@ button.list-row:hover, a.list-row:hover { background-color: var(--hover-bg); }
 .photo-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
 
 /* --- Pull quote / testimonial --------------------------------------------- */
-
-.review {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0.875rem 1rem;
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius);
-}
-.review-head { display: flex; align-items: center; gap: 0.625rem; }
-.review-name { font-size: 0.9375rem; font-weight: 600; }
-.review-meta { font-size: 0.75rem; color: var(--text-tertiary); }
-.review-text { font-size: 0.9375rem; color: var(--text-secondary); line-height: 1.5; }
 
 /* --- Professional card ----------------------------------------------------- */
 

@@ -34,7 +34,7 @@ const BOOKING: Booking = {
   cancelDeadline: '2099-01-01T03:00:00.000Z',
   can: {
     approve: false, reject: false, complete: false,
-    cancel: true, reschedule: true, callToCancel: false, review: false,
+    cancel: true, reschedule: true, callToCancel: false,
   },
   startsAt: '2099-01-01T05:00:00.000Z',
   createdAt: '2026-01-01T00:00:00.000Z',

@@ -1,18 +1,15 @@
 import { parseISO } from 'date-fns';
-import { Armchair, BarChart3, RefreshCw, Star } from 'lucide-react';
+import { Armchair, BarChart3 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '../../components/common/Button';
 import { Callout } from '../../components/common/Callout';
 import { Card } from '../../components/common/Card';
 import { EmptyState } from '../../components/common/EmptyState';
-import { ListSkeleton, Skeleton } from '../../components/common/Skeleton';
+import { Skeleton } from '../../components/common/Skeleton';
 import { Segmented } from '../../components/common/Tabs';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
-import { ReviewCard } from '../../components/booking/ReviewCard';
-import { Rating } from '../../components/common/Rating';
 import { useT } from '../../hooks/useLanguage';
-import { useMyReviews } from '../../hooks/useReviews';
 import { ApiValidationError } from '../../utils/apiClient';
 import { messageOf } from '../../utils/errorMessage';
 import { formatBdt, formatNumber, formatPattern } from '../../utils/format';
@@ -56,18 +53,6 @@ type Answer =
 
 export default function PerformancePage() {
   const t = useT();
-  /* `/api/reviews/` narrowed to this chair by the server. It used to be the
-     whole salon's reviews filtered on `staffName === userName` — same intent,
-     but two stylists with one name shared a history and correcting the spelling
-     of your own name lost you every review you had. */
-  const {
-    reviews,
-    summary: reviewSummary,
-    count: reviewCount,
-    loading: reviewsLoading,
-    failed: reviewsFailed,
-    reload: reloadReviews,
-  } = useMyReviews();
   const [period, setPeriod] = useState<ReportPeriod>('week');
   const [attempt, setAttempt] = useState(0);
   const [answer, setAnswer] = useState<{ request: string; value: Answer } | null>(null);
@@ -350,54 +335,6 @@ export default function PerformancePage() {
               </Card>
             </section>
 
-            {/* --- My reviews ---
-                Reviews of visits this stylist did, all-time — not this
-                period. The figures above move with the pills; a score built
-                on three reviews would swing on one bad Friday, so the line
-                under the stars says which it is. */}
-            <section className="section" aria-labelledby="pt-rev-head">
-              <div className="pro-section-head">
-                <h3 id="pt-rev-head">{t('pt.myReviews')}</h3>
-                {reviewCount > 0 && reviewSummary?.average !== null ? (
-                  <Rating value={reviewSummary?.average ?? 0} count={reviewCount} />
-                ) : null}
-              </div>
-              {reviewsFailed ? (
-                <EmptyState
-                  className="pt-empty"
-                  icon={<Star size={26} aria-hidden="true" />}
-                  title={t('pt.reviewsFailed')}
-                  description={reviewsFailed}
-                  action={
-                    <Button
-                      variant="outline"
-                      icon={<RefreshCw size={16} aria-hidden="true" />}
-                      onClick={reloadReviews}
-                    >
-                      {t('action.retry')}
-                    </Button>
-                  }
-                />
-              ) : reviewsLoading ? (
-                <ListSkeleton rows={2} />
-              ) : reviews.length === 0 ? (
-                <EmptyState
-                  className="pt-empty"
-                  icon={<Star size={26} aria-hidden="true" />}
-                  title={t('pt.noReviews')}
-                  description={t('pt.noReviewsBody')}
-                />
-              ) : (
-                <>
-                  <div className="stack-sm">
-                    {reviews.slice(0, 5).map((review) => (
-                      <ReviewCard key={review.id} review={review} />
-                    ))}
-                  </div>
-                  <p className="pt-mix-blank">{t('pt.reviewsAllTime')}</p>
-                </>
-              )}
-            </section>
           </>
         )}
       </ScreenBody>

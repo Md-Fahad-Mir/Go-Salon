@@ -5,6 +5,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { Spinner } from '../../components/common/Spinner';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
+import { PreferenceButtons } from '../../components/home/PreferenceButtons';
 import { AppointmentRow } from '../../components/provider/queue/AppointmentRow';
 import { ownedBy } from '../../components/provider/queue/queueUtils';
 import { useTicker } from '../../components/provider/queue/useTicker';
@@ -53,7 +54,7 @@ export default function RequestsPage() {
 
   return (
     <Screen nav>
-      <Header title={t('nav.requests')} />
+      <Header title={t('nav.requests')} actions={<PreferenceButtons />} />
       <ScreenBody className="pq-requests">
         {loading ? (
           <div className="bk-loading" aria-busy="true">

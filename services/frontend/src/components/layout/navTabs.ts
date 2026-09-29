@@ -1,4 +1,4 @@
-import { CalendarDays, Home, ListChecks, Settings, Sparkles, Users, UserRound } from 'lucide-react';
+import { CalendarDays, Home, ListChecks, Sparkles, Users, UserRound } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ROUTES } from '../../constants';
 import type { TranslationKey } from '../../i18n';
@@ -17,7 +17,7 @@ export interface NavTab {
 /* The customer's bar is their own. The three professional bars share one
    shape, and differ only where the role genuinely differs:
 
-     barber, employee:  Today  ->  Requests  ->  Profile  ->  Settings
+     barber, employee:  Today  ->  Requests  ->  Profile
      salon owner:       Home   ->  Requests  ->  Staff    ->  Profile
 
    **Staff** and the salon's profile belong to whoever owns the place. A barber
@@ -25,11 +25,11 @@ export interface NavTab {
    chair in somebody else's salon, not a salon. Both of them get their own
    **Profile** instead, since there is no business of their own to open.
 
-   Settings is the last tab for the barber and the employee. The owner opens it
-   from the gear on their Profile, the way a customer does. Everything a
-   professional owns but does not touch hourly — the calendar, the price list,
-   takings, analytics — is reached from there, so cutting the bar back did not
-   cut anything off. */
+   There is no Settings for a professional. Language and light/dark sit in the
+   header of each role's home screen, and the password and signing out at the
+   foot of each role's Profile. Everything a professional owns but does not
+   touch hourly — the calendar, the price list, takings, analytics — is
+   reached from Profile too. */
 export const NAV_TABS: Record<UserRole, NavTab[]> = {
   customer: [
     /* Four, not five. The Search tab led to the cross-salon directory, which
@@ -46,7 +46,6 @@ export const NAV_TABS: Record<UserRole, NavTab[]> = {
     { to: ROUTES.proQueue, labelKey: 'nav.today', icon: CalendarDays, match: ['/pro/queue'], hero: true },
     { to: ROUTES.proRequests, labelKey: 'nav.requests', icon: ListChecks, match: ['/pro/requests', '/pro/appointment'] },
     { to: ROUTES.proProfile, labelKey: 'nav.profile', icon: UserRound, match: ['/pro/profile', '/pro/portfolio', '/pro/earnings', '/pro/calendar', '/pro/services', '/pro/treatments', '/pro/clients', '/pro/lookbook'] },
-    { to: ROUTES.proSettings, labelKey: 'nav.settings', icon: Settings, match: ['/pro/settings'] },
   ],
 
   salon_owner: [
@@ -55,17 +54,14 @@ export const NAV_TABS: Record<UserRole, NavTab[]> = {
     { to: ROUTES.proSalonStaff, labelKey: 'nav.staff', icon: Users, match: ['/pro/salon/staff'] },
     // The salon's whole portfolio: who it is, where, when it opens, the menu,
     // the team and the pictures. The gallery screen it links out to counts as
-    // part of it, so the tab stays lit there. Settings is reached from the
-    // gear in this screen's header, as it is from the customer's Profile, so
-    // it counts as part of it too.
-    { to: ROUTES.proSalonProfile, labelKey: 'nav.profile', icon: UserRound, match: ['/pro/salon/profile', '/pro/portfolio', '/pro/salon/services', '/pro/salon/analytics', '/pro/settings'] },
+    // part of it, so the tab stays lit there.
+    { to: ROUTES.proSalonProfile, labelKey: 'nav.profile', icon: UserRound, match: ['/pro/salon/profile', '/pro/portfolio', '/pro/salon/services', '/pro/salon/analytics'] },
   ],
 
   salon_employee: [
     { to: ROUTES.proQueue, labelKey: 'nav.today', icon: CalendarDays, match: ['/pro/queue'], hero: true },
     { to: ROUTES.proRequests, labelKey: 'nav.requests', icon: ListChecks, match: ['/pro/requests', '/pro/appointment'] },
     { to: ROUTES.proProfile, labelKey: 'nav.profile', icon: UserRound, match: ['/pro/profile', '/pro/shift', '/pro/performance'] },
-    { to: ROUTES.proSettings, labelKey: 'nav.settings', icon: Settings, match: ['/pro/settings'] },
   ],
 
   // An admin's tools are the backend's own admin site, so there is no bar.
@@ -76,6 +72,6 @@ export const NAV_TABS: Record<UserRole, NavTab[]> = {
  *
  *  Audience no longer changes it. A women's hairstylist is a hairstylist —
  *  the same role and the same four things — and her clients, treatments and
- *  lookbook are reached from Settings alongside everybody else's.
+ *  lookbook are reached from Profile alongside everybody else's.
  */
 export const navTabsFor = (role: UserRole): NavTab[] => NAV_TABS[role];

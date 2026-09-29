@@ -23,7 +23,7 @@ export const profile = {
   'bookings.emptyUpcomingBody': 'Find a salon and book your next look.',
   'bookings.findSalon': 'Find a salon',
   'bookings.emptyCompletedTitle': 'Nothing completed yet',
-  'bookings.emptyCompletedBody': 'Your finished visits will show up here, ready to rebook or review.',
+  'bookings.emptyCompletedBody': 'Your finished visits will show up here, ready to rebook.',
   'bookings.emptyCancelledTitle': 'No cancellations',
   'bookings.emptyCancelledBody': 'Plans held. Nothing has been cancelled.',
   'bookings.changedMind': 'Changed your mind?',
@@ -35,9 +35,6 @@ export const profile = {
   'bookings.reschedule': 'Reschedule',
   'bookings.rebook': 'Rebook',
   'bookings.receipt': 'Receipt',
-  'bookings.leaveReview': 'Leave a review',
-  'bookings.reviewed': 'Reviewed',
-  'bookings.reviewedRating': 'Reviewed {rating}/5',
   'bookings.cancelledWithReason': 'Cancelled · {reason}',
   'bookings.details': 'Details',
   'bookings.detailsOf': 'Details of {services}',
@@ -117,20 +114,6 @@ export const profile = {
   'bookings.receiptLineTotal': 'Total {total} via {method}',
   'bookings.receiptCopied': 'Receipt copied',
 
-  /* ---- Review sheet ---- */
-  'bookings.rateVisit': 'Rate your visit',
-  'bookings.quickTags': 'Quick tags',
-  'bookings.tagOnTime': 'On time',
-  'bookings.tagGreatCut': 'Great cut',
-  'bookings.tagFriendly': 'Friendly',
-  'bookings.tagClean': 'Clean',
-  'bookings.tagValue': 'Value',
-  'bookings.reviewLabel': 'What stood out?',
-  'bookings.reviewPlaceholder': 'The cut, the wait, the chat…',
-  'bookings.submitReview': 'Submit review',
-  'bookings.reviewThanks': 'Thanks for the review',
-  'bookings.reviewThanksBody': '{pro} will see it shortly.',
-
   /* ---- Cancellation policy sheet ---- */
   'profile.policyTitle': 'Cancellation policy',
   'profile.policySubtitle': 'What to do if plans change.',
@@ -147,7 +130,6 @@ export const profile = {
   'profile.settingsTitle': 'Settings',
   'profile.activityLabel': 'Your activity',
   'profile.statBookings': 'Bookings',
-  'profile.statReviews': 'Reviews',
   'profile.account': 'Account',
   'profile.memberSince': 'Customer · Member since {date}',
   'profile.credits_one': '{count} try-on credit',
@@ -161,7 +143,6 @@ export const profile = {
   'profile.location': 'Location',
   'profile.more': 'More',
   'profile.myBookings': 'My bookings',
-  'profile.myReviews': 'My reviews',
   'profile.tryOnHistory': 'Try-on history',
   'profile.help': 'Help & support',
   'profile.logOut': 'Log out',
@@ -204,14 +185,6 @@ export const profile = {
   'profile.lengthLong': 'Long',
   'profile.lengthLongHint': 'Past the shoulders',
 
-  /* ---- My reviews ---- */
-  'profile.reviewsTitle': 'My reviews',
-  'profile.noReviewsTitle': 'No reviews yet',
-  'profile.noReviewsBody': 'After a visit you can rate it from My bookings.',
-  'profile.reviewsNewest_one': '{count} review · newest first',
-  'profile.reviewsNewest_other': '{count} reviews · newest first',
-  'profile.reviewsListLabel': 'Your reviews',
-
   /* ---- Help & support ---- */
   'profile.talkToUs': 'Talk to us',
   'profile.whatsapp': 'Chat on WhatsApp',
@@ -238,11 +211,6 @@ export const profile = {
   'profile.faqMoveQ': 'Can I move my appointment?',
   'profile.faqMoveA1':
     'Yes. Open the booking and tap Reschedule to pick a new slot. Moving is free whenever the salon has an opening, even inside the {hours}-hour window.',
-  'profile.faqReviewsQ': 'How do reviews work?',
-  'profile.faqReviewsA1':
-    'Once a visit is completed you can rate it from My bookings › Completed. Only customers who actually booked can review, so ratings stay honest.',
-  'profile.faqReviewsA2':
-    'Your name appears with the review; edit your name under Profile if you want to change how it shows.',
 
   /* ---- Settings ---- */
   'settings.account': 'Account',
@@ -252,8 +220,6 @@ export const profile = {
   'settings.smsRemindersHint': 'The day before a booking',
   'settings.bookingUpdates': 'Booking updates',
   'settings.bookingUpdatesHint': 'Confirmations, changes and cancellations',
-  'settings.offers': 'Offers and new styles',
-  'settings.offersHint': 'Occasional, never more than weekly',
   'settings.privacy': 'Try-on & privacy',
   'settings.saveResults': 'Save my results',
   'settings.saveResultsHint': 'Keep try-ons in your history',
@@ -271,9 +237,6 @@ export const profile = {
   'settings.version': 'Version',
   'settings.terms': 'Terms of Service',
   'settings.privacyPolicy': 'Privacy Policy',
-  'settings.rateApp': 'Rate the app',
-  'settings.rateAppToast': 'Thanks!',
-  'settings.rateAppToastBody': 'Store ratings open with the public launch.',
 
   /* ---- Payment methods ---- */
   'settings.payments': 'Payment methods',
@@ -318,9 +281,6 @@ export const profile = {
   'legal.termsTryOnHead': 'The AI try-on is a preview',
   'legal.termsTryOnBody':
     'A rendered hairstyle shows roughly how a cut might sit. It is not a promise: what suits your hair is a conversation with your stylist, and they decide what is possible.',
-  'legal.termsReviewHead': 'Reviews',
-  'legal.termsReviewBody':
-    'Review the visit, not the person. Your name appears with what you write. We remove reviews that are abusive or that are not about a real appointment.',
   'legal.termsAccountHead': 'Your account',
   'legal.termsAccountBody':
     'One account per phone number, and it is yours — do not book on somebody else\'s behalf without telling them, because the salon will text that number.',
@@ -330,7 +290,7 @@ export const profile = {
 
   'legal.privacyKeepHead': 'What we keep',
   'legal.privacyKeepBody':
-    'Your name, your phone number, and an email only if you add one. Your bookings, your reviews, and the hair details you choose to fill in. That is the lot.',
+    'Your name, your phone number, and an email only if you add one. Your bookings and the hair details you choose to fill in. That is the lot.',
   'legal.privacySalonHead': 'What the salon sees',
   'legal.privacySalonBody':
     'The salon you book gets your name, your phone number, and what you booked — they need all three to hold the chair and to reach you if something changes. They do not see your other bookings, anywhere else.',

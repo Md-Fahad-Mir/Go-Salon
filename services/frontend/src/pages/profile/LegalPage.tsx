@@ -23,7 +23,6 @@ const TERMS: Clause[] = [
   { head: 'legal.termsPayHead', body: ['legal.termsPayBody'] },
   { head: 'legal.termsCancelHead', body: ['legal.termsCancelBody'] },
   { head: 'legal.termsTryOnHead', body: ['legal.termsTryOnBody'] },
-  { head: 'legal.termsReviewHead', body: ['legal.termsReviewBody'] },
   { head: 'legal.termsAccountHead', body: ['legal.termsAccountBody'] },
   { head: 'legal.termsChangeHead', body: ['legal.termsChangeBody'] },
 ];

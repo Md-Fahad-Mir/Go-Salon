@@ -17,14 +17,13 @@ import {
   SearchX,
   Share2,
   Sparkles,
-  Star,
   XCircle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { Booking } from '../types';
 import { ROUTES } from '../constants';
-import { Badge, StatusBadge } from '../components/common/Badge';
+import { StatusBadge } from '../components/common/Badge';
 import { Button, LinkButton } from '../components/common/Button';
 import { Callout } from '../components/common/Callout';
 import { Card } from '../components/common/Card';
@@ -36,7 +35,6 @@ import { CancelDialog } from '../components/profile/CancelDialog';
 import { ExternalButton } from '../components/profile/ExternalButton';
 import { PolicySheet } from '../components/profile/PolicySheet';
 import { ReceiptSheet } from '../components/profile/ReceiptSheet';
-import { ReviewSheet } from '../components/profile/ReviewSheet';
 import { bookingStart, cancelReasonLabel, isUpcoming, servicesLabel } from '../components/profile/bookingHelpers';
 import { useBookingActions } from '../components/profile/useBookingActions';
 import { useT } from '../hooks/useLanguage';
@@ -44,12 +42,12 @@ import type { TFunction } from '../i18n';
 import { getProfessional } from '../store/useDirectoryStore';
 import { useAppStore } from '../store/useAppStore';
 import { api } from '../utils/api';
-import { formatBdt, formatDateLong, formatDayLabel, formatDuration, formatNumber, formatTime, formatTimeRange } from '../utils/format';
+import { formatBdt, formatDateLong, formatDayLabel, formatDuration, formatTime, formatTimeRange } from '../utils/format';
 import { directionsUrl } from '../utils/geo';
 import { activeDateLocale } from '../utils/locale';
 import { buildIcs, downloadText, shareOrCopy } from '../utils/share';
 
-type Sheet = 'cancel' | 'review' | 'receipt' | 'policy' | null;
+type Sheet = 'cancel' | 'receipt' | 'policy' | null;
 
 const heroFor = (
   booking: Booking,
@@ -144,8 +142,6 @@ export default function BookingDetailPage() {
   const hero = heroFor(booking, t);
   const HeroIcon = HERO_ICONS[hero.icon];
   const upcoming = isUpcoming(booking);
-  // The review of this visit, as the server sent it with the booking.
-  const review = booking.review;
   const services = servicesLabel(booking);
 
   const share = async () => {
@@ -331,18 +327,6 @@ export default function BookingDetailPage() {
               <Button block icon={<RotateCcw size={18} aria-hidden="true" />} onClick={() => rebook(booking)}>
                 {t('bookings.rebook')}
               </Button>
-              {review ? (
-                <div className="between" style={{ justifyContent: 'center', minHeight: 'var(--control-height)' }}>
-                  <Badge tone="success" plain pill>
-                    <Star size={12} fill="currentColor" aria-hidden="true" />{' '}
-                    {t('bookings.reviewedRating', { rating: formatNumber(review.rating) })}
-                  </Badge>
-                </div>
-              ) : booking.can.review ? (
-                <Button variant="accent-soft" block icon={<Star size={18} aria-hidden="true" />} onClick={() => setSheet('review')}>
-                  {t('bookings.leaveReview')}
-                </Button>
-              ) : null}
               <Button variant="secondary" block icon={<Receipt size={18} aria-hidden="true" />} onClick={() => setSheet('receipt')}>
                 {t('bookings.viewReceipt')}
               </Button>
@@ -361,7 +345,6 @@ export default function BookingDetailPage() {
       </ScreenBody>
 
       {sheet === 'cancel' ? <CancelDialog booking={booking} open onClose={() => setSheet(null)} /> : null}
-      {sheet === 'review' ? <ReviewSheet booking={booking} open onClose={() => setSheet(null)} /> : null}
       {sheet === 'receipt' ? <ReceiptSheet booking={booking} open onClose={() => setSheet(null)} /> : null}
       <PolicySheet open={sheet === 'policy'} onClose={() => setSheet(null)} />
     </Screen>

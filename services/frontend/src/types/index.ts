@@ -46,9 +46,6 @@ export interface BookingActions {
   reschedule: boolean;
   /** Past the deadline: the customer rings the salon instead. */
   callToCancel: boolean;
-  /** Theirs to rate, finished, and not rated yet. Decided by the server so a
-      refresh cannot lose it, which a local flag did. */
-  review: boolean;
 }
 
 export interface GeoPoint {
@@ -150,11 +147,9 @@ export interface StaffMember {
   professionalId: string;
   name: string;
   title: string;
-  /** This chair's own score — the reviews of work done in it — or null when
-      nobody has rated them. Same reason as a business's: `0.0 (0)` under a
-      new colleague's name is a verdict nobody has passed. */
-  rating: number | null;
-  reviewCount: number;
+  /** Their own photo, from their profile. Absent when they have not set one
+      (and on fixture staff), in which case their initials stand in. */
+  avatar?: string;
   specialties: string[];
   experienceYears: number;
   tone: number;
@@ -196,11 +191,6 @@ export interface Professional {
   category: string;
   specialties: string[];
   experienceYears: number | null;
-  /** The mean of every review of this business, or **null when there are
-      none**. Not zero — zero reads as a bad score, and a place nobody has
-      reviewed has not been scored badly. */
-  rating: number | null;
-  reviewCount: number;
   /** The real week, with more than one stretch a day where there is one. */
   hours: WeekSchedule;
   /** Answered by the server against the business's own timezone, so a phone
@@ -225,39 +215,6 @@ export interface GalleryPhoto {
   id: number;
   image: string;
   caption: string;
-}
-
-export interface Review {
-  id: string;
-  professionalId: string;
-  /** The business's name, carried with the review: "My reviews" is reached
-      without loading any listing first, so a cache lookup would come up
-      empty on a cold start. */
-  professionalName?: string;
-  /** The appointment this is about. It is also the id every review endpoint
-      is keyed on — a visit has at most one review, so the visit names it. */
-  bookingId?: string;
-  userId: string;
-  /** How the reviewer is named in public: given name and an initial. The
-      server shortens it; nothing on the client should lengthen it back. */
-  userName: string;
-  rating: number;
-  text: string;
-  createdAt: string;
-  serviceName?: string;
-  staffName?: string;
-  /** The business's answer. Empty until they write one, and the customer
-      reads it, so it is not a screen-local draft. */
-  reply?: string;
-  repliedAt?: string | null;
-  /** Whose name the reply is signed with — the business's, decided by the
-      server rather than inferred from whoever is reading the screen. */
-  repliedByName?: string;
-  /** Whether the account reading this may answer it. At a salon the owner
-      always may and the stylist may only on their own chair and only where
-      the salon has not already spoken — a rule no screen can work out, so the
-      server answers it and no Reply button is drawn that the API refuses. */
-  canReply?: boolean;
 }
 
 export interface TimeSlot {
@@ -320,9 +277,6 @@ export interface Booking {
   /** Only on the answer to an approve or a reject: whether the customer's
       text actually went out. */
   notification?: { status: string; error: string };
-  /** The review of this visit, once there is one. Both sides read it: the
-      customer so the screen stops asking, the salon so it can answer. */
-  review?: Review;
   hairstyleId?: string;
   /** Whether to text a reminder the day before. Remembered on this device
       only — there is no reminder service behind it yet. */
@@ -515,7 +469,6 @@ export interface Toast {
 
 export interface UserPreferences {
   smsReminders: boolean;
-  promoNotifications: boolean;
   bookingUpdates: boolean;
   saveHistory: boolean;
   /** Demo switch: makes the next mock payment fail. */

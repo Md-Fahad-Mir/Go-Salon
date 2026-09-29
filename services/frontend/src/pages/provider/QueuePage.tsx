@@ -18,6 +18,7 @@ import { Button } from '../../components/common/Button';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
+import { PreferenceButtons } from '../../components/home/PreferenceButtons';
 import { StickyFooter } from '../../components/layout/StickyFooter';
 import { useT } from '../../hooks/useLanguage';
 import { useProviderProfile } from '../../hooks/useRole';
@@ -141,6 +142,7 @@ export default function QueuePage() {
       <Header
         title={greeting}
         align="start"
+        actions={<PreferenceButtons />}
       />
 
       <ScreenBody className="pq-day">

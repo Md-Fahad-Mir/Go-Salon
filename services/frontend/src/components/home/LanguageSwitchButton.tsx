@@ -9,10 +9,10 @@ interface LanguageSwitchButtonProps {
   variant?: 'plain' | 'scrim';
 }
 
-/** English or বাংলা, from the button beside Home's notification bell. The
-    customer's only way to change the language — their Settings has no
-    language section. (Providers keep `LanguageSection` in their own
-    settings, since they have no Home.) */
+/** English or বাংলা, from a button in the home screen's header — the
+    customer's Home, and each professional's home screen (Today, or the
+    salon's queue). The only way to change the language: no Settings screen
+    has a language section any more. */
 export function LanguageSwitchButton({ variant = 'plain' }: LanguageSwitchButtonProps) {
   const { language, setLanguage, t } = useLanguage();
   const [open, setOpen] = useState(false);

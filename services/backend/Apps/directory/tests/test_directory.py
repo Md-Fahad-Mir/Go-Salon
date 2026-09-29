@@ -210,10 +210,10 @@ class ContentTests(ListingTestCase):
         friday = next(d for d in self.listing()['hours'] if d['day'] == 'fri')
         self.assertTrue(friday['is_closed'])
 
-    def test_reports_no_rating_rather_than_inventing_one(self):
+    def test_carries_no_rating_or_review_count(self):
         row = self.listing()
-        self.assertIsNone(row['rating'])
-        self.assertEqual(row['review_count'], 0)
+        self.assertNotIn('rating', row)
+        self.assertNotIn('review_count', row)
 
     def test_distance_comes_back_in_kilometres(self):
         self.assertEqual(self.listing()['distance_km'], 0.0)

@@ -8,6 +8,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { ActionSheet, type SheetAction } from '../../components/common/ActionSheet';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
+import { PreferenceButtons } from '../../components/home/PreferenceButtons';
 import { StickyFooter } from '../../components/layout/StickyFooter';
 import { WalkInSheet, type WalkInDraft } from '../../components/provider/queue/WalkInSheet';
 import { ChairStrip } from '../../components/provider/salon/ChairStrip';
@@ -163,7 +164,7 @@ export default function SalonQueuePage() {
   if (!profile) {
     return (
       <Screen nav>
-        <Header title={t('salon.queueTitle')} />
+        <Header title={t('salon.queueTitle')} actions={<PreferenceButtons />} />
         <ScreenBody className="fullscreen-center">
           <EmptyState
             icon={<Store size={26} aria-hidden="true" />}
@@ -192,7 +193,7 @@ export default function SalonQueuePage() {
 
   return (
     <Screen nav>
-      <Header title={t('salon.queueTitle')} />
+      <Header title={t('salon.queueTitle')} actions={<PreferenceButtons />} />
       <ScreenBody>
         <section className="section" aria-labelledby="sq-chairs">
           <div className="pro-section-head">

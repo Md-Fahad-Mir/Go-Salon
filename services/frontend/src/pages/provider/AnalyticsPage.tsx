@@ -23,24 +23,20 @@
    leader. */
 
 import { parseISO } from 'date-fns';
-import { AlertTriangle, BarChart3, MessageSquare, RefreshCw } from 'lucide-react';
+import { AlertTriangle, BarChart3 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { TAKINGS_METHODS } from '../../constants';
 import { Button } from '../../components/common/Button';
 import { EmptyState } from '../../components/common/EmptyState';
-import { ListSkeleton } from '../../components/common/Skeleton';
 import { Segmented } from '../../components/common/Tabs';
 import { Spinner } from '../../components/common/Spinner';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
-import { ReviewThread } from '../../components/provider/business/ReviewThread';
 import { RankList, type RankRow } from '../../components/provider/salon/RankList';
 import { TAKINGS_KEYS } from '../../components/provider/salon/salonLabels';
 import { useT } from '../../hooks/useLanguage';
-import { useMyReviews } from '../../hooks/useReviews';
-import { useProviderStore } from '../../store/useProviderStore';
 import { messageOf } from '../../utils/errorMessage';
-import { formatBdt, formatNumber, formatPattern, formatRating } from '../../utils/format';
+import { formatBdt, formatNumber, formatPattern } from '../../utils/format';
 import {
   reportService,
   type AnalyticsReport,
@@ -70,18 +66,6 @@ interface Result {
 
 export default function AnalyticsPage() {
   const t = useT();
-  /* Reviews are read from `/api/reviews/`, which scopes itself to the account
-     asking — for an owner that is their salon and nothing else. Separate from
-     the report because a score is all-time and the report is a period. */
-  const {
-    reviews,
-    summary: reviewSummary,
-    count: reviewCount,
-    loading: reviewsLoading,
-    failed: reviewsFailed,
-    reload: reloadReviews,
-  } = useMyReviews();
-  const businessName = useProviderStore((state) => state.profile?.businessName ?? '');
   const [period, setPeriod] = useState<ReportPeriod>('week');
   /* Bumped by "try again" — the only way to ask the same question twice. */
   const [attempt, setAttempt] = useState(0);
@@ -317,64 +301,6 @@ export default function AnalyticsPage() {
           />
         )}
 
-        {/* Satisfaction is all-time, not this period: three reviews in a week
-            is not a score, and a number that swings on one bad Friday is worse
-            than no number. The heading says so rather than leaving the reader
-            to assume it follows the pills above. */}
-        <section className="section" aria-labelledby="an-reviews">
-          <h3 className="label" id="an-reviews">{t('salon.satisfaction')}</h3>
-          {reviewsFailed ? (
-            <EmptyState
-              icon={<MessageSquare size={26} aria-hidden="true" />}
-              title={t('salon.reviewsFailedTitle')}
-              description={reviewsFailed}
-              action={
-                <Button
-                  variant="outline"
-                  icon={<RefreshCw size={16} aria-hidden="true" />}
-                  onClick={reloadReviews}
-                >
-                  {t('action.retry')}
-                </Button>
-              }
-            />
-          ) : reviewsLoading ? (
-            <ListSkeleton rows={2} />
-          ) : reviewCount === 0 ? (
-            <EmptyState
-              icon={<MessageSquare size={26} aria-hidden="true" />}
-              title={t('salon.noReviewsTitle')}
-              description={t('salon.noReviewsBody')}
-            />
-          ) : (
-            <>
-              <div className="pro-stats" aria-live="polite">
-                <div className="pro-stat pro-stat-accent">
-                  <strong>{formatRating(reviewSummary?.average ?? 0)}</strong>
-                  <span>{t('salon.statRating')}</span>
-                </div>
-                <div className="pro-stat">
-                  <strong>{formatNumber(reviewCount)}</strong>
-                  <span>{t('salon.statReviews')}</span>
-                </div>
-              </div>
-              <p className="ps-note">{t('salon.reviewsAllTime', { count: formatNumber(reviewCount) })}</p>
-              <div className="stack-sm">
-                {reviews.slice(0, 5).map((review) => (
-                  <ReviewThread
-                    key={review.id}
-                    review={review}
-                    businessName={businessName}
-                    onReply={undefined}
-                  />
-                ))}
-              </div>
-              {/* Answering one is the shopfront's job, and that is where the
-                  reply box lives — this screen reads, it does not write. */}
-              <p className="caption dim">{t('salon.reviewsReplyElsewhere')}</p>
-            </>
-          )}
-        </section>
       </ScreenBody>
     </Screen>
   );

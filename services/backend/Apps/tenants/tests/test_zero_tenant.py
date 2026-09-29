@@ -110,14 +110,6 @@ class ZeroTenantAdminTests(BookingTestCase):
         self.assertEqual(response.data['headline']['revenue'], '0.00')
         self.assertEqual(response.data['by_staff'], [])
 
-    def test_the_reviews_list_is_empty_and_one_review_is_not_found(self):
-        response = self.client.get('/api/reviews/')
-        self.assertEqual(response.status_code, 200, response.data)
-        self.assertEqual(response.data['results'], [])
-        self.assertEqual(
-            self.client.post(f'/api/reviews/booking/{self.booking_id}/',
-                             {'rating': 5}, format='json').status_code, 404)
-
     # -- and the salon's own booking is untouched throughout ---------------
 
     def test_nothing_the_admin_did_changed_the_salons_data(self):

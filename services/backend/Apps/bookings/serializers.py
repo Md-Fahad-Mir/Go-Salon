@@ -130,7 +130,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
     cancel_deadline = serializers.DateTimeField(read_only=True)
     rescheduled_from_id = serializers.IntegerField(read_only=True, allow_null=True)
     rescheduled_to_id = serializers.SerializerMethodField()
-    review = serializers.SerializerMethodField()
 
     class Meta:
         model = Appointment
@@ -150,7 +149,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
             'reject_reason', 'cancel_reason', 'cancelled_by',
             'cancellation_window_hours', 'cancel_deadline',
             'rescheduled_from_id', 'rescheduled_to_id',
-            'items', 'can', 'review', 'created_at', 'approved_at', 'completed_at',
+            'items', 'can', 'created_at', 'approved_at', 'completed_at',
         )
         read_only_fields = fields
 
@@ -168,23 +167,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
             }
             for item in appointment.items.all()
         ]
-
-    def get_review(self, appointment):
-        """The review of this visit, if there is one — for both sides of it.
-
-        The customer needs it so the screen stops inviting them to write a
-        second one; the salon needs it so it can answer. It lives on the
-        appointment rather than in a list of its own because that is the only
-        place either screen already has the row.
-        """
-        from Apps.reviews.serializers import ReviewSerializer
-
-        review = getattr(appointment, 'review', None)
-        if review is None:
-            return None
-        # Context carried through so the review's own `can_reply` is answered
-        # for whoever is reading the booking, not left False by default.
-        return ReviewSerializer(review, context=self.context).data
 
     def get_rescheduled_to_id(self, appointment):
         moved = getattr(appointment, 'rescheduled_to', None)
@@ -212,14 +194,6 @@ class AppointmentSerializer(serializers.ModelSerializer):
             # Past the deadline a customer rings instead, and the number is
             # already on the record so the screen has something to dial.
             'call_to_cancel': bool(mine and open_now and not appointment.customer_may_cancel()),
-            # Only the person who sat in the chair, only once the work is
-            # done, and only once. The screen reads this instead of keeping a
-            # local flag that a refresh would wipe.
-            'review': bool(
-                mine
-                and appointment.status == AppointmentStatus.COMPLETED
-                and getattr(appointment, 'review', None) is None
-            ),
         }
 
 

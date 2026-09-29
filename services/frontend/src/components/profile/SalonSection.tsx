@@ -12,13 +12,12 @@ import { HOME_ROUTE_FOR, ROUTES } from '../../constants';
 import { useT } from '../../hooks/useLanguage';
 import { useAppStore } from '../../store/useAppStore';
 
-/* Which salon the app is acting in.
+/* Which salon the app is acting in — for a salon owner with several shops,
+   on their salon's Profile. (A customer switches from the avatar in Home's
+   header instead: `SalonSwitchButton`.)
 
-   The same shape as `LanguageSection` on purpose — a labelled section holding
-   a `list-card` of radio rows with a tick on the chosen one — because it is
-   the same kind of control: one account-level setting, pick one of a few. A
-   bottom sheet would have been a second pattern for a job this project
-   already has one for.
+   A labelled section holding a `list-card` of radio rows with a tick on the
+   chosen one: one account-level setting, pick one of a few.
 
    WHEN IT RENDERS, AND WHEN IT DOES NOT
 

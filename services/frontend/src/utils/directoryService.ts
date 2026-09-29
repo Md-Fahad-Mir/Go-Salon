@@ -58,10 +58,6 @@ interface ApiStaff {
   specialties: string[];
   experience_years: number;
   chair_status: string;
-  /** This chair's own score: the mean of the reviews of work done in it, and
-      null when there are none. */
-  rating: number | null;
-  review_count: number;
   /** This chair's effective week: its own hours, or the salon's when it has
       set none. Resolved server-side, the same way booking resolves it. */
   hours: ApiDay[];
@@ -96,8 +92,6 @@ interface ApiListing {
   staff_count: number;
   hours: ApiDay[];
   open_now: boolean;
-  rating: number | null;
-  review_count: number;
   services?: ApiService[];
   staff?: ApiStaff[];
 }
@@ -139,8 +133,6 @@ export function toProfessional(row: ApiListing): Professional {
     category: row.category,
     specialties: row.specialties ?? [],
     experienceYears: row.experience_years,
-    rating: row.rating,
-    reviewCount: row.review_count,
     hours: toWeek(row.hours),
     openNow: row.open_now,
     acceptance: row.acceptance,
@@ -184,8 +176,8 @@ export const toStaff = (row: ApiStaff, professionalId: string): StaffMember => (
   professionalId,
   name: row.name,
   title: row.title,
-  rating: row.rating ?? null,
-  reviewCount: row.review_count ?? 0,
+  // The backend sends '' rather than null for somebody with no photo.
+  avatar: row.avatar || undefined,
   specialties: row.specialties ?? [],
   experienceYears: row.experience_years,
   tone: Math.floor(hashUnit(`${professionalId}:${row.id}`) * 6),

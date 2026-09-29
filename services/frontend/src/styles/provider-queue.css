@@ -359,21 +359,6 @@
 /* a working list and has the room for it.                                     */
 /* -------------------------------------------------------------------------- */
 
-:root[data-app='salon_owner'] .review {
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  border-color: var(--border-light);
-  box-shadow: var(--bevel-top), var(--elev-card);
-}
-
-:root[data-app='salon_owner'] .review-head {
-  padding-bottom: var(--space-2);
-  background-image: var(--rule-gradient);
-  background-repeat: no-repeat;
-  background-position: bottom;
-  background-size: 100% 1px;
-}
-
 /* -------------------------------------------------------------------------- */
 /* O3. The analytics screen — the headline figures                            */
 /*                                                                            */

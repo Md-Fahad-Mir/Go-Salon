@@ -114,14 +114,7 @@ export interface ProviderProfile {
 
   /* Fixture-only, and optional because a real account has none of it. The
      queue and the takings still read `mockData` — see the note at the top of
-     `mockData/providers.ts`.
-
-     There is deliberately no listing id and no score here. Reviews are read
-     from `/api/reviews/`, which scopes itself to the account asking; handing
-     a provider profile the business's listing id would let a screen ask
-     `/api/reviews/listing/{id}/` instead, and that endpoint is open to anyone
-     signed in — which is how a stylist would end up reading the chair beside
-     them. */
+     `mockData/providers.ts`. */
   staffId?: string;
   coverTones?: number[];
 }
@@ -214,8 +207,7 @@ export interface StaffRecord {
   phoneVerified: boolean;
   joinedAt: string;
 
-  /* Fixture-only. A chair's score is not here: it comes from `by_staff` on
-     `/api/reviews/`, which only an owner is given. */
+  /* Fixture-only. */
   staffId?: string;
   tone?: number;
 }

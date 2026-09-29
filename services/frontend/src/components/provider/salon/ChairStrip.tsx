@@ -40,7 +40,7 @@ export function ChairStrip({ staff, appointments, selectedId, onSelect }: ChairS
             onClick={() => onSelect(selected ? null : member.id)}
           >
             <span className="ps-chair-head">
-              <Avatar name={member.name} size="sm" />
+              <Avatar name={member.name} src={member.avatar || undefined} size="sm" />
               <span className="ps-chair-name">{firstNameOf(member.name)}</span>
             </span>
             <span className="ps-chair-now">{now}</span>

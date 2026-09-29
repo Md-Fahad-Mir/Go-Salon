@@ -16,7 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAppStore } from '../store/useAppStore';
 import { useDirectoryStore } from '../store/useDirectoryStore';
 import { route } from '../test/http';
-import { listingWire, reviewsWire } from '../test/listing';
+import { listingWire } from '../test/listing';
 import { mount } from '../test/render';
 import type { User } from '../types';
 import ProfessionalDetailPage from './ProfessionalDetailPage';
@@ -44,16 +44,14 @@ describe('the salon profile at /professional/:id', () => {
   it('renders exactly what it rendered before the extraction', async () => {
     route([
       ['/listings/salon-4/', { status: 200, body: listingWire() }],
-      ['/reviews/listing/salon-4/', { status: 200, body: reviewsWire() }],
     ]);
     const { container } = mount({
       at: '/professional/salon-4',
       routes: { '/professional/:id': <ProfessionalDetailPage /> },
     });
 
-    // Both fetches have landed once the menu and a review are on screen.
+    // The fetch has landed once the menu is on screen.
     await screen.findByText('Haircut');
-    await screen.findByText('Clean fade, exactly what I asked for.');
 
     expect(container.innerHTML).toMatchSnapshot();
   });
@@ -61,7 +59,6 @@ describe('the salon profile at /professional/:id', () => {
   it('keeps its back arrow: this is a screen someone navigated to', async () => {
     route([
       ['/listings/salon-4/', { status: 200, body: listingWire() }],
-      ['/reviews/listing/salon-4/', { status: 200, body: reviewsWire() }],
     ]);
     mount({ at: '/professional/salon-4', routes: { '/professional/:id': <ProfessionalDetailPage /> } });
 
@@ -69,5 +66,23 @@ describe('the salon profile at /professional/:id', () => {
     expect(screen.getByRole('button', { name: 'Go back' })).toBeInTheDocument();
     // And no bell — that is Home's, not this route's.
     expect(screen.queryByRole('button', { name: /notification/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('the team', () => {
+  it("shows each stylist's own photo, and initials for one who has none", async () => {
+    const photo = 'https://img.test/rafi.jpg';
+    const base = listingWire();
+    const staff = (base.staff as Array<Record<string, unknown>>).map((member) =>
+      member.id === 'e1' ? { ...member, avatar: photo } : member,
+    );
+    route([['/listings/salon-4/', { status: 200, body: { ...base, staff } }]]);
+    mount({ at: '/professional/salon-4', routes: { '/professional/:id': <ProfessionalDetailPage /> } });
+
+    await screen.findByText('Haircut');
+    expect(screen.getByRole('img', { name: 'Rafi Ahmed' })).toHaveAttribute('src', photo);
+    // Nadia has no photo: her initials stand in, not a broken image.
+    expect(screen.queryByRole('img', { name: 'Nadia Islam' })).not.toBeInTheDocument();
+    expect(screen.getByText('NI')).toBeInTheDocument();
   });
 });

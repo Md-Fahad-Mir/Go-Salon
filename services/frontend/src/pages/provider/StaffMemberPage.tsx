@@ -8,7 +8,6 @@ import { Button, LinkButton } from '../../components/common/Button';
 import { Callout } from '../../components/common/Callout';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { EmptyState } from '../../components/common/EmptyState';
-import { Rating } from '../../components/common/Rating';
 import { Spinner } from '../../components/common/Spinner';
 import { Toggle } from '../../components/common/Toggle';
 import { Header } from '../../components/layout/Header';
@@ -29,7 +28,6 @@ import {
   takeOf,
 } from '../../components/provider/salon/salonLabels';
 import { useT } from '../../hooks/useLanguage';
-import { useMyReviews } from '../../hooks/useReviews';
 import { useAppStore } from '../../store/useAppStore';
 import { useProviderStore } from '../../store/useProviderStore';
 import type { Schedule, WeekSchedule } from '../../types';
@@ -48,11 +46,6 @@ import {
 export default function StaffMemberPage() {
   const { id } = useParams<{ id: string }>();
   const t = useT();
-  /* This chair's score, from `by_staff` on `/api/reviews/` — which the server
-     returns for an owner only, and computes over the reviews of work done in
-     this chair rather than of the salon as a whole. */
-  const { byStaff } = useMyReviews();
-  const score = byStaff.find((row) => row.employeeId === id);
   const navigate = useNavigate();
   const staff = useProviderStore((s) => s.staff);
   const services = useProviderStore((s) => s.services);
@@ -200,7 +193,6 @@ export default function StaffMemberPage() {
             <div className="stack-xs" style={{ minWidth: 0 }}>
               <h2 className="ps-staff-name">{member.name}</h2>
               <p className="ps-staff-title">{member.title}</p>
-              {score ? <Rating value={score.rating} count={score.reviewCount} /> : null}
               {member.phoneVerified ? null : (
                 <span className="pro-pill pro-pill-warning">{t('salon.awaitingFirstSignIn')}</span>
               )}

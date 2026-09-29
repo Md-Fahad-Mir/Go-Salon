@@ -44,9 +44,6 @@ def scoped(user, tenant) -> tuple:
     base = Appointment.objects.select_related(
         'customer', 'salon', 'salon__owner', 'barber', 'barber__user',
         'employee', 'employee__user', 'rescheduled_from',
-        # The review of the visit, so a list of bookings does not become one
-        # extra query per row asking whether it has been rated.
-        'review', 'review__replied_by',
     ).prefetch_related('items')
 
     # Before role, before anything: does this account stand in this tenant?

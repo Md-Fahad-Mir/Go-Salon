@@ -15,7 +15,6 @@ import type {
   TakingsMethod,
 } from '../types';
 import { ApiValidationError, api } from './apiClient';
-import { toReview, type ApiReview } from './reviewService';
 
 /* --- What the wire looks like --------------------------------------------- */
 
@@ -34,7 +33,6 @@ interface ApiCan {
   cancel: boolean;
   reschedule: boolean;
   call_to_cancel: boolean;
-  review: boolean;
 }
 
 export interface ApiAppointment {
@@ -75,10 +73,6 @@ export interface ApiAppointment {
   rescheduled_to_id: number | null;
   items: ApiItem[];
   can: ApiCan;
-  /** The review of this visit, or null. Carried on the appointment because
-      both sides of it start from the booking: the customer to see they have
-      already rated it, the salon to answer. */
-  review: ApiReview | null;
   created_at: string;
   approved_at: string | null;
   completed_at: string | null;
@@ -150,9 +144,7 @@ export function toBooking(row: ApiAppointment): Booking {
       cancel: row.can.cancel,
       reschedule: row.can.reschedule,
       callToCancel: row.can.call_to_cancel,
-      review: row.can.review,
     },
-    review: row.review ? toReview(row.review) : undefined,
     startsAt: row.starts_at,
     createdAt: row.created_at,
     approvedAt: row.approved_at ?? undefined,

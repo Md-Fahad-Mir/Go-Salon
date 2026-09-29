@@ -36,7 +36,6 @@ export const ROUTES = {
   notifications: '/notifications',
   hairstyle: (id: string) => `/hairstyle/${id}`,
   professional: (id: string) => `/professional/${id}`,
-  professionalReviews: (id: string) => `/professional/${id}/reviews`,
   bookingService: (id: string) => `/booking/${id}/service`,
   bookingStaff: (id: string) => `/booking/${id}/staff`,
   bookingDateTime: (id: string) => `/booking/${id}/datetime`,
@@ -63,7 +62,6 @@ export const ROUTES = {
   /* Two destinations every professional's bar ends up at, whatever their
      role: the bookings waiting on an answer, and the app's own settings. */
   proRequests: '/pro/requests',
-  proSettings: '/pro/settings',
   /* Salon owner */
   proSalonQueue: '/pro/salon/queue',
   proSalonStaff: '/pro/salon/staff',
@@ -87,7 +85,6 @@ export const ROUTES = {
   tryOnHistory: '/ai-tryon/history',
   profile: '/profile',
   profileEdit: '/profile/edit',
-  profileReviews: '/profile/reviews',
   profileSettings: '/profile/settings',
   help: '/profile/help',
   terms: '/profile/terms',
@@ -327,6 +324,9 @@ export const isProviderRole = (role: UserRole | undefined): role is ProviderRole
 /** A professional shows at most this many pictures of their work. Six fills
     the grid on a phone; the server refuses the seventh. */
 export const MAX_GALLERY_IMAGES = 6;
+
+/** Shown in Settings → About. Set at build time from `VITE_APP_VERSION`. */
+export const APP_VERSION: string = import.meta.env.VITE_APP_VERSION || '0.1.0';
 
 export const HOME_ROUTE_FOR: Record<UserRole, string> = {
   customer: ROUTES.home,

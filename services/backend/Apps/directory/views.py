@@ -3,7 +3,7 @@
     GET /api/listings/{id}/      its menu, its chairs, its week, its address
 
 Ids are kind-prefixed — `salon-3`, `barber-9` — the same namespace bookings
-and reviews already use, so a customer never has to know which table a
+already use, so a customer never has to know which table a
 listing came out of.
 
 WHAT THIS USED TO BE
@@ -40,7 +40,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from Apps.reviews.ratings import chair_scores_for, scores_for
 from Apps.schedules.models import WorkingDay
 from Apps.services.models import Service
 from Apps.tenants.context import belongs_to
@@ -156,16 +155,12 @@ class DetailView(APIView):
             salon = _salons().filter(pk=int(raw)).first()
             if salon is None:
                 return _not_found()
-            scores = scores_for(salon_ids=[salon.id])
-            chairs = chair_scores_for([e.id for e in salon.employees.all() if e.is_active])
-            return Response(salon_listing(salon, point=point, detail=True,
-                                          scores=scores, chair_scores=chairs))
+            return Response(salon_listing(salon, point=point, detail=True))
 
         profile = _barbers().filter(pk=int(raw)).first()
         if profile is None:
             return _not_found()
-        scores = scores_for(barber_ids=[profile.id])
-        return Response(barber_listing(profile, point=point, detail=True, scores=scores))
+        return Response(barber_listing(profile, point=point, detail=True))
 
 
 def _not_found() -> Response:

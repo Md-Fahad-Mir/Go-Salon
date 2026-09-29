@@ -223,7 +223,7 @@ describe('leaving a salon', () => {
 
     expect(screen.getByText('Remove Bluebell Parlour?')).toBeInTheDocument();
     expect(
-      screen.getByText(/Your bookings and reviews there stay/),
+      screen.getByText(/Your bookings there stay/),
     ).toBeInTheDocument();
     // Two taps in, and still nothing has been sent.
     expect(sent).toHaveLength(0);

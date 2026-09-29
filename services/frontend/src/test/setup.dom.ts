@@ -29,3 +29,21 @@ URL.revokeObjectURL = (url: string) => void handedOut.delete(url);
 
 /** Object URLs still outstanding — a test can check nothing was leaked. */
 export const liveObjectUrls = (): number => handedOut.size;
+
+/* jsdom has no `matchMedia`, and `ThemeProvider` asks it which mood the phone
+   is in. A quiet default — nothing matches, nothing changes — so a screen can
+   be mounted inside the provider the way the app mounts it. Tests about the
+   install offer replace this with their own via `vi.stubGlobal`. */
+if (typeof window.matchMedia !== 'function') {
+  window.matchMedia = (query: string) =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }) as MediaQueryList;
+}

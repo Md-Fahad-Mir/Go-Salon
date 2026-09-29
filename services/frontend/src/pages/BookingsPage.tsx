@@ -12,7 +12,6 @@ import { Screen, ScreenBody } from '../components/layout/Screen';
 import { BookingCard } from '../components/profile/BookingCard';
 import { CancelDialog } from '../components/profile/CancelDialog';
 import { ReceiptSheet } from '../components/profile/ReceiptSheet';
-import { ReviewSheet } from '../components/profile/ReviewSheet';
 import { bookingStart, tabFor, type BookingTab } from '../components/profile/bookingHelpers';
 import { useBookingActions } from '../components/profile/useBookingActions';
 import { useBookings } from '../hooks/useBookings';
@@ -41,7 +40,6 @@ export default function BookingsPage() {
   const t = useT();
 
   const [cancelId, setCancelId] = useState<string | null>(null);
-  const [reviewId, setReviewId] = useState<string | null>(null);
   const [receiptId, setReceiptId] = useState<string | null>(null);
 
   const grouped = useMemo(() => {
@@ -57,7 +55,6 @@ export default function BookingsPage() {
 
   const list = grouped[tab];
   const cancelTarget = cancelId ? bookings.find((b) => b.id === cancelId) : undefined;
-  const reviewTarget = reviewId ? bookings.find((b) => b.id === reviewId) : undefined;
   const receiptTarget = receiptId ? bookings.find((b) => b.id === receiptId) : undefined;
 
   return (
@@ -120,7 +117,6 @@ export default function BookingsPage() {
                   onCancel={(b) => setCancelId(b.id)}
                   onReschedule={reschedule}
                   onRebook={rebook}
-                  onReview={(b) => setReviewId(b.id)}
                   onReceipt={(b) => setReceiptId(b.id)}
                 />
               </li>
@@ -144,9 +140,6 @@ export default function BookingsPage() {
           onClose={() => setCancelId(null)}
           onCancelled={reload}
         />
-      ) : null}
-      {reviewTarget ? (
-        <ReviewSheet key={reviewTarget.id} booking={reviewTarget} open onClose={() => setReviewId(null)} />
       ) : null}
       {receiptTarget ? (
         <ReceiptSheet key={receiptTarget.id} booking={receiptTarget} open onClose={() => setReceiptId(null)} />

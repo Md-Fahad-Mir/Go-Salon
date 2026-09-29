@@ -42,7 +42,7 @@ export function ReassignSheet({ open, onClose, appointment, staff, onPick }: Rea
                   onClose();
                 }}
               >
-                <Avatar name={member.name} size="sm" />
+                <Avatar name={member.name} src={member.avatar || undefined} size="sm" />
                 <span className="ps-pick-body">
                   <span className="ps-pick-name">{member.name}</span>
                   <span className="ps-pick-sub">{member.title}</span>

@@ -40,7 +40,6 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const HairstyleDetailPage = lazy(() => import('./pages/HairstyleDetailPage'));
 const ProfessionalDetailPage = lazy(() => import('./pages/ProfessionalDetailPage'));
-const ProfessionalReviewsPage = lazy(() => import('./pages/ProfessionalReviewsPage'));
 
 const ServiceSelectPage = lazy(() => import('./pages/booking/ServiceSelectPage'));
 const StaffSelectPage = lazy(() => import('./pages/booking/StaffSelectPage'));
@@ -60,14 +59,12 @@ const HistoryPage = lazy(() => import('./pages/tryon/HistoryPage'));
 
 const ProfilePage = lazy(() => import('./pages/profile/ProfilePage'));
 const EditProfilePage = lazy(() => import('./pages/profile/EditProfilePage'));
-const MyReviewsPage = lazy(() => import('./pages/profile/MyReviewsPage'));
 const SettingsPage = lazy(() => import('./pages/profile/SettingsPage'));
 const HelpPage = lazy(() => import('./pages/profile/HelpPage'));
 
 /* Provider app — one bundle per screen, same as the customer side. */
 const QueuePage = lazy(() => import('./pages/provider/QueuePage'));
 const RequestsPage = lazy(() => import('./pages/provider/RequestsPage'));
-const ProSettingsPage = lazy(() => import('./pages/provider/ProSettingsPage'));
 const CalendarPage = lazy(() => import('./pages/provider/CalendarPage'));
 const ProServicesPage = lazy(() => import('./pages/provider/ServicesPage'));
 const PortfolioPage = lazy(() => import('./pages/provider/PortfolioPage'));
@@ -155,7 +152,6 @@ export default function App() {
                     <Route path="/notifications" element={<NotificationsPage />} />
                     <Route path="/hairstyle/:id" element={<HairstyleDetailPage />} />
                     <Route path="/professional/:id" element={<ProfessionalDetailPage />} />
-                    <Route path="/professional/:id/reviews" element={<ProfessionalReviewsPage />} />
 
                     <Route path="/booking/:professionalId/service" element={<ServiceSelectPage />} />
                     <Route path="/booking/:professionalId/staff" element={<StaffSelectPage />} />
@@ -181,7 +177,6 @@ export default function App() {
 
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/profile/edit" element={<EditProfilePage />} />
-                    <Route path="/profile/reviews" element={<MyReviewsPage />} />
                     <Route path="/profile/settings" element={<SettingsPage />} />
                     <Route path="/profile/help" element={<HelpPage />} />
                     </Route>
@@ -205,7 +200,6 @@ export default function App() {
                       {/* Every professional has these two, whatever their
                           role: what is waiting on them, and the app itself. */}
                       <Route path="/pro/requests" element={<RequestsPage />} />
-                      <Route path="/pro/settings" element={<ProSettingsPage />} />
                       <Route path="/pro/calendar" element={<CalendarPage />} />
                       <Route path="/pro/services" element={<ProServicesPage />} />
                       <Route path="/pro/portfolio" element={<PortfolioPage />} />

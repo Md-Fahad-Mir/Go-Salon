@@ -11,6 +11,7 @@ import { Header } from '../layout/Header';
 import { Screen, ScreenBody } from '../layout/Screen';
 import { LanguageSwitchButton } from './LanguageSwitchButton';
 import { SalonSwitchButton } from './SalonSwitchButton';
+import { ThemeSwitchButton } from './ThemeSwitchButton';
 
 /** Home's own chrome, for every moment Home has no salon profile to show:
     no salon yet, several and none chosen, the list still arriving, or the
@@ -45,6 +46,7 @@ export function HomeFrame({ children, center = false }: { children: ReactNode; c
             >
               <Bell size={22} />
             </IconButton>
+            <ThemeSwitchButton />
             <LanguageSwitchButton />
             <SalonSwitchButton />
             <Link to={ROUTES.profile} className="home-avatar-link" aria-label={t('home.yourProfile')}>

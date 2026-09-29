@@ -23,7 +23,7 @@ export const profile = {
   'bookings.emptyUpcomingBody': 'স্যালন খুঁজে পরের লুকটা বুক করে ফেলুন।',
   'bookings.findSalon': 'স্যালন খুঁজুন',
   'bookings.emptyCompletedTitle': 'এখনো কিছু শেষ হয়নি',
-  'bookings.emptyCompletedBody': 'শেষ হওয়া অ্যাপয়েন্টমেন্টগুলো এখানে জমা হবে — আবার বুক করা বা রিভিউ দেওয়ার জন্য।',
+  'bookings.emptyCompletedBody': 'শেষ হওয়া অ্যাপয়েন্টমেন্টগুলো এখানে জমা হবে — আবার বুক করার জন্য।',
   'bookings.emptyCancelledTitle': 'কোনো ক্যানসেল নেই',
   'bookings.emptyCancelledBody': 'সব ঠিকঠাক আছে। কিছুই ক্যানসেল হয়নি।',
   'bookings.changedMind': 'মত বদলেছে?',
@@ -35,9 +35,6 @@ export const profile = {
   'bookings.reschedule': 'সময় বদলান',
   'bookings.rebook': 'আবার বুক',
   'bookings.receipt': 'রসিদ',
-  'bookings.leaveReview': 'রিভিউ দিন',
-  'bookings.reviewed': 'রিভিউ দেওয়া',
-  'bookings.reviewedRating': 'রিভিউ {rating}/৫',
   'bookings.cancelledWithReason': 'ক্যানসেল · {reason}',
   'bookings.details': 'বিস্তারিত',
   'bookings.detailsOf': '{services}-এর বিস্তারিত',
@@ -117,20 +114,6 @@ export const profile = {
   'bookings.receiptLineTotal': 'মোট {total}, {method}-এ',
   'bookings.receiptCopied': 'রসিদ কপি হয়েছে',
 
-  /* ---- Review sheet ---- */
-  'bookings.rateVisit': 'আপনার অভিজ্ঞতা জানান',
-  'bookings.quickTags': 'দ্রুত ট্যাগ',
-  'bookings.tagOnTime': 'সময়মতো',
-  'bookings.tagGreatCut': 'দারুণ কাট',
-  'bookings.tagFriendly': 'আন্তরিক',
-  'bookings.tagClean': 'পরিষ্কার',
-  'bookings.tagValue': 'দামে ভালো',
-  'bookings.reviewLabel': 'কী ভালো লাগল?',
-  'bookings.reviewPlaceholder': 'কাট, অপেক্ষা, আলাপ…',
-  'bookings.submitReview': 'রিভিউ দিন',
-  'bookings.reviewThanks': 'রিভিউয়ের জন্য ধন্যবাদ',
-  'bookings.reviewThanksBody': '{pro} শিগগিরই এটি দেখবে।',
-
   /* ---- Cancellation policy sheet ---- */
   'profile.policyTitle': 'ক্যানসেল নীতি',
   'profile.policySubtitle': 'পরিকল্পনা বদলালে কী করবেন।',
@@ -147,7 +130,6 @@ export const profile = {
   'profile.settingsTitle': 'সেটিংস',
   'profile.activityLabel': 'আপনার কার্যক্রম',
   'profile.statBookings': 'বুকিং',
-  'profile.statReviews': 'রিভিউ',
   'profile.account': 'অ্যাকাউন্ট',
   'profile.memberSince': 'কাস্টমার · {date} থেকে আছেন',
   'profile.credits_one': '{count}টি ট্রাই-অন ক্রেডিট',
@@ -159,7 +141,6 @@ export const profile = {
   'profile.location': 'লোকেশন',
   'profile.more': 'আরও',
   'profile.myBookings': 'আমার বুকিং',
-  'profile.myReviews': 'আমার রিভিউ',
   'profile.tryOnHistory': 'ট্রাই-অন হিস্ট্রি',
   'profile.help': 'সহায়তা',
   'profile.logOut': 'লগ আউট',
@@ -202,14 +183,6 @@ export const profile = {
   'profile.lengthLong': 'লম্বা',
   'profile.lengthLongHint': 'কাঁধের নিচে',
 
-  /* ---- My reviews ---- */
-  'profile.reviewsTitle': 'আমার রিভিউ',
-  'profile.noReviewsTitle': 'এখনো কোনো রিভিউ নেই',
-  'profile.noReviewsBody': 'অ্যাপয়েন্টমেন্ট শেষ হলে আমার বুকিং থেকে রেটিং দিতে পারবেন।',
-  'profile.reviewsNewest_one': '{count}টি রিভিউ · নতুনগুলো আগে',
-  'profile.reviewsNewest_other': '{count}টি রিভিউ · নতুনগুলো আগে',
-  'profile.reviewsListLabel': 'আপনার রিভিউ',
-
   /* ---- Help & support ---- */
   'profile.talkToUs': 'আমাদের সাথে কথা বলুন',
   'profile.whatsapp': 'হোয়াটসঅ্যাপে চ্যাট',
@@ -237,11 +210,6 @@ export const profile = {
   'profile.faqMoveQ': 'অ্যাপয়েন্টমেন্টের সময় বদলানো যায়?',
   'profile.faqMoveA1':
     'হ্যাঁ। বুকিংটি খুলে সময় বদলান চাপলে নতুন স্লট বেছে নিতে পারবেন। স্যালনে জায়গা থাকলে সময় বদলানো ফ্রি — {hours} ঘণ্টার ভেতরে হলেও।',
-  'profile.faqReviewsQ': 'রিভিউ কীভাবে কাজ করে?',
-  'profile.faqReviewsA1':
-    'অ্যাপয়েন্টমেন্ট শেষ হলে আমার বুকিং › হয়ে গেছে থেকে রেটিং দিতে পারবেন। যারা সত্যিই বুক করেছেন কেবল তারাই রিভিউ দিতে পারেন, তাই রেটিংগুলো সৎ থাকে।',
-  'profile.faqReviewsA2':
-    'রিভিউয়ের সাথে আপনার নাম দেখা যায়; নাম কীভাবে দেখাবে বদলাতে চাইলে প্রোফাইল থেকে নাম এডিট করুন।',
 
   /* ---- Settings ---- */
   'settings.account': 'অ্যাকাউন্ট',
@@ -251,8 +219,6 @@ export const profile = {
   'settings.smsRemindersHint': 'বুকিংয়ের আগের দিন',
   'settings.bookingUpdates': 'বুকিং আপডেট',
   'settings.bookingUpdatesHint': 'নিশ্চিতকরণ, পরিবর্তন আর ক্যানসেল',
-  'settings.offers': 'অফার আর নতুন স্টাইল',
-  'settings.offersHint': 'মাঝেমধ্যে, সপ্তাহে একবারের বেশি নয়',
   'settings.privacy': 'ট্রাই-অন ও প্রাইভেসি',
   'settings.saveResults': 'আমার ফলাফল সেভ রাখুন',
   'settings.saveResultsHint': 'ট্রাই-অনগুলো হিস্ট্রিতে জমা থাকবে',
@@ -270,9 +236,6 @@ export const profile = {
   'settings.version': 'ভার্সন',
   'settings.terms': 'সেবার শর্তাবলি',
   'settings.privacyPolicy': 'প্রাইভেসি পলিসি',
-  'settings.rateApp': 'অ্যাপে রেটিং দিন',
-  'settings.rateAppToast': 'ধন্যবাদ!',
-  'settings.rateAppToastBody': 'পাবলিক লঞ্চের সাথে স্টোর রেটিং চালু হবে।',
 
   /* ---- Payment methods ---- */
   'settings.payments': 'পেমেন্ট মেথড',
@@ -313,9 +276,6 @@ export const profile = {
   'legal.termsTryOnHead': 'এআই ট্রাই-অন একটি ধারণা মাত্র',
   'legal.termsTryOnBody':
     'রেন্ডার করা হেয়ারস্টাইল মোটামুটি দেখায় কাটটি কেমন বসতে পারে। এটি প্রতিশ্রুতি নয়: আপনার চুলে কী মানাবে সেটি স্টাইলিস্টের সঙ্গে আলোচনার বিষয়, আর কী সম্ভব তা তিনিই ঠিক করেন।',
-  'legal.termsReviewHead': 'রিভিউ',
-  'legal.termsReviewBody':
-    'রিভিউ করুন সেবাটির, মানুষটির নয়। আপনি যা লিখবেন তার সঙ্গে আপনার নাম দেখা যাবে। আপত্তিকর রিভিউ, বা সত্যিকারের অ্যাপয়েন্টমেন্ট নিয়ে নয় এমন রিভিউ আমরা সরিয়ে দিই।',
   'legal.termsAccountHead': 'আপনার অ্যাকাউন্ট',
   'legal.termsAccountBody':
     'প্রতি ফোন নম্বরে একটি অ্যাকাউন্ট, এবং সেটি আপনার — অন্য কারও হয়ে বুক করার আগে তাঁকে জানিয়ে নিন, কারণ স্যালন ওই নম্বরেই খুদেবার্তা পাঠাবে।',
@@ -325,7 +285,7 @@ export const profile = {
 
   'legal.privacyKeepHead': 'আমরা যা রাখি',
   'legal.privacyKeepBody':
-    'আপনার নাম, ফোন নম্বর, আর ইমেইল কেবল যদি আপনি দেন। আপনার বুকিং, রিভিউ, এবং চুলের যে তথ্যগুলো আপনি নিজে পূরণ করেন। এটুকুই।',
+    'আপনার নাম, ফোন নম্বর, আর ইমেইল কেবল যদি আপনি দেন। আপনার বুকিং এবং চুলের যে তথ্যগুলো আপনি নিজে পূরণ করেন। এটুকুই।',
   'legal.privacySalonHead': 'স্যালন যা দেখে',
   'legal.privacySalonBody':
     'আপনি যে স্যালনে বুক করেন তাঁরা পান আপনার নাম, ফোন নম্বর এবং কী বুক করেছেন — চেয়ার রাখতে ও দরকারে যোগাযোগ করতে তিনটিই লাগে। অন্য কোথাকার কোনো বুকিং তাঁরা দেখেন না।',

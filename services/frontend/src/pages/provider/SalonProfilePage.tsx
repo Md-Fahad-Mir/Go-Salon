@@ -9,7 +9,6 @@ import {
   Phone,
   Pencil,
   Scissors,
-  Settings,
   Store,
   Users,
 } from 'lucide-react';
@@ -23,16 +22,17 @@ import { Button } from '../../components/common/Button';
 import { Callout } from '../../components/common/Callout';
 import { Carousel } from '../../components/common/Carousel';
 import { EmptyState } from '../../components/common/EmptyState';
-import { IconButton } from '../../components/common/IconButton';
 import { ListCard, ListRow } from '../../components/common/ListRow';
 import { SalonQRSection } from '../../components/provider/salon/SalonQRSection';
 import { Price } from '../../components/common/Price';
-import { Rating } from '../../components/common/Rating';
 import { Spinner } from '../../components/common/Spinner';
 import { Toggle } from '../../components/common/Toggle';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
+import { PreferenceButtons } from '../../components/home/PreferenceButtons';
+import { AccountSection } from '../../components/profile/AccountSection';
 import { ExternalButton } from '../../components/profile/ExternalButton';
+import { SalonSection } from '../../components/profile/SalonSection';
 import { GalleryGrid } from '../../components/provider/business/GalleryGrid';
 import { WeekHoursSheet } from '../../components/provider/hours/WeekHoursSheet';
 import {
@@ -40,7 +40,6 @@ import {
 } from '../../components/provider/salon/SalonProfileSheets';
 import { WEEKDAY_LONG_KEYS } from '../../components/provider/salon/salonLabels';
 import { useT } from '../../hooks/useLanguage';
-import { useMyReviews } from '../../hooks/useReviews';
 import { useAppStore } from '../../store/useAppStore';
 import { useProviderStore } from '../../store/useProviderStore';
 import { messageOf } from '../../utils/errorMessage';
@@ -56,10 +55,6 @@ const TEAM_PREVIEW = 5;
 
 export default function SalonProfilePage() {
   const t = useT();
-  /* The shopfront's score, counted by the server over every review of this
-     salon. `/api/reviews/` scopes itself to the account asking, so an owner
-     gets their own salon and nothing else. */
-  const { summary: reviews } = useMyReviews();
   const profile = useProviderStore((s) => s.profile);
   const updateProfile = useProviderStore((s) => s.updateProfile);
   const setAutoAccept = useProviderStore((s) => s.setAutoAccept);
@@ -87,22 +82,13 @@ export default function SalonProfilePage() {
     }
   };
 
-  /* Settings is not a tab for the owner. It sits in this header, as it does on
-     the customer's Profile, so the gear is there even while the salon is
-     loading or missing — that is where signing out lives. */
-  const settingsButton = (
-    <IconButton label={t('nav.settings')} onClick={() => navigate(ROUTES.proSettings)}>
-      <Settings size={22} />
-    </IconButton>
-  );
-
   /* Still loading, failed, or genuinely nothing yet. All three keep the one
-     control that has nothing to do with the salon — signing out, behind the
-     gear above. */
+     thing that has nothing to do with the salon — the password and signing
+     out, at the foot of the screen. */
   if (!profile) {
     return (
       <Screen nav>
-        <Header title={t('salon.profileTitle')} actions={settingsButton} />
+        <Header title={t('salon.profileTitle')} actions={<PreferenceButtons />} />
         <ScreenBody className="fullscreen-center">
           {status === 'loading' ? (
             <Spinner size="lg" label={t('state.loading')} />
@@ -120,6 +106,7 @@ export default function SalonProfilePage() {
               description={t('pb.noProfileBody')}
             />
           )}
+          <AccountSection />
         </ScreenBody>
       </Screen>
     );
@@ -142,7 +129,7 @@ export default function SalonProfilePage() {
 
   return (
     <Screen nav>
-      <Header title={t('salon.profileTitle')} actions={settingsButton} />
+      <Header title={t('salon.profileTitle')} actions={<PreferenceButtons />} />
       <ScreenBody className="sp-shop">
         <div className="ps-cover sp-cover">
           {/* The shopfront: whatever the salon has uploaded, and a plain
@@ -184,9 +171,6 @@ export default function SalonProfilePage() {
           <div className="stack-xs grow">
             <h2 className="sp-name">{profile.businessName}</h2>
             <p className="caption sp-tagline">{profile.tagline}</p>
-            {reviews && reviews.count > 0 && reviews.average !== null ? (
-              <Rating value={reviews.average} count={reviews.count} />
-            ) : null}
           </div>
         </div>
 
@@ -422,6 +406,11 @@ export default function SalonProfilePage() {
             />
           </ListCard>
         </section>
+
+        {/* Renders itself only for an owner with more than one shop. */}
+        <SalonSection />
+
+        <AccountSection headClassName="ps-chapter" listClassName="sp-list sp-icons" />
       </ScreenBody>
 
       <SalonDetailsSheet
