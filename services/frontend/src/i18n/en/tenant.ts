@@ -16,6 +16,10 @@ export const tenant = {
   /* The switcher, in Settings. */
   'tenant.switchTitle': 'Salon',
   'tenant.switchHint': 'Which salon the app is showing you.',
+  /* The header's own switcher, on Home — its icon-button label and its
+     sheet's title. */
+  'tenant.switchAction': 'Switch salon',
+  'tenant.switchTap': 'Tap to switch',
   'tenant.switchActive': 'Showing now',
   'tenant.errListTitle': 'We could not load your salons',
   'tenant.errListBody': 'The app is still showing the last list it had.',
@@ -35,21 +39,17 @@ export const tenant = {
   'tenant.homeHint': 'Tap one to book.',
   'tenant.homeEmptyTitle': 'No salons yet',
   'tenant.homeEmptyBody': 'Scan the QR code in a salon to add it here. Ask at the counter — every salon on Go Salon has one.',
-  'tenant.homeEmptyAction': 'Add a salon in Settings',
+  'tenant.homeEmptyAction': 'Scan a salon’s QR code',
   'tenant.homePickTitle': 'Which salon are you visiting?',
-  'tenant.homePickBody': 'Tap one to open it. You can switch any time from Settings.',
+  'tenant.homePickBody': 'Tap one to open it. You can switch any time from the salon icon at the top.',
   'tenant.bookAt': 'Book at {name}',
 
   /* The in-app scanner. */
   'tenant.scanTitle': 'Add a salon',
   'tenant.scanHint': 'Point your camera at the salon’s QR code.',
   'tenant.scanAddSalon': 'Add a salon',
-  /* The row in Settings that opens the scanner, under a heading that already
-     says "Add a salon" — so the row says what to do, not what it is. */
+  /* The second line under "Add a salon" in the header's salon switcher. */
   'tenant.scanRow': 'Scan a salon’s QR code',
-  'tenant.scanRowHint': 'Ask at the counter — every salon on Go Salon has one.',
-  /* Where the scanner and the join screen send someone back to. */
-  'tenant.backToSettings': 'Back to Settings',
   'tenant.scanCameraLabel': 'Camera, looking for a salon’s QR code',
   'tenant.scanStarting': 'Opening the camera…',
   'tenant.scanNotOurs': 'That is not a salon code. Try the one on the counter.',

@@ -16,6 +16,9 @@ export const tenant = {
   /* The switcher, in Settings. */
   'tenant.switchTitle': 'স্যালন',
   'tenant.switchHint': 'অ্যাপ এখন কোন স্যালনের তথ্য দেখাচ্ছে।',
+  /* The header's own switcher, on Home. */
+  'tenant.switchAction': 'স্যালন পরিবর্তন করুন',
+  'tenant.switchTap': 'বদলাতে চাপ দিন',
   'tenant.switchActive': 'এখন দেখাচ্ছে',
   'tenant.errListTitle': 'আপনার স্যালনের তালিকা আনা যায়নি',
   'tenant.errListBody': 'অ্যাপ এখনো আগের তালিকাটিই দেখাচ্ছে।',
@@ -34,9 +37,9 @@ export const tenant = {
   'tenant.homeHint': 'বুক করতে একটিতে চাপ দিন।',
   'tenant.homeEmptyTitle': 'এখনো কোনো স্যালন নেই',
   'tenant.homeEmptyBody': 'স্যালনে গিয়ে কিউআর কোড স্ক্যান করলে এখানে যুক্ত হবে। কাউন্টারে জিজ্ঞেস করুন — গো স্যালনের প্রতিটি স্যালনেই কোড আছে।',
-  'tenant.homeEmptyAction': 'সেটিংসে গিয়ে স্যালন যোগ করুন',
+  'tenant.homeEmptyAction': 'স্যালনের কিউআর কোড স্ক্যান করুন',
   'tenant.homePickTitle': 'আপনি কোন স্যালনে যাচ্ছেন?',
-  'tenant.homePickBody': 'একটিতে চাপ দিলে সেটি খুলবে। সেটিংস থেকে যেকোনো সময় বদলাতে পারবেন।',
+  'tenant.homePickBody': 'একটিতে চাপ দিলে সেটি খুলবে। ওপরের স্যালন আইকন থেকে যেকোনো সময় বদলাতে পারবেন।',
   'tenant.bookAt': '{name}-এ বুক করুন',
 
   /* The in-app scanner. */
@@ -44,8 +47,6 @@ export const tenant = {
   'tenant.scanHint': 'স্যালনের কিউআর কোডের দিকে ক্যামেরা ধরুন।',
   'tenant.scanAddSalon': 'স্যালন যোগ করুন',
   'tenant.scanRow': 'স্যালনের কিউআর কোড স্ক্যান করুন',
-  'tenant.scanRowHint': 'কাউন্টারে জিজ্ঞেস করুন — গো স্যালনের প্রতিটি স্যালনেই কোড আছে।',
-  'tenant.backToSettings': 'সেটিংসে ফিরে যান',
   'tenant.scanCameraLabel': 'ক্যামেরা, স্যালনের কিউআর কোড খুঁজছে',
   'tenant.scanStarting': 'ক্যামেরা চালু হচ্ছে…',
   'tenant.scanNotOurs': 'এটি স্যালনের কোড নয়। কাউন্টারে যেটি আছে সেটি দেখুন।',

@@ -56,7 +56,7 @@ const open = () =>
     at: '/home',
     routes: {
       '/home': <HomePage />,
-      '/profile/settings': <p>the settings screen</p>,
+      '/join-salon': <p>the scanner</p>,
       '/notifications': <p>the notifications screen</p>,
     },
     elsewhere: <p>somewhere else</p>,
@@ -163,17 +163,17 @@ describe('while the active salon’s listing is loading or has failed', () => {
 });
 
 describe('with no salon at all', () => {
-  it('says how to get one, and points at Settings rather than opening the camera', async () => {
+  it('says how to get one, and links straight to the scanner', async () => {
     settled([]);
     serve(); // any request would throw: this state needs nothing from the server
     open();
 
     expect(screen.getByText('No salons yet')).toBeInTheDocument();
     expect(screen.getByText(/Scan the QR code in a salon/)).toBeInTheDocument();
-    const way = screen.getByRole('link', { name: 'Add a salon in Settings' });
-    expect(way).toHaveAttribute('href', '/profile/settings');
+    const way = screen.getByRole('link', { name: 'Scan a salon’s QR code' });
+    expect(way).toHaveAttribute('href', '/join-salon');
     await userEvent.click(way);
-    expect(screen.getByText('the settings screen')).toBeInTheDocument();
+    expect(screen.getByText('the scanner')).toBeInTheDocument();
     expect(sent).toHaveLength(0);
   });
 

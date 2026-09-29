@@ -197,10 +197,10 @@ export default function JoinPage() {
         action={
           dead ? (
             /* `replace`, so the dead code is not left in the history. Back
-               from Settings would otherwise remount this screen, and a remount
+               from Home would otherwise remount this screen, and a remount
                forgets the request it made — so it would send the same dead
                token again and land here again. */
-            <LinkButton to={ROUTES.profileSettings} replace>{t('tenant.backToSettings')}</LinkButton>
+            <LinkButton to={ROUTES.home} replace>{t('action.backToHome')}</LinkButton>
           ) : (
             <Button
               onClick={() => {

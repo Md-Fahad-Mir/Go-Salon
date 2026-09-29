@@ -119,23 +119,22 @@ export default function ScanJoinPage() {
      phone's camera app reads the very same code and opens the app at the join
      screen, so a refused permission is an inconvenience rather than a wall.
 
-     Back means Settings, because Settings is where this screen is opened from.
-     The Home target it used to have came from the days when Home listed the
-     salons and offered the scanner under them; now it would throw somebody out
-     of the place they were standing in.
+     Back means Home, because Home is where this screen is opened from — the
+     salon switcher in its header, or its empty state for somebody with no
+     salon yet.
 
      And it goes back the way the header's own arrow does — by popping — rather
-     than by pushing Settings on top. A pushed Settings has this screen
-     underneath it, so its Back arrow would land straight back on a camera that
-     is still refused, and round again. Only a cold load, with nothing to pop,
-     replaces this screen with Settings instead. */
+     than by pushing Home on top. A pushed Home has this screen underneath it,
+     so its Back would land straight back on a camera that is still refused,
+     and round again. Only a cold load, with nothing to pop, replaces this
+     screen with Home instead. */
   const leave = () =>
-    location.key !== 'default' ? navigate(-1) : navigate(ROUTES.profileSettings, { replace: true });
+    location.key !== 'default' ? navigate(-1) : navigate(ROUTES.home, { replace: true });
   const blocked = status === 'denied' || status === 'unsupported' || status === 'error';
 
   return (
     <Screen>
-      <Header title={t('tenant.scanTitle')} close backTo={ROUTES.profileSettings} />
+      <Header title={t('tenant.scanTitle')} close backTo={ROUTES.home} />
       <ScreenBody className={blocked ? 'fullscreen-center' : undefined}>
         {blocked ? (
           <EmptyState
@@ -148,7 +147,7 @@ export default function ScanJoinPage() {
               status === 'denied' ? t('tenant.scanDeniedBody') : t('tenant.scanUnsupportedBody')
             }
             action={
-              <Button onClick={leave}>{t('tenant.backToSettings')}</Button>
+              <Button onClick={leave}>{t('action.backToHome')}</Button>
             }
           />
         ) : (

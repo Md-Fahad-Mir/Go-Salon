@@ -28,8 +28,7 @@ import { useAppStore } from '../store/useAppStore';
                         with three salons must not be told they have none.
      could not be read  a failure, with a retry; never mistaken for an empty
                         account.
-     none at all        the way to one. The scanner lives in Settings, so this
-                        points there rather than opening the camera.
+     none at all        the way to one: a link straight to the scanner.
      several, none      also every fresh sign-in, for a multi-salon customer
      chosen             (`reconcileTenant` only picks for an account with
                         one). Nothing here guesses either: they are asked.
@@ -91,7 +90,7 @@ export default function HomePage() {
           tone="accent"
           title={t('tenant.homeEmptyTitle')}
           description={t('tenant.homeEmptyBody')}
-          action={<LinkButton to={ROUTES.profileSettings}>{t('tenant.homeEmptyAction')}</LinkButton>}
+          action={<LinkButton to={ROUTES.joinScan}>{t('tenant.homeEmptyAction')}</LinkButton>}
         />
       </HomeFrame>
     );

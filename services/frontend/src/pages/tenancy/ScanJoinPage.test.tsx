@@ -178,70 +178,68 @@ describe('when the camera cannot be opened', () => {
   });
 });
 
-describe('the way back is Settings, where this screen is opened from', () => {
+describe('the way back is Home, where this screen is opened from', () => {
   beforeEach(() => {
     fakeVideoAndCanvas();
     fakeAnimationFrames();
   });
 
-  /** The scanner, with Settings where it really is. */
-  const openFromSettings = () =>
+  /** The scanner, with Home where it really is. */
+  const openFromHome = () =>
     mount({
       at: '/join-salon',
       routes: {
         '/join-salon': <ScanJoinPage />,
-        '/profile/settings': <p>the settings screen</p>,
         '/home': <p>the home screen</p>,
       },
       elsewhere: <p>somewhere else</p>,
     });
 
-  it('sends a refused camera back to Settings, not to Home', async () => {
+  it('sends a refused camera back to Home', async () => {
     fakeCamera('denied');
     serve();
-    openFromSettings();
+    openFromHome();
 
     await screen.findByText('The camera is switched off');
-    await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
-    expect(screen.getByText('the settings screen')).toBeInTheDocument();
-    expect(screen.queryByText('the home screen')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Back to home' }));
+    expect(screen.getByText('the home screen')).toBeInTheDocument();
   });
 
-  it('pops back to the Settings it came from, rather than pushing another', async () => {
+  it('pops back to the Home it came from, rather than pushing another', async () => {
     fakeCamera('denied');
     serve();
-    /** Settings, with a Back that pops history the way the real header does. */
-    function Settings() {
+    /** Home, with a Back that pops history the way the real header does. */
+    function Home() {
       const navigate = useNavigate();
-      return <button type="button" onClick={() => navigate(-1)}>back from settings</button>;
+      return <button type="button" onClick={() => navigate(-1)}>back from home</button>;
     }
     render(
       <LanguageProvider>
-        <MemoryRouter initialEntries={['/profile/settings', '/join-salon']} initialIndex={1}>
+        <MemoryRouter initialEntries={['/home', '/join-salon']} initialIndex={1}>
           <Routes>
             <Route path="/join-salon" element={<ScanJoinPage />} />
-            <Route path="/profile/settings" element={<Settings />} />
+            <Route path="/home" element={<Home />} />
           </Routes>
         </MemoryRouter>
       </LanguageProvider>,
     );
 
     await screen.findByText('The camera is switched off');
-    await userEvent.click(screen.getByRole('button', { name: 'Back to Settings' }));
-    await userEvent.click(screen.getByRole('button', { name: 'back from settings' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Back to home' }));
+    await userEvent.click(screen.getByRole('button', { name: 'back from home' }));
 
-    // A pushed Settings would have the scanner under it, and Back would land
-    // on the refused camera again — round and round.
+    // A pushed Home would have the scanner under it, and Back would land on
+    // the refused camera again — round and round.
     expect(screen.queryByText('The camera is switched off')).not.toBeInTheDocument();
   });
 
-  it('closes to Settings when there is no history to pop — a cold load', async () => {
+  it('closes to Home when there is no history to pop — a cold load', async () => {
     fakeCamera('granted');
     serve();
-    openFromSettings();
+    openFromHome();
 
     await userEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(screen.getByText('the settings screen')).toBeInTheDocument();
+    expect(screen.getByText('the home screen')).toBeInTheDocument();
   });
 });
 

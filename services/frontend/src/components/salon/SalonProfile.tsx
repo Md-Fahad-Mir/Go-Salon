@@ -33,6 +33,8 @@ import { SectionHead } from '../common/SectionHead';
 import { ListSkeleton } from '../common/Skeleton';
 import { Spinner } from '../common/Spinner';
 import { HomeFrame } from '../home/HomeFrame';
+import { LanguageSwitchButton } from '../home/LanguageSwitchButton';
+import { SalonSwitchButton } from '../home/SalonSwitchButton';
 import { Header } from '../layout/Header';
 import { Screen, ScreenBody } from '../layout/Screen';
 import { StickyFooter } from '../layout/StickyFooter';
@@ -208,8 +210,8 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
              salons a customer had not joined, which is the shape of thing
              this app no longer has — the salons they belong to *are* the
              list, and they are in Settings. */
-          <>
-            {home ? (
+          home ? (
+            <>
               <IconButton
                 label={
                   unread
@@ -222,11 +224,14 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
               >
                 <Bell size={22} />
               </IconButton>
-            ) : null}
+              <LanguageSwitchButton variant="scrim" />
+              <SalonSwitchButton variant="scrim" />
+            </>
+          ) : (
             <IconButton label={t('action.share')} variant="scrim" onClick={onShare}>
               <Share2 size={20} />
             </IconButton>
-          </>
+          )
         }
       />
       <ScreenBody flush>

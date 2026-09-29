@@ -161,10 +161,9 @@ describe('a code that is not good any more', () => {
     expect(screen.getByText(/Ask at the counter/)).toBeInTheDocument();
     expect(store().tenants).toEqual([]);
     expect(store().activeTenantId).toBeNull();
-    // Back to where the scanner is opened from — not to a Home that, with no
-    // salon joined, would only say to go and scan one.
-    expect(screen.getByRole('link', { name: 'Back to Settings' }))
-      .toHaveAttribute('href', '/profile/settings');
+    // Back to Home, where the scanner is opened from.
+    expect(screen.getByRole('link', { name: 'Back to home' }))
+      .toHaveAttribute('href', '/home');
   });
 
   it('leaves no dead code in the history for Back to send again', async () => {
@@ -173,27 +172,27 @@ describe('a code that is not good any more', () => {
       status: 404,
       body: { detail: 'That code is not valid any more.', code: 'not_found', errors: {} },
     });
-    /** Settings, with a Back that pops history the way the real header does. */
-    function Settings() {
+    /** Home, with a Back that pops history the way the real header does. */
+    function Home() {
       const navigate = useNavigate();
-      return <button type="button" onClick={() => navigate(-1)}>back from settings</button>;
+      return <button type="button" onClick={() => navigate(-1)}>back from home</button>;
     }
     // Where the scanner leaves things: it replaces itself with the join screen,
-    // so Settings is directly underneath.
+    // so Home is directly underneath.
     render(
       <LanguageProvider>
-        <MemoryRouter initialEntries={['/profile/settings', `/join/${TOKEN}`]} initialIndex={1}>
+        <MemoryRouter initialEntries={['/home', `/join/${TOKEN}`]} initialIndex={1}>
           <Routes>
             <Route path="/join/:token" element={<JoinPage />} />
-            <Route path="/profile/settings" element={<Settings />} />
+            <Route path="/home" element={<Home />} />
           </Routes>
         </MemoryRouter>
       </LanguageProvider>,
     );
 
     await screen.findByText('That code is not valid');
-    await userEvent.click(screen.getByRole('link', { name: 'Back to Settings' }));
-    await userEvent.click(screen.getByRole('button', { name: 'back from settings' }));
+    await userEvent.click(screen.getByRole('link', { name: 'Back to home' }));
+    await userEvent.click(screen.getByRole('button', { name: 'back from home' }));
 
     // Pushed rather than replaced, Back would remount the join screen, which
     // forgets its request and POSTs the dead token again.

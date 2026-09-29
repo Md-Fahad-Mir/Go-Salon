@@ -1,8 +1,10 @@
-/* Settings: where a customer adds a salon.
+/* Settings holds no salon controls and no language picker for a customer.
 
-   The scanner used to be reached from Home's salon list. It lives here now,
-   and the case that matters most is the customer with no salon yet — the
-   switcher hides itself for them, and this must not. */
+   Adding, switching and removing a salon all live on Home, behind the salon's
+   avatar in the header, and a customer with no salon is sent from Home's
+   empty state straight to the scanner. Settings keeping a second copy of any
+   of it is what this pins down. The language is changed from the button
+   beside Home's bell, so it is not here either. */
 
 import { screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -42,29 +44,26 @@ const open = () =>
     elsewhere: <p>somewhere else</p>,
   });
 
-describe('adding a salon', () => {
-  it('offers the scanner to a customer with no salon — the switcher does not', () => {
-    store().setTenants([]);
-    open();
+describe('salons', () => {
+  it('are not managed here, with or without one', () => {
+    for (const tenants of [[], [ALPHA]]) {
+      store().setTenants(tenants);
+      const view = open();
 
-    expect(screen.getByRole('heading', { name: 'Add a salon' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Scan a salon’s QR code/ })).toHaveAttribute('href', '/join-salon');
-    // The switcher is absent at zero salons; the way in is not. Named, because
-    // the language picker beside it is a radio group too.
-    expect(screen.queryByRole('radiogroup', { name: 'Salon' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Add a salon' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /Scan a salon’s QR code/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('radio', { name: /Aurora Salon/ })).not.toBeInTheDocument();
+      expect(screen.queryByText('Remove a salon')).not.toBeInTheDocument();
+      view.unmount();
+    }
   });
+});
 
-  it('sits beside the switcher, not inside it, once there are salons', () => {
-    store().setTenants([ALPHA]);
+describe('language', () => {
+  it('is not changed here — Home has its own button for it', () => {
     open();
-
-    expect(screen.getByRole('radio', { name: /Aurora Salon/ })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Scan a salon’s QR code/ })).toHaveAttribute('href', '/join-salon');
-  });
-
-  it('says where the code is', () => {
-    store().setTenants([]);
-    open();
-    expect(screen.getByText(/Ask at the counter/)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Language' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: /English/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: /বাংলা/ })).not.toBeInTheDocument();
   });
 });

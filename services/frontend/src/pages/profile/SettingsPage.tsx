@@ -1,4 +1,4 @@
-import { FileText, History, KeyRound, QrCode, Shield, Star, Trash2 } from 'lucide-react';
+import { FileText, History, KeyRound, Shield, Star, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ROUTES } from '../../constants';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
@@ -7,10 +7,8 @@ import { Toggle } from '../../components/common/Toggle';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
 import { AppearanceSection } from '../../components/profile/AppearanceSection';
-import { LanguageSection } from '../../components/profile/LanguageSection';
 import { LogoutButton } from '../../components/profile/LogoutButton';
 import { PaymentAccountsSection } from '../../components/profile/PaymentAccountsSection';
-import { SalonSection } from '../../components/profile/SalonSection';
 import { useT } from '../../hooks/useLanguage';
 import { useAppStore } from '../../store/useAppStore';
 import { formatNumber } from '../../utils/format';
@@ -57,29 +55,10 @@ export default function SettingsPage() {
           </ListCard>
         </section>
 
-        {/* The switcher. It renders itself only when there is something to
-            switch or leave — a customer at one salon or more, an owner at two
-            — and nothing at all for a customer with no salon yet. */}
-        <SalonSection />
-
-        {/* The way in: the scanner. Its own section rather than a row inside
-            `SalonSection`, because that one hides itself for the customer with
-            no salon — who is exactly the person this exists for. A link to the
-            screen that already does the scanning, not a second camera. */}
-        <section className="section" aria-labelledby="pf-add-salon">
-          <h3 className="label" id="pf-add-salon">{t('tenant.scanTitle')}</h3>
-          <ListCard className="pf-list">
-            <ListRow
-              icon={<QrCode size={18} aria-hidden="true" />}
-              title={t('tenant.scanRow')}
-              sub={t('tenant.scanRowHint')}
-              to={ROUTES.joinScan}
-            />
-          </ListCard>
-        </section>
-
-        <LanguageSection />
-
+        {/* No salon or language section here. Switching, adding and removing a
+            salon live on Home behind the salon's avatar (`SalonSwitchButton`),
+            and the language is changed from the button beside Home's bell
+            (`LanguageSwitchButton`). */}
         <AppearanceSection />
 
         <section className="section" aria-labelledby="pf-notifications">
