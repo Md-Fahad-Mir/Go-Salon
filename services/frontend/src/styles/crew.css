@@ -352,9 +352,10 @@
   background-position: top;
   background-size: 100% 1px;
 }
-/* Three tabs, not four: Settings left the bar when its contents moved to the
-   home header and the foot of Profile. The base rule only knows four and
-   falls back to five columns, which would bunch three tabs to one side. */
+/* The barber's bar has three tabs (the employee's has four, with Try on):
+   Settings left it when its contents moved to the header and the foot of
+   Profile. The base rule only knows four and falls back to five columns,
+   which would bunch three tabs to one side. */
 :root[data-app='barber'] .bottom-nav[data-count='3'],
 :root[data-app='salon_employee'] .bottom-nav[data-count='3'] {
   --nav-count: 3;

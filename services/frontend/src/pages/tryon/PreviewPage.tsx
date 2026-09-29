@@ -56,6 +56,9 @@ function Preview({ generation }: { generation: AIGeneration }) {
   const setGenerationFeedback = useAppStore((s) => s.setGenerationFeedback);
   const removeGeneration = useAppStore((s) => s.removeGeneration);
   const toast = useAppStore((s) => s.toast);
+  // Booking the look is the customer's next step. A salon's own staff are
+  // already the people who would cut it, so for them there is only another go.
+  const isCustomer = useAppStore((s) => s.user?.role === 'customer');
   const photoKey = useTryOnStore((s) => s.photoKey);
   const setPhotoKey = useTryOnStore((s) => s.setPhotoKey);
   const before = usePhotoUrl(generation.sourceKey);
@@ -226,10 +229,10 @@ function Preview({ generation }: { generation: AIGeneration }) {
 
       <StickyFooter>
         <FooterRow>
-          <Button variant="secondary" onClick={tryAnother}>
+          <Button variant={isCustomer ? 'secondary' : 'primary'} onClick={tryAnother}>
             {t('tryon.tryAnother')}
           </Button>
-          <Button onClick={bookLook}>{t('tryon.bookLook')}</Button>
+          {isCustomer ? <Button onClick={bookLook}>{t('tryon.bookLook')}</Button> : null}
         </FooterRow>
       </StickyFooter>
 

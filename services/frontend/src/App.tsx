@@ -94,6 +94,7 @@ const LegalPage = lazy(() => import('./pages/profile/LegalPage'));
 
 const OWNER = ['salon_owner'] as const;
 const EMPLOYEE = ['salon_employee'] as const;
+const TRY_ON = ['customer', 'salon_owner', 'salon_employee'] as const;
 
 function RouteFallback() {
   return (
@@ -168,17 +169,23 @@ export default function App() {
                         scans it may have no account yet. */}
                     <Route path="/join-salon" element={<ScanJoinPage />} />
 
-                    <Route path="/ai-tryon" element={<TryOnHomePage />} />
-                    <Route path="/ai-tryon/capture-360" element={<Capture360Page />} />
-                    <Route path="/ai-tryon/upload" element={<PhotoUploadPage />} />
-                    <Route path="/ai-tryon/select" element={<StyleSelectPage />} />
-                    <Route path="/ai-tryon/preview/:id" element={<PreviewPage />} />
-                    <Route path="/ai-tryon/history" element={<HistoryPage />} />
-
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/profile/edit" element={<EditProfilePage />} />
                     <Route path="/profile/settings" element={<SettingsPage />} />
                     <Route path="/profile/help" element={<HelpPage />} />
+                    </Route>
+
+                    {/* The AI try-on: a customer's own, and a salon's for the
+                        clients in its chairs — the owner and the stylists
+                        show somebody a cut on their own face before picking
+                        up the scissors. An independent barber is not in it. */}
+                    <Route element={<RoleOnly allow={TRY_ON} />}>
+                      <Route path="/ai-tryon" element={<TryOnHomePage />} />
+                      <Route path="/ai-tryon/capture-360" element={<Capture360Page />} />
+                      <Route path="/ai-tryon/upload" element={<PhotoUploadPage />} />
+                      <Route path="/ai-tryon/select" element={<StyleSelectPage />} />
+                      <Route path="/ai-tryon/preview/:id" element={<PreviewPage />} />
+                      <Route path="/ai-tryon/history" element={<HistoryPage />} />
                     </Route>
 
                     {/* Changing a password is the same screen whatever the

@@ -19,6 +19,7 @@ import { useT } from '../../hooks/useLanguage';
 import type { TKey } from '../../i18n';
 import { mockHairstyles } from '../../mockData';
 import { useAppStore } from '../../store/useAppStore';
+import { PreferenceButtons } from '../../components/home/PreferenceButtons';
 import { useTryOnStore } from '../../store/useTryOnStore';
 import { formatNumber } from '../../utils/format';
 import { hairstylesForGender } from '../../utils/audience';
@@ -55,9 +56,14 @@ export default function TryOnHomePage() {
       <Header
         title={t('nav.tryOn')}
         actions={
-          <IconButton label={t('tryon.historyAction')} onClick={() => navigate(ROUTES.tryOnHistory)}>
-            <HistoryIcon size={22} />
-          </IconButton>
+          <>
+            {/* A salon's staff have no Settings: every tab of theirs carries
+                light/dark and language. A customer's are on their Home. */}
+            {user?.role === 'customer' ? null : <PreferenceButtons />}
+            <IconButton label={t('tryon.historyAction')} onClick={() => navigate(ROUTES.tryOnHistory)}>
+              <HistoryIcon size={22} />
+            </IconButton>
+          </>
         }
       />
       <ScreenBody className="stagger">

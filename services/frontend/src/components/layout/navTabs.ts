@@ -17,8 +17,12 @@ export interface NavTab {
 /* The customer's bar is their own. The three professional bars share one
    shape, and differ only where the role genuinely differs:
 
-     barber, employee:  Today  ->  Requests  ->  Profile
-     salon owner:       Home   ->  Requests  ->  Staff    ->  Profile
+     barber:            Today  ->  Requests  ->  Profile
+     employee:          Today  ->  Requests  ->  Try on  ->  Profile
+     salon owner:       Home   ->  Requests  ->  Try on  ->  Staff  ->  Profile
+
+   **Try on** is the salon's: the owner and the stylists show a client a cut
+   on their own face before it is cut. An independent barber does not have it.
 
    **Staff** and the salon's profile belong to whoever owns the place. A barber
    working for themselves has no roster and no salon record; an employee has a
@@ -51,6 +55,7 @@ export const NAV_TABS: Record<UserRole, NavTab[]> = {
   salon_owner: [
     { to: ROUTES.proSalonQueue, labelKey: 'nav.home', icon: Home, match: ['/pro/salon/queue'], hero: true },
     { to: ROUTES.proRequests, labelKey: 'nav.requests', icon: ListChecks, match: ['/pro/requests', '/pro/appointment'] },
+    { to: ROUTES.tryOn, labelKey: 'nav.tryOn', icon: Sparkles, match: ['/ai-tryon'] },
     { to: ROUTES.proSalonStaff, labelKey: 'nav.staff', icon: Users, match: ['/pro/salon/staff'] },
     // The salon's whole portfolio: who it is, where, when it opens, the menu,
     // the team and the pictures. The gallery screen it links out to counts as
@@ -61,6 +66,7 @@ export const NAV_TABS: Record<UserRole, NavTab[]> = {
   salon_employee: [
     { to: ROUTES.proQueue, labelKey: 'nav.today', icon: CalendarDays, match: ['/pro/queue'], hero: true },
     { to: ROUTES.proRequests, labelKey: 'nav.requests', icon: ListChecks, match: ['/pro/requests', '/pro/appointment'] },
+    { to: ROUTES.tryOn, labelKey: 'nav.tryOn', icon: Sparkles, match: ['/ai-tryon'] },
     { to: ROUTES.proProfile, labelKey: 'nav.profile', icon: UserRound, match: ['/pro/profile', '/pro/shift', '/pro/performance'] },
   ],
 
