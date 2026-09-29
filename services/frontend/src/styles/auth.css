@@ -12,6 +12,10 @@
   letter-spacing: -0.02em;
   color: var(--text-primary);
 }
+/* Satin, not flat fill: the same material the Welcome masthead tile and the
+   sign-in/reset primary button are cut from, so the mark reads as one object
+   carried across every auth screen. --accent-gradient/--sheen/--bevel-* are
+   defined in both themes, so this is correct in light and dark alike. */
 .auth-brand-mark {
   display: grid;
   place-items: center;
@@ -19,9 +23,10 @@
   height: 2.25rem;
   border-radius: 0.625rem;
   background-color: var(--accent);
+  background-image: var(--sheen), var(--accent-gradient);
   color: var(--accent-on);
   --mark-hole: var(--accent);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--bevel-top), var(--bevel-hair), var(--shadow-sm);
 }
 .auth-brand-mark svg { width: 82%; height: 82%; }
 .auth-brand-word { font-size: 1.375rem; }
@@ -402,9 +407,25 @@
   gap: 0.5rem;
 }
 .auth-intro .auth-brand { margin-bottom: 0.75rem; }
-.auth-intro h2 { font-size: 1.75rem; }
+/* The same lighter, wider editorial voice the Welcome headline carries
+   (.auth-welcome-body .display) — Bengali keeps the base weight, since a
+   thinned stroke loses its conjuncts at this size; English gets the lighter,
+   tighter cut. */
+.auth-intro h2 { font-size: 1.875rem; font-weight: 500; line-height: 1.18; }
+html[data-lang='en'] .auth-intro h2 { font-weight: 400; letter-spacing: -0.025em; }
 .auth-intro h2:focus { outline: none; }
-.auth-intro p { font-size: 1rem; line-height: 1.5; }
+.auth-intro p { font-size: 1rem; line-height: 1.55; }
+
+/* The icon badge that stands in for the brand mark on a screen with no logo
+   (ForgotPasswordPage's key). Same satin material as the brand tile and the
+   primary button, so it reads as one system rather than a generic tinted
+   circle. */
+.auth-body .icon-circle {
+  background-color: var(--accent);
+  background-image: var(--sheen), var(--accent-gradient);
+  color: var(--accent-on);
+  box-shadow: var(--bevel-top), var(--bevel-hair);
+}
 
 .auth-edit-number { margin-top: -0.25rem; margin-inline-start: -0.25rem; }
 
@@ -422,6 +443,83 @@
 .auth-social { display: flex; flex-direction: column; gap: 0.625rem; }
 
 .auth-resend { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.25rem; min-height: var(--touch-target); }
+
+/* --- Auth actions ------------------------------------------------------------
+   The Welcome screen's own satin gold and quiet underline, carried onto every
+   "next" button and "the other way" link in the flow — sign in, verify, save,
+   continue — so the journey reads as one material, not a restyle per screen.
+   `.auth-body ~ .sticky-footer` reaches the register wizard's pinned Continue
+   button, which sits outside .auth-body as ScreenBody's sibling under the
+   same <Screen>; the combinator only fires after an .auth-body sibling, so it
+   never reaches a sticky footer anywhere else in the app. Restrained on
+   purpose: no idle motion, only a hand-lit hover, same as Welcome's button. */
+.auth-body .btn-primary,
+.auth-body ~ .sticky-footer .btn-primary {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  border-color: transparent;
+  background-color: var(--accent);
+  background-image: var(--sheen), var(--accent-gradient);
+  box-shadow: var(--bevel-top), var(--bevel-hair), var(--shadow-sm);
+}
+.auth-body .btn-primary::before,
+.auth-body ~ .sticky-footer .btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.05));
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out);
+  pointer-events: none;
+}
+.auth-body .btn-primary:hover:not(:disabled)::before,
+.auth-body ~ .sticky-footer .btn-primary:hover:not(:disabled)::before { opacity: 1; }
+.auth-body .btn-primary:active:not(:disabled)::before,
+.auth-body ~ .sticky-footer .btn-primary:active:not(:disabled)::before {
+  opacity: 0.5;
+  transition-duration: var(--speed-fast);
+}
+.auth-body .btn-primary:focus-visible,
+.auth-body ~ .sticky-footer .btn-primary:focus-visible { border-radius: var(--radius-pill); }
+
+/* The secondary way out of a screen — sign in instead, back to sign in — said
+   quietly, an underline rather than a filled shape, matching the Welcome
+   ghost button. Scoped to the foot link only: the resend-code and
+   change-account-type buttons stay the plain inline `.link-btn` they already
+   are, since they are in-place actions rather than a way off the screen. */
+.auth-foot-link .link-btn {
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 0.2em;
+}
+.auth-foot-link .link-btn:hover:not(:disabled) {
+  background-color: transparent;
+  text-decoration-color: var(--accent-ink);
+}
+
+/* --- Reveal --------------------------------------------------------------
+   The same calm rise the Welcome screen opens with, kept to a single beat
+   here rather than Welcome's full staggered sequence: a wizard step remounts
+   this on every step change (see ProRegisterWizard's `key={step}`), so a long
+   choreography would replay in full each time instead of reading as a
+   one-off entrance. */
+@keyframes auth-page-rise {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to { opacity: 1; transform: none; }
+}
+.auth-intro { animation: auth-page-rise 0.5s var(--ease-out) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-intro { animation: none; }
+  .auth-body .btn-primary::before,
+  .auth-body ~ .sticky-footer .btn-primary::before { transition: none; }
+}
 
 /* --- Registration ---------------------------------------------------------- */
 
