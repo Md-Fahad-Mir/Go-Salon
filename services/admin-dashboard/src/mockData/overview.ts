@@ -116,27 +116,21 @@ export const dhakaAreasByRange: Record<TimeRange, RankedDatum[]> = {
 export const kpisByRange: Record<TimeRange, KpiDatum[]> = {
   '30d': [
     { id: 'active-users', label: 'Active users', value: '8,412', footnote: '+12% vs last month', tone: 'positive' },
-    { id: 'generations', label: 'Generations today', value: '1,286', footnote: '+4% vs yesterday', tone: 'positive' },
-    { id: 'success-rate', label: 'Success rate', value: '94.2%', footnote: '−1.1 pts', tone: 'negative' },
-    { id: 'avg-generation', label: 'Avg. generation', value: '18.4s', footnote: 'target under 25s', tone: 'neutral' },
+    { id: 'generations', label: 'AI Image Generations', value: '1,286', footnote: '+4% vs yesterday', tone: 'positive' },
     { id: 'spend', label: 'AI spend vs revenue', value: '$1,840 / ৳842k', footnote: 'margin 74%', tone: 'positive' },
-    { id: 'new-salons', label: 'New salons this week', value: '23', footnote: '6 awaiting approval', tone: 'neutral' },
+    { id: 'new-salons', label: 'New salons Created', value: '23', footnote: '6 awaiting approval', tone: 'neutral' },
   ],
   '7d': [
     { id: 'active-users', label: 'Active users', value: '3,908', footnote: '+6% vs previous week', tone: 'positive' },
-    { id: 'generations', label: 'Generations today', value: '1,286', footnote: '+4% vs yesterday', tone: 'positive' },
-    { id: 'success-rate', label: 'Success rate', value: '95.0%', footnote: '+0.8 pts', tone: 'positive' },
-    { id: 'avg-generation', label: 'Avg. generation', value: '17.9s', footnote: 'target under 25s', tone: 'neutral' },
+    { id: 'generations', label: 'AI Image Generations', value: '1,286', footnote: '+4% vs yesterday', tone: 'positive' },
     { id: 'spend', label: 'AI spend vs revenue', value: '$436 / ৳201k', footnote: 'margin 76%', tone: 'positive' },
-    { id: 'new-salons', label: 'New salons this week', value: '23', footnote: '6 awaiting approval', tone: 'neutral' },
+    { id: 'new-salons', label: 'New salons Created', value: '23', footnote: '6 awaiting approval', tone: 'neutral' },
   ],
   today: [
     { id: 'active-users', label: 'Active users', value: '1,144', footnote: '+2% vs yesterday', tone: 'positive' },
-    { id: 'generations', label: 'Generations today', value: '1,286', footnote: '+4% vs yesterday', tone: 'positive' },
-    { id: 'success-rate', label: 'Success rate', value: '93.6%', footnote: '−0.6 pts', tone: 'negative' },
-    { id: 'avg-generation', label: 'Avg. generation', value: '19.1s', footnote: 'target under 25s', tone: 'neutral' },
+    { id: 'generations', label: 'AI Image Generations', value: '1,286', footnote: '+4% vs yesterday', tone: 'positive' },
     { id: 'spend', label: 'AI spend vs revenue', value: '$61 / ৳29.6k', footnote: 'margin 71%', tone: 'positive' },
-    { id: 'new-salons', label: 'New salons this week', value: '23', footnote: '6 awaiting approval', tone: 'neutral' },
+    { id: 'new-salons', label: 'New salons Created', value: '23', footnote: '6 awaiting approval', tone: 'neutral' },
   ],
 };
 

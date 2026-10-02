@@ -257,20 +257,22 @@ export interface AuditLogEntry {
 export interface PlatformSettings {
   platformFee: number;
   aiImagePrice: number;
-  cancellationWindowHours: number;
   otpExpiryMinutes: number;
   otpResendCooldownMinutes: number;
-  currency: string;
-  currencySymbol: string;
-  autoVerifyBusinesses: boolean;
   smsEnabled: boolean;
   emailEnabled: boolean;
   aiModel: string;
   aiMaxConcurrent: number;
   aiTimeoutSeconds: number;
   aiRateLimitPerHour: number;
-  notificationTypes: Record<string, boolean>;
-  verificationDocs: Record<string, boolean>;
+}
+
+export interface SubscriptionTierPlan {
+  id: SubscriptionTier;
+  name: string;
+  price: number;
+  featured?: boolean;
+  features: string[];
 }
 
 /* --- UI-level shapes ------------------------------------------------------ */

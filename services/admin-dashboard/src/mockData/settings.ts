@@ -1,39 +1,19 @@
-import type { PlatformSettings } from '../types';
+import type { PlatformSettings, SubscriptionTierPlan } from '../types';
 
 export const defaultSettings: PlatformSettings = {
   platformFee: 5,
   aiImagePrice: 15,
-  cancellationWindowHours: 2,
   otpExpiryMinutes: 15,
   otpResendCooldownMinutes: 2,
-  currency: 'BDT',
-  currencySymbol: '৳',
-  autoVerifyBusinesses: false,
   smsEnabled: true,
   emailEnabled: false,
   aiModel: 'gosalon-hair-v3',
   aiMaxConcurrent: 24,
   aiTimeoutSeconds: 45,
   aiRateLimitPerHour: 60,
-  notificationTypes: {
-    'Booking approved': true,
-    'Booking declined': true,
-    'Booking reminder': true,
-    'Payment receipt': true,
-    'Payment reminder': false,
-    'OTP verification': true,
-    'Subscription renewal': true,
-  },
-  verificationDocs: {
-    'Trade licence': true,
-    'National ID of owner': true,
-    'Shop photo (exterior)': true,
-    'TIN certificate': false,
-    'Bank / MFS payout account': true,
-  },
 };
 
-export const SUBSCRIPTION_TIERS = [
+export const SUBSCRIPTION_TIERS: SubscriptionTierPlan[] = [
   {
     id: 'free',
     name: 'Free',
@@ -58,6 +38,6 @@ export const SUBSCRIPTION_TIERS = [
       'Early access to new styles',
     ],
   },
-] as const;
+];
 
 export const AI_MODELS = ['gosalon-hair-v3', 'gosalon-hair-v2', 'gosalon-hair-lite'] as const;

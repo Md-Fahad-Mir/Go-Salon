@@ -1,9 +1,10 @@
-import { Check } from 'lucide-react';
-import type { PlatformSettings } from '../types';
-import { AI_MODELS, SUBSCRIPTION_TIERS } from '../mockData/settings';
+import type { PlatformSettings, SubscriptionTierPlan } from '../types';
+import { AI_MODELS } from '../mockData/settings';
 import { useStore } from '../store/useStore';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Toggle } from '../components/ui/Toggle';
+import { Field } from '../components/ui/Field';
+import { TagInput } from '../components/ui/TagInput';
 import { formatBdt } from '../utils/format';
 
 interface NumberRowProps {
@@ -45,8 +46,70 @@ function NumberRow({ label, hint, value, suffix, min = 0, step = 1, onCommit }: 
   );
 }
 
+function TierEditor({ tier }: { tier: SubscriptionTierPlan }) {
+  const updateSubscriptionTier = useStore((state) => state.updateSubscriptionTier);
+
+  return (
+    <article className="tier-card" data-featured={tier.featured ? 'true' : 'false'}>
+      <div className="row" style={{ gap: '0.75rem', alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <Field label="Plan name">
+            <input
+              className="input"
+              defaultValue={tier.name}
+              key={tier.name}
+              onBlur={(event) => {
+                const next = event.target.value.trim();
+                if (next && next !== tier.name) updateSubscriptionTier(tier.id, { name: next });
+              }}
+            />
+          </Field>
+        </div>
+        <div style={{ flex: 1 }}>
+          <Field label="Price / mo (৳)">
+            <input
+              className="input"
+              type="number"
+              min={0}
+              defaultValue={tier.price}
+              key={tier.price}
+              onBlur={(event) => {
+                const next = Number(event.target.value);
+                if (!Number.isNaN(next) && next !== tier.price) updateSubscriptionTier(tier.id, { price: next });
+              }}
+            />
+          </Field>
+        </div>
+      </div>
+      <Field label="Features" hint="Enter to add, backspace to remove the last">
+        <TagInput
+          value={tier.features}
+          onChange={(features) => updateSubscriptionTier(tier.id, { features })}
+          placeholder="Add a feature…"
+        />
+      </Field>
+      <div className="setting-row">
+        <div className="info">
+          <strong>Featured</strong>
+          <span>Highlight this plan on pricing pages</span>
+        </div>
+        <div className="control">
+          <Toggle
+            checked={Boolean(tier.featured)}
+            hideLabel
+            label="Featured"
+            onChange={(value) => updateSubscriptionTier(tier.id, { featured: value })}
+          />
+        </div>
+      </div>
+      <span className="dim">{tier.price === 0 ? 'Free' : `${formatBdt(tier.price)} / mo`}</span>
+    </article>
+  );
+}
+
 export default function SettingsPage() {
   const settings = useStore((state) => state.settings);
+  const subscriptionTiers = useStore((state) => state.subscriptionTiers);
   const updateSettings = useStore((state) => state.updateSettings);
   const pushToast = useStore((state) => state.pushToast);
 
@@ -82,31 +145,6 @@ export default function SettingsPage() {
               suffix="৳"
               onCommit={(value) => set('aiImagePrice', value)}
             />
-            <NumberRow
-              label="Cancellation window"
-              hint="Free cancellation before the appointment"
-              value={settings.cancellationWindowHours}
-              suffix="hours"
-              min={0}
-              onCommit={(value) => set('cancellationWindowHours', value)}
-            />
-            <div className="setting-row">
-              <div className="info">
-                <strong>Currency</strong>
-                <span>Display currency across the app and receipts</span>
-              </div>
-              <div className="control">
-                <select
-                  className="select"
-                  aria-label="Currency"
-                  value={settings.currency}
-                  onChange={(event) => set('currency', event.target.value)}
-                >
-                  <option value="BDT">BDT ৳</option>
-                  <option value="USD">USD $</option>
-                </select>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -131,39 +169,6 @@ export default function SettingsPage() {
               min={1}
               onCommit={(value) => set('otpResendCooldownMinutes', value)}
             />
-            <div className="setting-row">
-              <div className="info">
-                <strong>Auto-verify new businesses</strong>
-                <span>Skip the manual approval queue</span>
-              </div>
-              <div className="control">
-                <Toggle
-                  checked={settings.autoVerifyBusinesses}
-                  hideLabel
-                  label="Auto-verify new businesses"
-                  onChange={(value) => set('autoVerifyBusinesses', value)}
-                />
-              </div>
-            </div>
-
-            <h3 className="section-label">Required documents</h3>
-            {Object.entries(settings.verificationDocs).map(([doc, required]) => (
-              <div className="setting-row" key={doc}>
-                <div className="info">
-                  <strong>{doc}</strong>
-                </div>
-                <div className="control">
-                  <Toggle
-                    checked={required}
-                    hideLabel
-                    label={`Require ${doc}`}
-                    onChange={(value) =>
-                      updateSettings({ verificationDocs: { ...settings.verificationDocs, [doc]: value } })
-                    }
-                  />
-                </div>
-              </div>
-            ))}
           </div>
         </section>
 
@@ -200,25 +205,6 @@ export default function SettingsPage() {
                 />
               </div>
             </div>
-
-            <h3 className="section-label">Message types</h3>
-            {Object.entries(settings.notificationTypes).map(([type, enabled]) => (
-              <div className="setting-row" key={type}>
-                <div className="info">
-                  <strong>{type}</strong>
-                </div>
-                <div className="control">
-                  <Toggle
-                    checked={enabled}
-                    hideLabel
-                    label={type}
-                    onChange={(value) =>
-                      updateSettings({ notificationTypes: { ...settings.notificationTypes, [type]: value } })
-                    }
-                  />
-                </div>
-              </div>
-            ))}
           </div>
         </section>
 
@@ -277,28 +263,11 @@ export default function SettingsPage() {
         <section className="card">
           <div className="card-head">
             <h2>Subscription tiers</h2>
-            <span className="card-sub">monthly, in {settings.currency}</span>
+            <span className="card-sub">monthly, in BDT</span>
           </div>
           <div className="card-body stack-sm">
-            {SUBSCRIPTION_TIERS.map((tier) => (
-              <article
-                className="tier-card"
-                key={tier.id}
-                data-featured={'featured' in tier && tier.featured ? 'true' : 'false'}
-              >
-                <div className="row-between">
-                  <strong>{tier.name}</strong>
-                  <span className="strong">{tier.price === 0 ? 'Free' : `${formatBdt(tier.price)} / mo`}</span>
-                </div>
-                <ul>
-                  {tier.features.map((feature) => (
-                    <li key={feature}>
-                      <Check size={14} />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </article>
+            {subscriptionTiers.map((tier) => (
+              <TierEditor tier={tier} key={tier.id} />
             ))}
           </div>
         </section>

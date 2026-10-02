@@ -22,7 +22,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from Apps.tenants.context import business_of_tenant, tenant_of_request
 from Apps.tenants.permissions import OptionalTenantContext, TenantContext
 
-from .exceptions import Conflict
+from .exceptions import Conflict, NotAdmin
 from .models import OTPPurpose, Role, Salon, SalonEmployee, User
 from .permissions import IsSalonOrParlorOwner
 from .serializers import (
@@ -239,6 +239,25 @@ class LoginView(PublicAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+        return session_response(user)
+
+
+class AdminLoginView(PublicAPIView):
+    """The same phone-and-password check as `LoginView`, but only staff or
+    superuser accounts are let through. Used solely by the admin dashboard —
+    every other client keeps using `/auth/login/`."""
+
+    serializer_class = LoginSerializer
+    throttle_scope = 'login'
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        if not (user.is_staff or user.is_superuser):
+            raise NotAdmin()
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
         return session_response(user)

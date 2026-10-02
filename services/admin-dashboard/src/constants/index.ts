@@ -1,7 +1,5 @@
 import type {
   AccountStatus,
-  BookingStatus,
-  ModerationStatus,
   NotificationStatus,
   PaymentMethod,
   SubscriptionTier,
@@ -12,16 +10,14 @@ import type {
 } from '../types';
 
 export const ROUTES = {
+  login: '/login',
   overview: '/admin',
   hairstyles: '/admin/hairstyles',
   users: '/admin/users',
   salons: '/admin/salons-barbers',
-  moderation: '/admin/moderation',
   payments: '/admin/payments',
-  bookings: '/admin/bookings',
   notifications: '/admin/notifications',
   settings: '/admin/settings',
-  auditLog: '/admin/audit-log',
 } as const;
 
 export const ADMIN_USER = {
@@ -101,34 +97,11 @@ export const VERIFICATION_TONES: Record<VerificationStatus, Tone> = {
   rejected: 'danger',
 };
 
-export const BOOKING_STATUS_TONES: Record<BookingStatus, Tone> = {
-  pending: 'warning',
-  approved: 'info',
-  completed: 'success',
-  rejected: 'danger',
-  cancelled: 'neutral',
-  rescheduled: 'accent',
-};
-
 export const TRANSACTION_STATUS_TONES: Record<TransactionStatus, Tone> = {
   completed: 'success',
   pending: 'warning',
   failed: 'danger',
   refunded: 'info',
-};
-
-export const MODERATION_STATUS_LABELS: Record<ModerationStatus, string> = {
-  under_review: 'Under review',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  needs_info: 'Needs info',
-};
-
-export const MODERATION_STATUS_TONES: Record<ModerationStatus, Tone> = {
-  under_review: 'warning',
-  approved: 'success',
-  rejected: 'danger',
-  needs_info: 'info',
 };
 
 export const NOTIFICATION_STATUS_TONES: Record<NotificationStatus, Tone> = {

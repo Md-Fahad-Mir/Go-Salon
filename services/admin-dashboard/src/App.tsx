@@ -1,22 +1,21 @@
 import { Suspense, lazy } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
+import { AuthGate } from './components/AuthGate';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ThemeProvider } from './components/ThemeProvider';
 import { Skeleton } from './components/ui/Skeleton';
 import { ROUTES } from './constants';
 
 /* One bundle per page keeps the first paint small. */
+const LoginPage = lazy(() => import('./pages/LoginPage'));
 const OverviewPage = lazy(() => import('./pages/OverviewPage'));
 const HairstylesPage = lazy(() => import('./pages/HairstylesPage'));
 const UsersPage = lazy(() => import('./pages/UsersPage'));
 const SalonsPage = lazy(() => import('./pages/SalonsPage'));
-const ModerationPage = lazy(() => import('./pages/ModerationPage'));
 const PaymentsPage = lazy(() => import('./pages/PaymentsPage'));
-const BookingsPage = lazy(() => import('./pages/BookingsPage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const SettingsPage = lazy(() => import('./pages/SettingsPage'));
-const AuditLogPage = lazy(() => import('./pages/AuditLogPage'));
 
 function RouteFallback() {
   return (
@@ -35,7 +34,22 @@ export default function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Navigate to={ROUTES.overview} replace />} />
-            <Route path="/admin" element={<Layout />}>
+            <Route
+              path={ROUTES.login}
+              element={
+                <Suspense fallback={<RouteFallback />}>
+                  <LoginPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <AuthGate>
+                  <Layout />
+                </AuthGate>
+              }
+            >
               <Route
                 index
                 element={
@@ -69,26 +83,10 @@ export default function App() {
                 }
               />
               <Route
-                path="moderation"
-                element={
-                  <Suspense fallback={<RouteFallback />}>
-                    <ModerationPage />
-                  </Suspense>
-                }
-              />
-              <Route
                 path="payments"
                 element={
                   <Suspense fallback={<RouteFallback />}>
                     <PaymentsPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="bookings"
-                element={
-                  <Suspense fallback={<RouteFallback />}>
-                    <BookingsPage />
                   </Suspense>
                 }
               />
@@ -105,14 +103,6 @@ export default function App() {
                 element={
                   <Suspense fallback={<RouteFallback />}>
                     <SettingsPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="audit-log"
-                element={
-                  <Suspense fallback={<RouteFallback />}>
-                    <AuditLogPage />
                   </Suspense>
                 }
               />

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { ADMIN_USER, ROUTES } from '../../constants';
+import { ROUTES } from '../../constants';
 import { formatDateTime } from '../../utils/format';
 import { useIsDesktop } from '../../hooks/useMediaQuery';
 import { useStore } from '../../store/useStore';
-import { Avatar } from '../ui/Avatar';
 import { SearchBar } from '../ui/SearchBar';
+import { AccountMenu } from './AccountMenu';
 import { ThemeToggle } from './ThemeToggle';
 
 interface HeaderProps {
@@ -15,16 +15,13 @@ interface HeaderProps {
 }
 
 /** Global search routes to the page that owns the match — a phone number goes
-    to Users, a BKG id to Bookings, and so on. */
+    to Users, a TRX id to Payments, and so on. */
 const routeForQuery = (query: string): string => {
   const value = query.trim().toUpperCase();
-  if (value.startsWith('BKG')) return ROUTES.bookings;
   if (value.startsWith('TRX')) return ROUTES.payments;
   if (value.startsWith('BIZ')) return ROUTES.salons;
   if (value.startsWith('HS')) return ROUTES.hairstyles;
-  if (value.startsWith('MOD')) return ROUTES.moderation;
   if (value.startsWith('NTF')) return ROUTES.notifications;
-  if (value.startsWith('LOG')) return ROUTES.auditLog;
   return ROUTES.users;
 };
 
@@ -98,10 +95,7 @@ export function Header({ onMenuClick, sidebarOpen }: HeaderProps) {
           {clock}
         </time>
         <ThemeToggle />
-        <span title={`${ADMIN_USER.name} · ${ADMIN_USER.role}`}>
-          <Avatar name={ADMIN_USER.name} />
-        </span>
-        <span className="sr-only">Signed in as {ADMIN_USER.name}</span>
+        <AccountMenu />
       </div>
     </header>
   );

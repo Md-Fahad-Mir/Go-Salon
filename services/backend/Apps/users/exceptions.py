@@ -48,6 +48,16 @@ class Conflict(APIException):
     default_code = 'conflict'
 
 
+class NotAdmin(APIException):
+    """Correct phone and password, but this account has no business in the
+    admin dashboard. Kept distinct from invalid-credentials so the admin
+    login screen can say exactly why it was turned away."""
+
+    status_code = status.HTTP_403_FORBIDDEN
+    default_code = 'not_admin'
+    default_detail = 'This account is not authorized to access the admin dashboard.'
+
+
 def _first_detail(value):
     """The first ErrorDetail inside DRF's nested error shapes."""
     if isinstance(value, list) and value:

@@ -3,6 +3,7 @@
     /api/auth/register/{customer,barber,salon-owner}/   public sign-up
     /api/auth/otp/{request,verify,resend}/              phone verification
     /api/auth/{login,logout,token/refresh}/             sessions
+    /api/auth/admin/login/                              admin dashboard sign-in
     /api/auth/password/...                              forgot / reset / change
     /api/auth/me/                                       the signed-in account
     /api/profile/me/                                    the caller's own profile
@@ -31,6 +32,7 @@ urlpatterns = [
 
     # Sessions.
     path('auth/login/', views.LoginView.as_view(), name='login'),
+    path('auth/admin/login/', views.AdminLoginView.as_view(), name='admin-login'),
     path('auth/logout/', views.LogoutView.as_view(), name='logout'),
     path('auth/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('auth/me/', views.MeView.as_view(), name='me'),

@@ -17,7 +17,6 @@ import { TagInput } from '../components/ui/TagInput';
 import { Toggle } from '../components/ui/Toggle';
 import { ImageUploader } from '../components/ui/ImageUploader';
 import { EntityStatusBadge } from '../components/ui/StatusBadge';
-import { Badge } from '../components/ui/Badge';
 import { RowMenu } from '../components/ui/RowMenu';
 import { formatDate, formatNumber, formatPercent } from '../utils/format';
 
@@ -152,44 +151,11 @@ export default function HairstylesPage() {
     },
     { key: 'category', header: 'Category', sortable: true, render: (row) => row.category },
     {
-      key: 'tags',
-      header: 'Tags',
-      render: (row) => (
-        <div className="chips">
-          {row.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} tone="neutral" plain>
-              {tag}
-            </Badge>
-          ))}
-          {row.tags.length > 3 ? <span className="dim">+{row.tags.length - 3}</span> : null}
-        </div>
-      ),
-    },
-    {
       key: 'generationCount',
       header: 'Generations',
       sortable: true,
       align: 'end',
       render: (row) => formatNumber(row.generationCount),
-    },
-    {
-      key: 'successRate',
-      header: 'Success',
-      sortable: true,
-      align: 'end',
-      render: (row) => (row.successRate ? formatPercent(row.successRate) : '—'),
-    },
-    {
-      key: 'featured',
-      header: 'Featured',
-      render: (row) => (
-        <Toggle
-          checked={row.featured}
-          hideLabel
-          label={`Feature ${row.name}`}
-          onChange={(checked) => updateHairstyle(row.id, { featured: checked })}
-        />
-      ),
     },
     {
       key: 'status',

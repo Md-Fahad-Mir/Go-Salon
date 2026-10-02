@@ -1,8 +1,6 @@
 import type {
   AccountStatus,
-  BookingStatus,
   EntityStatus,
-  ModerationStatus,
   NotificationStatus,
   SubscriptionTier,
   TransactionStatus,
@@ -10,9 +8,6 @@ import type {
 } from '../../types';
 import {
   ACCOUNT_STATUS_TONES,
-  BOOKING_STATUS_TONES,
-  MODERATION_STATUS_LABELS,
-  MODERATION_STATUS_TONES,
   NOTIFICATION_STATUS_TONES,
   TIER_LABELS,
   TIER_TONES,
@@ -34,16 +29,8 @@ export const VerificationBadge = ({ status }: { status: VerificationStatus }) =>
   <Badge tone={VERIFICATION_TONES[status]}>{titleCase(status)}</Badge>
 );
 
-export const BookingStatusBadge = ({ status }: { status: BookingStatus }) => (
-  <Badge tone={BOOKING_STATUS_TONES[status]}>{titleCase(status)}</Badge>
-);
-
 export const TransactionStatusBadge = ({ status }: { status: TransactionStatus }) => (
   <Badge tone={TRANSACTION_STATUS_TONES[status]}>{titleCase(status)}</Badge>
-);
-
-export const ModerationStatusBadge = ({ status }: { status: ModerationStatus }) => (
-  <Badge tone={MODERATION_STATUS_TONES[status]}>{MODERATION_STATUS_LABELS[status]}</Badge>
 );
 
 export const NotificationStatusBadge = ({ status }: { status: NotificationStatus }) => (

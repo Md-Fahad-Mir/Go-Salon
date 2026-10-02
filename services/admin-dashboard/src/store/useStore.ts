@@ -4,15 +4,13 @@ import type {
   AppNotification,
   AuditLogEntry,
   Booking,
-  BookingStatus,
-  FlaggedContent,
   Hairstyle,
-  ModerationStatus,
   PlatformSettings,
   Salon,
   Service,
   SmsTemplate,
   StaffMember,
+  SubscriptionTierPlan,
   Toast,
   ToastTone,
   Transaction,
@@ -22,9 +20,7 @@ import type {
 import {
   defaultSettings,
   mockAiCharges,
-  mockAuditLog,
   mockBookings,
-  mockFlagged,
   mockHairstyles,
   mockNotifications,
   mockSalons,
@@ -33,9 +29,30 @@ import {
   mockTemplates,
   mockTransactions,
   mockUsers,
+  SUBSCRIPTION_TIERS,
 } from '../mockData';
-import { ADMIN_USER } from '../constants';
+import { ADMIN_USER, WEEKDAYS } from '../constants';
 import { nextId } from '../utils/id';
+
+const defaultOperatingHours = () =>
+  WEEKDAYS.reduce(
+    (hours, day) => {
+      hours[day] = { open: '10:00', close: '20:00', closed: false };
+      return hours;
+    },
+    {} as Salon['operatingHours'],
+  );
+
+export interface CreateSalonInput {
+  name: string;
+  businessType: Salon['businessType'];
+  ownerName: string;
+  phone: string;
+  email?: string;
+  city: string;
+  address: string;
+  bio?: string;
+}
 
 const SIDEBAR_KEY = 'sidebar-collapsed';
 
@@ -67,11 +84,11 @@ export interface AdminStore {
   bookings: Booking[];
   transactions: Transaction[];
   aiCharges: AiGenerationCharge[];
-  flagged: FlaggedContent[];
   notifications: AppNotification[];
   templates: SmsTemplate[];
   auditLog: AuditLogEntry[];
   settings: PlatformSettings;
+  subscriptionTiers: SubscriptionTierPlan[];
 
   /* ---- ui ---- */
   toasts: Toast[];
@@ -96,6 +113,7 @@ export interface AdminStore {
   deleteHairstyle: (id: string) => void;
 
   /* ---- businesses ---- */
+  createSalon: (input: CreateSalonInput) => void;
   updateSalon: (id: string, patch: Partial<Salon>) => void;
   setVerification: (id: string, status: VerificationStatus) => void;
   upsertStaff: (member: StaffMember) => void;
@@ -103,15 +121,9 @@ export interface AdminStore {
   upsertService: (service: Service) => void;
   removeService: (id: string) => void;
 
-  /* ---- bookings ---- */
-  setBookingStatus: (id: string, status: BookingStatus, reason?: string) => void;
-
   /* ---- payments ---- */
   refundTransaction: (id: string) => void;
   recordManualPayment: (input: { bookingId: string; amount: number; method: Transaction['paymentMethod'] }) => void;
-
-  /* ---- moderation ---- */
-  resolveFlag: (id: string, status: ModerationStatus, notes: string) => void;
 
   /* ---- notifications ---- */
   resendNotification: (id: string) => void;
@@ -119,6 +131,7 @@ export interface AdminStore {
 
   /* ---- settings ---- */
   updateSettings: (patch: Partial<PlatformSettings>) => void;
+  updateSubscriptionTier: (id: string, patch: Partial<SubscriptionTierPlan>) => void;
 }
 
 export const useStore = create<AdminStore>((set, get) => ({
@@ -130,11 +143,11 @@ export const useStore = create<AdminStore>((set, get) => ({
   bookings: mockBookings,
   transactions: mockTransactions,
   aiCharges: mockAiCharges,
-  flagged: mockFlagged,
   notifications: mockNotifications,
   templates: mockTemplates,
-  auditLog: mockAuditLog,
+  auditLog: [],
   settings: defaultSettings,
+  subscriptionTiers: SUBSCRIPTION_TIERS,
 
   toasts: [],
   sidebarCollapsed: readCollapsed(),
@@ -271,6 +284,37 @@ export const useStore = create<AdminStore>((set, get) => ({
 
   /* ---- businesses ------------------------------------------------------- */
 
+  createSalon: (input) => {
+    const salon: Salon = {
+      id: nextId('BIZ'),
+      name: input.name,
+      businessType: input.businessType,
+      ownerName: input.ownerName,
+      phone: input.phone,
+      email: input.email,
+      location: { city: input.city, area: '', address: input.address, lat: 0, lng: 0 },
+      bio: input.bio,
+      verificationStatus: 'pending',
+      activeStaffCount: 0,
+      totalServices: 0,
+      rating: 0,
+      reviewCount: 0,
+      status: 'active',
+      operatingHours: defaultOperatingHours(),
+      joinedDate: new Date().toISOString(),
+      acceptanceMode: 'manual',
+      monthlyRevenue: 0,
+    };
+    set((state) => ({ salons: [salon, ...state.salons] }));
+    get().recordAudit({
+      actionType: 'create',
+      resourceType: 'Business',
+      resourceId: salon.id,
+      details: `Created salon/parlour account "${salon.name}"`,
+    });
+    get().pushToast('success', 'Salon account created', salon.name);
+  },
+
   updateSalon: (id, patch) => {
     set((state) => ({
       salons: state.salons.map((salon) => (salon.id === id ? { ...salon, ...patch } : salon)),
@@ -362,60 +406,6 @@ export const useStore = create<AdminStore>((set, get) => ({
     get().pushToast('success', 'Service removed', service?.name);
   },
 
-  /* ---- bookings --------------------------------------------------------- */
-
-  setBookingStatus: (id, status, reason) => {
-    const before = get().bookings.find((booking) => booking.id === id);
-    set((state) => ({
-      bookings: state.bookings.map((booking) =>
-        booking.id === id ? { ...booking, status, reason: reason ?? booking.reason } : booking,
-      ),
-    }));
-    get().recordAudit({
-      actionType: status === 'approved' ? 'approve' : status === 'rejected' ? 'reject' : 'update',
-      resourceType: 'Booking',
-      resourceId: id,
-      details: `${status === 'approved' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Set to ' + status} booking for ${before?.customerName ?? id}`,
-      before: before?.status,
-      after: status,
-    });
-
-    // Approving or rejecting a booking triggers the customer SMS.
-    if (status === 'approved' || status === 'rejected') {
-      const type = status === 'approved' ? 'Booking approved' : 'Booking declined';
-      set((state) => ({
-        notifications: [
-          {
-            id: nextId('NTF'),
-            recipientName: before?.customerName ?? 'Customer',
-            recipientPhone: before?.customerPhone ?? '',
-            type,
-            content:
-              status === 'approved'
-                ? `Go Salon: your booking at ${before?.businessName} is confirmed for ${before?.appointmentTime}.`
-                : `Go Salon: ${before?.businessName} could not take your slot. ${reason ?? ''}`.trim(),
-            sentTime: new Date().toISOString(),
-            status: 'sent',
-            deliveryStatus: 'delivered',
-            channel: 'sms',
-            attempts: [
-              { at: new Date().toISOString(), result: 'delivered', detail: 'Delivered · gateway ack in 0.9s' },
-            ],
-          },
-          ...state.notifications,
-        ],
-      }));
-    }
-
-    get().pushToast(
-      status === 'rejected' ? 'warning' : 'success',
-      `Booking ${status}`,
-      status === 'approved' || status === 'rejected'
-        ? 'Customer notified by SMS'
-        : before?.customerName,
-    );
-  },
-
   /* ---- payments --------------------------------------------------------- */
 
   refundTransaction: (id) => {
@@ -460,34 +450,6 @@ export const useStore = create<AdminStore>((set, get) => ({
       details: `Recorded a manual ${method} payment against ${bookingId}`,
     });
     get().pushToast('success', 'Payment recorded', transaction.id);
-  },
-
-  /* ---- moderation ------------------------------------------------------- */
-
-  resolveFlag: (id, status, notes) => {
-    const before = get().flagged.find((item) => item.id === id);
-    set((state) => ({
-      flagged: state.flagged.map((item) =>
-        item.id === id ? { ...item, status, adminNotes: notes } : item,
-      ),
-    }));
-    get().recordAudit({
-      actionType: status === 'approved' ? 'approve' : status === 'rejected' ? 'reject' : 'update',
-      resourceType: before?.contentType === 'review' ? 'Review' : before?.contentType === 'photo' ? 'Photo' : 'Profile',
-      resourceId: id,
-      details: notes || `Resolved report ${id} as ${status.replace('_', ' ')}`,
-      before: before?.status,
-      after: status,
-    });
-    get().pushToast(
-      status === 'rejected' ? 'warning' : 'success',
-      status === 'approved'
-        ? 'Content kept'
-        : status === 'rejected'
-          ? 'Content removed'
-          : 'More information requested',
-      id,
-    );
   },
 
   /* ---- notifications ---------------------------------------------------- */
@@ -549,12 +511,20 @@ export const useStore = create<AdminStore>((set, get) => ({
       after: String(value),
     });
   },
+
+  updateSubscriptionTier: (id, patch) => {
+    const before = get().subscriptionTiers.find((tier) => tier.id === id);
+    set((state) => ({
+      subscriptionTiers: state.subscriptionTiers.map((tier) =>
+        tier.id === id ? { ...tier, ...patch } : tier,
+      ),
+    }));
+    get().recordAudit({
+      actionType: 'update',
+      resourceType: 'SubscriptionTier',
+      resourceId: id,
+      details: `Updated subscription tier "${before?.name ?? id}"`,
+    });
+    get().pushToast('success', 'Subscription tier saved', before?.name);
+  },
 }));
-
-/* Derived selectors kept next to the store so pages stay declarative. */
-export const selectOpenFlagCount = (state: AdminStore): number =>
-  state.flagged.filter((item) => item.status === 'under_review' || item.status === 'needs_info')
-    .length;
-
-export const selectPendingBookings = (state: AdminStore): Booking[] =>
-  state.bookings.filter((booking) => booking.status === 'pending');

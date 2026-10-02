@@ -4,8 +4,6 @@ export * from './salons';
 export * from './hairstyles';
 export * from './bookings';
 export * from './transactions';
-export * from './moderation';
 export * from './notifications';
-export * from './auditLog';
 export * from './settings';
 export * from './overview';
