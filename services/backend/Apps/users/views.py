@@ -7,8 +7,11 @@ activates the account and issues the first pair of tokens.
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from django.conf import settings
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -23,10 +26,14 @@ from Apps.tenants.context import business_of_tenant, tenant_of_request
 from Apps.tenants.permissions import OptionalTenantContext, TenantContext
 
 from .exceptions import Conflict, NotAdmin
-from .models import OTPPurpose, Role, Salon, SalonEmployee, User
-from .permissions import IsSalonOrParlorOwner
+from .models import AccountStatus, OTPPurpose, Role, Salon, SalonEmployee, User, VerificationStage
+from .permissions import IsAdmin, IsSalonOrParlorOwner
 from .serializers import (
     PROFILE_WRITERS,
+    AdminSalonCreateSerializer,
+    AdminSalonResultSerializer,
+    AdminUserSerializer,
+    AdminUserUpdateSerializer,
     BarberRegistrationSerializer,
     ChangePasswordSerializer,
     CustomerRegistrationSerializer,
@@ -547,3 +554,162 @@ class ProfileMeView(GenericAPIView):
         request.user.refresh_from_db()
         return Response(
             profile_payload(request.user, tenant_of_request(request)))
+
+
+# --------------------------------------------------------------------------
+# Admin dashboard
+#
+# Every view below requires IsAdmin — platform-wide power with no tenant
+# scoping, unlike everything above it in this file.
+# --------------------------------------------------------------------------
+
+
+def _no_such_user() -> Response:
+    return Response(
+        {'detail': 'No such user.', 'code': 'not_found', 'errors': {}},
+        status=status.HTTP_404_NOT_FOUND,
+    )
+
+
+RANGE_DAYS = {'today': 1, '7d': 7, '30d': 30}
+
+
+def _pct_change(previous: int, current: int) -> float:
+    if previous == 0:
+        return 100.0 if current > 0 else 0.0
+    return round((current - previous) / previous * 100, 1)
+
+
+def _tone(change_pct: float) -> str:
+    if change_pct > 0:
+        return 'positive'
+    if change_pct < 0:
+        return 'negative'
+    return 'neutral'
+
+
+class AdminOverviewStatsView(APIView):
+    """Platform-wide counts for the Overview page's two real KPIs.
+
+    Everything AI-generation-related (image count, spend, per-style
+    generation totals) has no source anywhere in this system yet — nothing
+    records a try-on call — so the admin dashboard keeps those on
+    illustrative data rather than this endpoint inventing numbers for them.
+    """
+
+    permission_classes = (IsAuthenticated, IsAdmin)
+
+    def get(self, request):
+        range_key = request.query_params.get('range', '30d')
+        days = RANGE_DAYS.get(range_key, 30)
+        now = timezone.now()
+        start = now - timedelta(days=days)
+        previous_start = start - timedelta(days=days)
+
+        active_users = User.objects.filter(is_active=True).count()
+        new_users = User.objects.filter(date_joined__gte=start).count()
+        new_users_previous = User.objects.filter(
+            date_joined__gte=previous_start, date_joined__lt=start).count()
+        users_change = _pct_change(new_users_previous, new_users)
+
+        new_salons = Salon.objects.filter(created_at__gte=start).count()
+        new_salons_previous = Salon.objects.filter(
+            created_at__gte=previous_start, created_at__lt=start).count()
+        salons_change = _pct_change(new_salons_previous, new_salons)
+        awaiting_approval = Salon.objects.filter(verification=VerificationStage.PENDING).count()
+
+        return Response({
+            'active_users': {
+                'value': active_users,
+                'change_pct': users_change,
+                'tone': _tone(users_change),
+            },
+            'new_salons': {
+                'value': new_salons,
+                'change_pct': salons_change,
+                'tone': _tone(salons_change),
+                'awaiting_approval': awaiting_approval,
+            },
+        })
+
+
+class AdminUserListView(GenericAPIView):
+    """Every account on the platform, whatever its role."""
+
+    permission_classes = (IsAuthenticated, IsAdmin)
+    serializer_class = AdminUserSerializer
+
+    def get(self, request):
+        users = User.objects.all().select_related('customer_profile')
+
+        query = request.query_params.get('q', '').strip()
+        if query:
+            users = users.filter(
+                Q(name__icontains=query) | Q(phone__icontains=query) | Q(email__icontains=query)
+            )
+        role = request.query_params.get('role')
+        if role:
+            users = users.filter(role=role)
+        tier = request.query_params.get('subscription_tier')
+        if tier:
+            users = users.filter(subscription_tier=tier)
+        acct_status = request.query_params.get('account_status')
+        if acct_status:
+            users = users.filter(account_status=acct_status)
+
+        return Response(self.get_serializer(users, many=True).data)
+
+
+class AdminUserDetailView(GenericAPIView):
+    permission_classes = (IsAuthenticated, IsAdmin)
+    serializer_class = AdminUserSerializer
+
+    def _get(self, pk: int) -> User | None:
+        return User.objects.filter(pk=pk).select_related('customer_profile').first()
+
+    def get(self, request, pk: int):
+        user = self._get(pk)
+        if user is None:
+            return _no_such_user()
+        return Response(self.get_serializer(user).data)
+
+    def patch(self, request, pk: int):
+        user = self._get(pk)
+        if user is None:
+            return _no_such_user()
+        # Setting your own status to anything but active syncs is_active to
+        # False (see AdminUserUpdateSerializer.save) — which signs out the
+        # very session making this request, with no way back in through this
+        # UI. The same reasoning that blocks deleting yourself below.
+        incoming_status = request.data.get('account_status')
+        if user.pk == request.user.pk and incoming_status and incoming_status != AccountStatus.ACTIVE:
+            raise Conflict('You cannot suspend or deactivate your own account.',
+                           code='cannot_modify_self_status')
+        serializer = AdminUserUpdateSerializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(AdminUserSerializer(user).data)
+
+    def delete(self, request, pk: int):
+        user = self._get(pk)
+        if user is None:
+            return _no_such_user()
+        if user.pk == request.user.pk:
+            raise Conflict('You cannot delete your own account.', code='cannot_delete_self')
+        user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AdminSalonCreateView(GenericAPIView):
+    """An admin opening a salon/parlour account directly — see
+    `AdminSalonCreateSerializer` for why this is not the self-service
+    registration flow with a permission class bolted on."""
+
+    permission_classes = (IsAuthenticated, IsAdmin)
+    serializer_class = AdminSalonCreateSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        result = serializer.save()
+        return Response(AdminSalonResultSerializer(result).data, status=status.HTTP_201_CREATED)

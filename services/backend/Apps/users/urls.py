@@ -8,6 +8,9 @@
     /api/auth/me/                                       the signed-in account
     /api/profile/me/                                    the caller's own profile
     /api/salon/employees/                               the owner's staff
+    /api/admin/overview/                                  platform KPIs
+    /api/admin/users/[<pk>/]                              every account
+    /api/admin/salons/                                     admin-opened salon accounts
 
 There is deliberately no register/salon-employee/ and no register/admin/.
 """
@@ -49,4 +52,10 @@ urlpatterns = [
     # The owner's staff. Employees cannot reach these.
     path('salon/employees/', views.SalonEmployeeListCreateView.as_view(), name='salon-employees'),
     path('salon/employees/<int:pk>/', views.SalonEmployeeDetailView.as_view(), name='salon-employee'),
+
+    # Admin dashboard. Every one of these requires IsAdmin.
+    path('admin/overview/', views.AdminOverviewStatsView.as_view(), name='admin-overview'),
+    path('admin/users/', views.AdminUserListView.as_view(), name='admin-users'),
+    path('admin/users/<int:pk>/', views.AdminUserDetailView.as_view(), name='admin-user'),
+    path('admin/salons/', views.AdminSalonCreateView.as_view(), name='admin-salons'),
 ]

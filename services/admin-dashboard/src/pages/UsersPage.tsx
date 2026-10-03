@@ -1,9 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Ban, CircleCheck, Eye, KeyRound, Pencil, Trash2 } from 'lucide-react';
+import { Ban, CircleCheck, Eye, KeyRound, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import type { AccountStatus, SubscriptionTier, User, UserType } from '../types';
 import { TIER_LABELS, USER_TYPE_LABELS } from '../constants';
 import { useStore } from '../store/useStore';
+import { useAuthStore } from '../store/useAuthStore';
 import { useTableState } from '../hooks/useTableState';
+import { useAsyncList } from '../hooks/useAsyncList';
+import { userService } from '../utils/adminService';
+import { ApiError } from '../utils/apiError';
 import type { Column } from '../components/ui/DataTable';
 import { DataTable } from '../components/ui/DataTable';
 import { FilterBar } from '../components/ui/FilterBar';
@@ -12,6 +16,7 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { SidePanel } from '../components/ui/SidePanel';
+import { EmptyState } from '../components/ui/EmptyState';
 import { Field } from '../components/ui/Field';
 import { Toggle } from '../components/ui/Toggle';
 import { Avatar } from '../components/ui/Avatar';
@@ -32,17 +37,17 @@ interface EditState {
 const PHONE_PATTERN = /^\+8801[3-9]\d{8}$/;
 
 export default function UsersPage() {
-  const users = useStore((state) => state.users);
-  const updateUser = useStore((state) => state.updateUser);
-  const setUserStatus = useStore((state) => state.setUserStatus);
-  const deleteUser = useStore((state) => state.deleteUser);
   const pushToast = useStore((state) => state.pushToast);
+  const currentUserId = useAuthStore((state) => state.user?.id);
+  const { data: users, loading, error, refetch } = useAsyncList(() => userService.list());
 
   const [viewing, setViewing] = useState<User | null>(null);
   const [editing, setEditing] = useState<User | null>(null);
   const [draft, setDraft] = useState<EditState | null>(null);
   const [touched, setTouched] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filters = useMemo(
     () => [
@@ -105,12 +110,74 @@ export default function UsersPage() {
     });
   };
 
+  const setStatus = async (user: User, status: AccountStatus) => {
+    try {
+      await userService.update(user.id, { status });
+      pushToast(
+        status === 'suspended' ? 'warning' : 'success',
+        `Account ${status}`,
+        user.name,
+      );
+      refetch();
+    } catch (err) {
+      pushToast('error', 'Could not update status', err instanceof ApiError ? err.message : 'Try again.');
+    }
+  };
+
+  const sendPasswordReset = async (user: User) => {
+    try {
+      await userService.sendPasswordReset(user.phone);
+      pushToast('info', 'Reset code sent', `SMS queued to ${user.phone}`);
+    } catch (err) {
+      pushToast('error', 'Could not send reset code', err instanceof ApiError ? err.message : 'Try again.');
+    }
+  };
+
   const phoneError =
     touched && draft && !PHONE_PATTERN.test(draft.phone)
       ? 'Use a Bangladeshi mobile number, e.g. +8801711002233'
       : undefined;
   const nameError = touched && draft && draft.name.trim().length < 2 ? 'A name is required' : undefined;
   const canSave = Boolean(draft && PHONE_PATTERN.test(draft.phone) && draft.name.trim().length > 1);
+
+  const saveEdit = async () => {
+    setTouched(true);
+    if (!canSave || !editing || !draft) return;
+    setSaving(true);
+    try {
+      await userService.update(editing.id, {
+        name: draft.name.trim(),
+        phone: draft.phone.trim(),
+        email: draft.email.trim() || undefined,
+        userType: draft.userType,
+        subscriptionTier: draft.subscriptionTier,
+        status: draft.status,
+        phoneVerified: draft.phoneVerified,
+      });
+      pushToast('success', 'User updated', draft.name);
+      setEditing(null);
+      refetch();
+    } catch (err) {
+      pushToast('error', 'Could not save', err instanceof ApiError ? err.message : 'Try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      await userService.remove(pendingDelete.id);
+      pushToast('success', 'User deleted', pendingDelete.name);
+      setPendingDelete(null);
+      refetch();
+    } catch (err) {
+      pushToast('error', 'Could not delete', err instanceof ApiError ? err.message : 'Try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const columns: Array<Column<User>> = [
     {
@@ -147,7 +214,9 @@ export default function UsersPage() {
     { key: 'status', header: 'Status', render: (row) => <AccountStatusBadge status={row.status} /> },
   ];
 
-  const actions = (row: User) => (
+  const actions = (row: User) => {
+    const isSelf = currentUserId !== undefined && row.id === String(currentUserId);
+    return (
     <>
       <button type="button" className="icon-btn" onClick={() => setViewing(row)} aria-label={`View ${row.name}`}>
         <Eye size={15} />
@@ -158,33 +227,46 @@ export default function UsersPage() {
       <RowMenu
         label={`More actions for ${row.name}`}
         items={[
-          row.status === 'suspended'
-            ? {
-                label: 'Reactivate account',
-                icon: <CircleCheck size={14} />,
-                onSelect: () => setUserStatus(row.id, 'active'),
-              }
-            : {
-                label: 'Suspend account',
-                icon: <Ban size={14} />,
-                onSelect: () => setUserStatus(row.id, 'suspended'),
-              },
+          // Suspending or deleting your own account locks you out of the
+          // session making the request — see Apps/users/views.py
+          // AdminUserDetailView.patch/delete for the matching server-side
+          // refusal. Hidden here rather than left to fail after the click.
+          ...(isSelf
+            ? []
+            : [
+                row.status === 'suspended'
+                  ? {
+                      label: 'Reactivate account',
+                      icon: <CircleCheck size={14} />,
+                      onSelect: () => setStatus(row, 'active'),
+                    }
+                  : {
+                      label: 'Suspend account',
+                      icon: <Ban size={14} />,
+                      onSelect: () => setStatus(row, 'suspended'),
+                    },
+              ]),
           {
             label: 'Send password reset',
             icon: <KeyRound size={14} />,
-            onSelect: () => pushToast('info', 'Reset link sent', `SMS queued to ${row.phone}`),
+            onSelect: () => sendPasswordReset(row),
           },
-          {
-            label: 'Delete account',
-            icon: <Trash2 size={14} />,
-            danger: true,
-            separatorBefore: true,
-            onSelect: () => setPendingDelete(row),
-          },
+          ...(isSelf
+            ? []
+            : [
+                {
+                  label: 'Delete account',
+                  icon: <Trash2 size={14} />,
+                  danger: true,
+                  separatorBefore: true,
+                  onSelect: () => setPendingDelete(row),
+                },
+              ]),
         ]}
       />
     </>
-  );
+    );
+  };
 
   const counts = useMemo(
     () => ({
@@ -203,48 +285,63 @@ export default function UsersPage() {
       />
 
       <section className="card">
-        <FilterBar
-          query={table.query}
-          onQueryChange={table.setQuery}
-          placeholder="Search by name, phone, email or ID…"
-          controls={filters}
-          values={table.filterValues}
-          onFilterChange={table.setFilter}
-          chips={table.activeChips}
-          onClearAll={table.clearFilters}
-        />
-
-        <DataTable
-          caption="All platform users"
-          columns={columns}
-          rows={table.rows}
-          rowKey={(row) => row.id}
-          sort={table.sort}
-          onSort={table.toggleSort}
-          actions={actions}
-          cardTitle={(row) => `${row.name} · ${row.id}`}
-          cardActions={(row) => (
-            <>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setViewing(row)}>
-                Profile
+        {error ? (
+          <EmptyState
+            title="Couldn't load users"
+            message={error}
+            action={
+              <button type="button" className="btn btn-secondary btn-sm" onClick={refetch}>
+                <RefreshCw size={14} /> Retry
               </button>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => openEdit(row)}>
-                Edit
-              </button>
-            </>
-          )}
-          emptyTitle="No users match"
-          emptyMessage="Try a different search term or clear the filters."
-        />
+            }
+          />
+        ) : (
+          <>
+            <FilterBar
+              query={table.query}
+              onQueryChange={table.setQuery}
+              placeholder="Search by name, phone, email or ID…"
+              controls={filters}
+              values={table.filterValues}
+              onFilterChange={table.setFilter}
+              chips={table.activeChips}
+              onClearAll={table.clearFilters}
+            />
 
-        <Pagination
-          page={table.page}
-          pageCount={table.pageCount}
-          pageSize={table.pageSize}
-          total={table.total}
-          onPageChange={table.setPage}
-          onPageSizeChange={table.setPageSize}
-        />
+            <DataTable
+              caption="All platform users"
+              columns={columns}
+              rows={table.rows}
+              rowKey={(row) => row.id}
+              sort={table.sort}
+              onSort={table.toggleSort}
+              actions={actions}
+              loading={loading}
+              cardTitle={(row) => `${row.name} · ${row.id}`}
+              cardActions={(row) => (
+                <>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setViewing(row)}>
+                    Profile
+                  </button>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => openEdit(row)}>
+                    Edit
+                  </button>
+                </>
+              )}
+              emptyTitle="No users match"
+              emptyMessage="Try a different search term or clear the filters."
+            />
+
+            <Pagination
+              page={table.page}
+              pageCount={table.pageCount}
+              pageSize={table.pageSize}
+              total={table.total}
+              onPageChange={table.setPage}
+              onPageSizeChange={table.setPageSize}
+            />
+          </>
+        )}
       </section>
 
       {/* ---- profile ---- */}
@@ -256,16 +353,18 @@ export default function UsersPage() {
         footer={
           viewing ? (
             <>
-              <button
-                type="button"
-                className={viewing.status === 'suspended' ? 'btn btn-secondary' : 'btn btn-danger'}
-                onClick={() => {
-                  setUserStatus(viewing.id, viewing.status === 'suspended' ? 'active' : 'suspended');
-                  setViewing(null);
-                }}
-              >
-                {viewing.status === 'suspended' ? 'Reactivate' : 'Suspend account'}
-              </button>
+              {currentUserId !== undefined && viewing.id === String(currentUserId) ? null : (
+                <button
+                  type="button"
+                  className={viewing.status === 'suspended' ? 'btn btn-secondary' : 'btn btn-danger'}
+                  onClick={() => {
+                    setStatus(viewing, viewing.status === 'suspended' ? 'active' : 'suspended');
+                    setViewing(null);
+                  }}
+                >
+                  {viewing.status === 'suspended' ? 'Reactivate' : 'Suspend account'}
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-primary"
@@ -328,9 +427,6 @@ export default function UsersPage() {
               <div>
                 <h3 className="section-label">Address</h3>
                 <p>{viewing.location.address}</p>
-                <p className="dim mono" style={{ fontSize: '0.75rem' }}>
-                  {viewing.location.lat}, {viewing.location.lng}
-                </p>
               </div>
             ) : null}
 
@@ -368,23 +464,10 @@ export default function UsersPage() {
             <button
               type="button"
               className="btn btn-primary"
-              disabled={touched && !canSave}
-              onClick={() => {
-                setTouched(true);
-                if (!canSave || !editing || !draft) return;
-                updateUser(editing.id, {
-                  name: draft.name.trim(),
-                  phone: draft.phone.trim(),
-                  email: draft.email.trim() || undefined,
-                  userType: draft.userType,
-                  subscriptionTier: draft.subscriptionTier,
-                  status: draft.status,
-                  phoneVerified: draft.phoneVerified,
-                });
-                setEditing(null);
-              }}
+              disabled={saving || (touched && !canSave)}
+              onClick={saveEdit}
             >
-              Save changes
+              {saving ? 'Saving…' : 'Save changes'}
             </button>
           </>
         }
@@ -470,7 +553,7 @@ export default function UsersPage() {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => pushToast('info', 'Reset link sent', `SMS queued to ${draft.phone}`)}
+              onClick={() => editing && sendPasswordReset(editing)}
             >
               <KeyRound size={15} /> Send password reset
             </button>
@@ -482,12 +565,9 @@ export default function UsersPage() {
         open={pendingDelete !== null}
         title="Delete this account?"
         message={`${pendingDelete?.name}'s account, bookings history and saved try-ons will be removed. This cannot be undone.`}
-        confirmLabel="Delete account"
+        confirmLabel={deleting ? 'Deleting…' : 'Delete account'}
         onCancel={() => setPendingDelete(null)}
-        onConfirm={() => {
-          if (pendingDelete) deleteUser(pendingDelete.id);
-          setPendingDelete(null);
-        }}
+        onConfirm={confirmDelete}
       />
     </>
   );

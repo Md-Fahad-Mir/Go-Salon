@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { salonService } from '../utils/adminService';
+import { ApiError } from '../utils/apiError';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Field } from '../components/ui/Field';
 
@@ -26,29 +29,67 @@ const EMPTY_FORM: FormState = {
   bio: '',
 };
 
+const FIELD_ERROR_MAP: Partial<Record<string, keyof FormState>> = {
+  business_name: 'name',
+  owner_name: 'ownerName',
+  owner_phone: 'phone',
+  owner_email: 'email',
+  city: 'city',
+  address: 'address',
+  bio: 'bio',
+};
+
 export default function SalonsPage() {
-  const createSalon = useStore((state) => state.createSalon);
+  const pushToast = useStore((state) => state.pushToast);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const update = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+  const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
+  };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setFormError(null);
+    setSuccess(null);
     if (!form.name.trim() || !form.ownerName.trim() || !form.phone.trim() || !form.address.trim()) return;
 
-    createSalon({
-      name: form.name.trim(),
-      businessType: form.businessType,
-      ownerName: form.ownerName.trim(),
-      phone: form.phone.trim(),
-      email: form.email.trim() || undefined,
-      city: form.city.trim(),
-      address: form.address.trim(),
-      bio: form.bio.trim() || undefined,
-    });
+    setSubmitting(true);
+    try {
+      const result = await salonService.create({
+        name: form.name.trim(),
+        businessType: form.businessType,
+        ownerName: form.ownerName.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim() || undefined,
+        city: form.city.trim(),
+        address: form.address.trim(),
+        bio: form.bio.trim() || undefined,
+      });
 
-    setForm(EMPTY_FORM);
+      setSuccess(`"${result.salonName}" was created. ${result.ownerName} can sign in once they set a password via "Forgot password".`);
+      pushToast('success', 'Salon account created', result.salonName);
+      setForm(EMPTY_FORM);
+      setFieldErrors({});
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setFormError(err.message);
+        const mapped: Partial<Record<keyof FormState, string>> = {};
+        for (const [key, messages] of Object.entries(err.errors)) {
+          const field = FIELD_ERROR_MAP[key];
+          if (field && messages[0]) mapped[field] = messages[0];
+        }
+        setFieldErrors(mapped);
+      } else {
+        setFormError('Something went wrong. Try again.');
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -63,7 +104,20 @@ export default function SalonsPage() {
           <h2>Create salon/parlour account</h2>
         </div>
         <div className="card-body stack-sm">
-          <Field label="Business name" required>
+          {success ? (
+            <div className="setting-row" style={{ color: 'var(--status-success-ink)' }}>
+              <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
+              <span>{success}</span>
+            </div>
+          ) : null}
+
+          {formError ? (
+            <div role="alert" className="setting-row" style={{ color: 'var(--status-danger-ink)' }}>
+              {formError}
+            </div>
+          ) : null}
+
+          <Field label="Business name" required error={fieldErrors.name}>
             <input
               className="input"
               value={form.name}
@@ -90,7 +144,7 @@ export default function SalonsPage() {
             </div>
           </div>
 
-          <Field label="Owner name" required>
+          <Field label="Owner name" required error={fieldErrors.ownerName}>
             <input
               className="input"
               value={form.ownerName}
@@ -100,7 +154,7 @@ export default function SalonsPage() {
             />
           </Field>
 
-          <Field label="Phone" required>
+          <Field label="Phone" required error={fieldErrors.phone}>
             <input
               className="input"
               type="tel"
@@ -111,7 +165,7 @@ export default function SalonsPage() {
             />
           </Field>
 
-          <Field label="Email" hint="Optional">
+          <Field label="Email" hint="Optional" error={fieldErrors.email}>
             <input
               className="input"
               type="email"
@@ -121,7 +175,7 @@ export default function SalonsPage() {
             />
           </Field>
 
-          <Field label="City" required>
+          <Field label="City" required error={fieldErrors.city}>
             <input
               className="input"
               value={form.city}
@@ -130,7 +184,7 @@ export default function SalonsPage() {
             />
           </Field>
 
-          <Field label="Address" required>
+          <Field label="Address" required error={fieldErrors.address}>
             <input
               className="input"
               value={form.address}
@@ -140,7 +194,7 @@ export default function SalonsPage() {
             />
           </Field>
 
-          <Field label="Bio" hint="Optional short description">
+          <Field label="Bio" hint="Optional short description" error={fieldErrors.bio}>
             <textarea
               className="input"
               rows={3}
@@ -149,8 +203,8 @@ export default function SalonsPage() {
             />
           </Field>
 
-          <button type="submit" className="btn btn-primary">
-            Create account
+          <button type="submit" className="btn btn-primary" disabled={submitting}>
+            {submitting ? 'Creating…' : 'Create account'}
           </button>
         </div>
       </form>

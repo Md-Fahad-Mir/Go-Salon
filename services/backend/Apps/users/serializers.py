@@ -6,6 +6,8 @@ validated the same way and differ only in the profile each one writes.
 
 from __future__ import annotations
 
+import secrets
+
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -25,6 +27,7 @@ from Apps.tenants.provisioning import provision_for_barber, provision_for_salon
 
 from .exceptions import Conflict, PhoneNotVerified
 from .models import (
+    AccountStatus,
     Audience,
     BarberProfile,
     BusinessType,
@@ -1107,3 +1110,194 @@ def profile_payload(user: User, tenant=None) -> dict:
         payload['salon'] = SalonReadSerializer(employment.salon).data
 
     return payload
+
+
+# --------------------------------------------------------------------------
+# Admin dashboard — a separate, richer read of the same User rows.
+#
+# Deliberately not UserSerializer-plus-fields: the two are read by different
+# audiences (the account's own app session vs. a platform admin) and must be
+# free to diverge without either one's contract shifting under its caller.
+# --------------------------------------------------------------------------
+
+
+def _bookings_count(user: User) -> int:
+    """How many appointments this account has been party to, read off
+    whichever side of the booking its role puts it on."""
+    from Apps.bookings.models import Appointment
+
+    if user.role == Role.CUSTOMER:
+        return Appointment.objects.filter(customer=user).count()
+    if user.role == Role.BARBER:
+        return Appointment.objects.filter(barber__user=user).count()
+    if user.role == Role.SALON_OWNER:
+        return Appointment.objects.filter(salon__owner=user).count()
+    if user.role == Role.SALON_EMPLOYEE:
+        return Appointment.objects.filter(employee__user=user).count()
+    return 0
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """The admin dashboard's row/detail shape for a user of any role."""
+
+    total_bookings = serializers.SerializerMethodField()
+    generations_used = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+    hair_type = serializers.SerializerMethodField()
+    hair_length = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'phone', 'name', 'email', 'role', 'subscription_tier',
+            'account_status', 'is_phone_verified', 'date_joined',
+            'total_bookings', 'generations_used', 'location', 'hair_type', 'hair_length',
+        )
+        read_only_fields = fields
+
+    def get_total_bookings(self, user: User) -> int:
+        return _bookings_count(user)
+
+    def get_generations_used(self, user: User) -> int:
+        # No per-generation log exists yet (see Apps/hairstyles), so this is
+        # the only honest approximation available: what of the starting
+        # allowance is gone. Non-customers never had an allowance to spend.
+        if user.role != Role.CUSTOMER:
+            return 0
+        return max(0, starting_credits() - user.try_on_credits)
+
+    def _customer_profile(self, user: User) -> CustomerProfile | None:
+        if user.role != Role.CUSTOMER:
+            return None
+        return getattr(user, 'customer_profile', None)
+
+    def get_location(self, user: User) -> dict | None:
+        profile = self._customer_profile(user)
+        return _location_of(profile) if profile else None
+
+    def get_hair_type(self, user: User) -> str | None:
+        profile = self._customer_profile(user)
+        return profile.hair_type if profile else None
+
+    def get_hair_length(self, user: User) -> str | None:
+        profile = self._customer_profile(user)
+        return profile.hair_length if profile else None
+
+
+class AdminUserUpdateSerializer(serializers.ModelSerializer):
+    """What an admin may change about someone else's account. No password —
+    that stays the account holder's own, reset through the existing
+    forgot-password flow rather than set by a third party."""
+
+    class Meta:
+        model = User
+        fields = ('name', 'phone', 'email', 'role', 'subscription_tier',
+                  'account_status', 'is_phone_verified')
+        extra_kwargs = {
+            field: {'required': False, 'validators': []} if field == 'phone' else {'required': False}
+            for field in fields
+        }
+
+    def validate_phone(self, value: str) -> str:
+        # The model field's own UniqueValidator would reach this phone before
+        # `validate_phone` does and answer with a generic 400 — stripped above
+        # via `validators: []` so the conflict comes back shaped like every
+        # other "that number is taken" refusal in this API (409, `Conflict`).
+        phone = _normalized(value)
+        existing = User.objects.filter(phone=phone).exclude(pk=self.instance.pk).first()
+        if existing is not None:
+            raise Conflict('Another account already uses that number.', code='phone_taken')
+        return phone
+
+    def validate_name(self, value: str) -> str:
+        value = value.strip()
+        if len(value) < 2:
+            raise serializers.ValidationError('A name is required.')
+        return value
+
+    def save(self, **kwargs) -> User:
+        user = super().save(**kwargs)
+        # The two ways of being unreachable are kept in step: `is_active` is
+        # what actually gates sign-in (see LoginSerializer), so an admin
+        # setting 'inactive' or 'suspended' must not leave someone able to
+        # log in anyway.
+        should_be_active = user.account_status == AccountStatus.ACTIVE
+        if user.is_active != should_be_active:
+            user.is_active = should_be_active
+            user.save(update_fields=['is_active'])
+        return user
+
+
+class AdminSalonCreateSerializer(serializers.Serializer):
+    """An admin opening an account for a salon or parlour directly, rather
+    than the owner signing themselves up.
+
+    No OTP, no password from the owner: the admin has already satisfied
+    themselves of who this is, so the phone is marked verified immediately
+    and a random password is set. The owner sets their own through
+    `/auth/password/forgot/` the first time they need to sign in — the same
+    endpoint self-registered owners use to recover a lost one.
+    """
+
+    business_name = serializers.CharField(max_length=60, min_length=2)
+    business_type = serializers.ChoiceField(choices=BusinessType.choices)
+    owner_name = serializers.CharField(max_length=80, min_length=2)
+    owner_phone = serializers.CharField(max_length=20)
+    owner_email = serializers.EmailField(required=False, allow_blank=True, default='')
+    city = serializers.CharField(max_length=60, required=False, allow_blank=True, default='')
+    address = serializers.CharField(max_length=160, min_length=6)
+    bio = serializers.CharField(max_length=2000, required=False, allow_blank=True, default='')
+
+    def validate_owner_phone(self, value: str) -> str:
+        phone = _normalized(value)
+        existing = User.objects.filter(phone=phone).first()
+        if existing is not None:
+            raise Conflict(
+                'An account with this number already exists.', code='phone_taken',
+            )
+        return phone
+
+    @transaction.atomic
+    def create(self, validated_data: dict) -> dict:
+        data = validated_data
+        owner = User(
+            phone=data['owner_phone'],
+            name=data['owner_name'].strip(),
+            email=(data.get('owner_email') or '').strip(),
+            role=Role.SALON_OWNER,
+            is_phone_verified=True,
+            is_active=True,
+            terms_accepted_at=timezone.now(),
+        )
+        owner.set_password(secrets.token_urlsafe(18))
+        owner.save()
+
+        salon = Salon.objects.create(
+            owner=owner,
+            name=data['business_name'].strip(),
+            business_type=data['business_type'],
+            audience=Audience.UNISEX,
+            address=data['address'].strip(),
+            city=data.get('city') or '',
+            bio=data.get('bio') or '',
+            auto_accept=False,
+        )
+        provision_for_salon(salon)
+        return {'owner': owner, 'salon': salon}
+
+
+class AdminSalonResultSerializer(serializers.Serializer):
+    """What the admin create-salon endpoint hands back: just enough to
+    confirm what was made, not the full read shape `SalonReadSerializer` uses
+    for an owner's own dashboard."""
+
+    owner = serializers.SerializerMethodField()
+    salon = serializers.SerializerMethodField()
+
+    def get_owner(self, instance: dict) -> dict:
+        owner = instance['owner']
+        return {'id': owner.id, 'name': owner.name, 'phone': owner.phone}
+
+    def get_salon(self, instance: dict) -> dict:
+        salon = instance['salon']
+        return {'id': salon.id, 'name': salon.name, 'business_type': salon.business_type}

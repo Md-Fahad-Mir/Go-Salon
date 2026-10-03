@@ -54,6 +54,29 @@ class BusinessType(models.TextChoices):
     BARBER = 'barber', 'Barbershop'
 
 
+class SubscriptionTier(models.TextChoices):
+    """The app plan an account is on. Independent of `role` — a customer and
+    a barber are both billed through the same three tiers."""
+
+    FREE = 'free', 'Free'
+    BASIC = 'basic', 'Basic'
+    ADVANCED = 'advanced', 'Advanced'
+
+
+class AccountStatus(models.TextChoices):
+    """The admin console's view of whether an account may use the app.
+
+    Kept separate from `is_active` rather than replacing it: `is_active` is
+    what `LoginSerializer` checks and what Django's own auth machinery
+    expects, so admin actions set both together (`inactive` and `suspended`
+    both clear `is_active`) rather than teaching the login path a third
+    state."""
+
+    ACTIVE = 'active', 'Active'
+    INACTIVE = 'inactive', 'Inactive'
+    SUSPENDED = 'suspended', 'Suspended'
+
+
 class ExperienceRange(models.TextChoices):
     """How long someone has been doing this, as a band rather than a number.
 
@@ -158,6 +181,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_phone_verified = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+
+    #: The admin dashboard's tri-state view of the account. See
+    #: `AccountStatus` — kept in step with `is_active` by whatever sets it,
+    #: not read by the login path itself.
+    account_status = models.CharField(
+        max_length=10, choices=AccountStatus.choices, default=AccountStatus.ACTIVE,
+    )
+    subscription_tier = models.CharField(
+        max_length=10, choices=SubscriptionTier.choices, default=SubscriptionTier.FREE,
+    )
 
     #: AI try-on credits. Part of the account the frontend reads on sign-in.
     try_on_credits = models.PositiveIntegerField(default=0)

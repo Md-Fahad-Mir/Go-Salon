@@ -168,12 +168,9 @@ export interface Hairstyle {
   name: string;
   category: string;
   image: string;
-  tags: string[];
   description?: string;
   generationCount: number;
-  featured: boolean;
   status: EntityStatus;
-  successRate: number;
   createdAt: string;
 }
 

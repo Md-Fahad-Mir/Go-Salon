@@ -1,7 +1,6 @@
 export * from './base';
 export * from './users';
 export * from './salons';
-export * from './hairstyles';
 export * from './bookings';
 export * from './transactions';
 export * from './notifications';

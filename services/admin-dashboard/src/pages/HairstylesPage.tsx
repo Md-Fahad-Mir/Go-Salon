@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Eye, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Eye, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import type { Hairstyle } from '../types';
 import { HAIRSTYLE_CATEGORIES } from '../constants';
 import { useStore } from '../store/useStore';
 import { useTableState } from '../hooks/useTableState';
+import { useAsyncList } from '../hooks/useAsyncList';
+import { hairstyleService } from '../utils/adminService';
+import { ApiError } from '../utils/apiError';
 import type { Column } from '../components/ui/DataTable';
 import { DataTable } from '../components/ui/DataTable';
 import { FilterBar } from '../components/ui/FilterBar';
@@ -12,21 +15,19 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { Modal } from '../components/ui/Modal';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { SidePanel } from '../components/ui/SidePanel';
+import { EmptyState } from '../components/ui/EmptyState';
 import { Field } from '../components/ui/Field';
-import { TagInput } from '../components/ui/TagInput';
 import { Toggle } from '../components/ui/Toggle';
 import { ImageUploader } from '../components/ui/ImageUploader';
 import { EntityStatusBadge } from '../components/ui/StatusBadge';
 import { RowMenu } from '../components/ui/RowMenu';
-import { formatDate, formatNumber, formatPercent } from '../utils/format';
+import { formatDate, formatNumber } from '../utils/format';
 
 interface FormState {
   name: string;
   category: string;
   description: string;
   image: string | undefined;
-  tags: string[];
-  featured: boolean;
   active: boolean;
 }
 
@@ -35,30 +36,35 @@ const EMPTY_FORM: FormState = {
   category: 'Haircut',
   description: '',
   image: undefined,
-  tags: [],
-  featured: false,
   active: true,
 };
 
 export default function HairstylesPage() {
-  const hairstyles = useStore((state) => state.hairstyles);
-  const addHairstyle = useStore((state) => state.addHairstyle);
-  const updateHairstyle = useStore((state) => state.updateHairstyle);
-  const deleteHairstyle = useStore((state) => state.deleteHairstyle);
+  const pushToast = useStore((state) => state.pushToast);
+  const { data: hairstyles, loading, error, refetch } = useAsyncList(() => hairstyleService.list());
 
   const [editing, setEditing] = useState<Hairstyle | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [customCategory, setCustomCategory] = useState(false);
   const [touched, setTouched] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [viewing, setViewing] = useState<Hairstyle | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Hairstyle | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const categoryOptions = useMemo(() => {
+    const fromData = new Set(hairstyles.map((row) => row.category));
+    HAIRSTYLE_CATEGORIES.forEach((category) => fromData.add(category));
+    return Array.from(fromData);
+  }, [hairstyles]);
 
   const filters = useMemo(
     () => [
       {
         key: 'category',
         label: 'Category',
-        options: HAIRSTYLE_CATEGORIES.map((value) => ({ value, label: value })),
+        options: categoryOptions.map((value) => ({ value, label: value })),
         match: (row: Hairstyle, value: string) => row.category === value,
       },
       {
@@ -67,34 +73,32 @@ export default function HairstylesPage() {
         options: [
           { value: 'active', label: 'Active' },
           { value: 'inactive', label: 'Inactive' },
-          { value: 'featured', label: 'Featured' },
         ],
-        match: (row: Hairstyle, value: string) =>
-          value === 'featured' ? row.featured : row.status === value,
+        match: (row: Hairstyle, value: string) => row.status === value,
       },
     ],
-    [],
+    [categoryOptions],
   );
 
   const table = useTableState<Hairstyle>({
     rows: hairstyles,
-    searchOn: (row) => [row.id, row.name, row.category, row.tags.join(' ')],
+    searchOn: (row) => [row.id, row.name, row.category],
     filters,
     sortAccessors: {
       name: (row) => row.name,
       category: (row) => row.category,
       generationCount: (row) => row.generationCount,
-      successRate: (row) => row.successRate,
     },
     initialSort: { key: 'generationCount', direction: 'desc' },
   });
 
   const nameError = touched && !form.name.trim() ? 'A name is required' : undefined;
-  const valid = form.name.trim().length > 1;
+  const valid = form.name.trim().length > 1 && form.category.trim().length > 0;
 
   const openCreate = () => {
     setEditing(null);
     setForm(EMPTY_FORM);
+    setCustomCategory(false);
     setTouched(false);
     setFormOpen(true);
   };
@@ -106,29 +110,63 @@ export default function HairstylesPage() {
       category: row.category,
       description: row.description ?? '',
       image: row.image,
-      tags: row.tags,
-      featured: row.featured,
       active: row.status === 'active',
     });
+    setCustomCategory(!(HAIRSTYLE_CATEGORIES as readonly string[]).includes(row.category));
     setTouched(false);
     setFormOpen(true);
   };
 
-  const save = () => {
+  const save = async () => {
     setTouched(true);
     if (!valid) return;
-    const payload = {
+    const input = {
       name: form.name.trim(),
       category: form.category,
       description: form.description.trim() || undefined,
-      image: form.image ?? '/hairstyles/placeholder.jpg',
-      tags: form.tags,
-      featured: form.featured,
-      status: form.active ? ('active' as const) : ('inactive' as const),
+      image: form.image,
+      active: form.active,
     };
-    if (editing) updateHairstyle(editing.id, payload);
-    else addHairstyle(payload);
-    setFormOpen(false);
+    setSaving(true);
+    try {
+      if (editing) {
+        await hairstyleService.update(editing.id, input);
+        pushToast('success', 'Hairstyle updated', input.name);
+      } else {
+        await hairstyleService.create(input);
+        pushToast('success', 'Hairstyle added', input.name);
+      }
+      setFormOpen(false);
+      refetch();
+    } catch (err) {
+      pushToast('error', 'Could not save', err instanceof ApiError ? err.message : 'Try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleActive = async (row: Hairstyle, active: boolean) => {
+    try {
+      await hairstyleService.update(row.id, { active });
+      refetch();
+    } catch (err) {
+      pushToast('error', 'Could not update status', err instanceof ApiError ? err.message : 'Try again.');
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      await hairstyleService.remove(pendingDelete.id);
+      pushToast('success', 'Hairstyle deleted', pendingDelete.name);
+      setPendingDelete(null);
+      refetch();
+    } catch (err) {
+      pushToast('error', 'Could not delete', err instanceof ApiError ? err.message : 'Try again.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const columns: Array<Column<Hairstyle>> = [
@@ -166,7 +204,7 @@ export default function HairstylesPage() {
             checked={row.status === 'active'}
             hideLabel
             label={`Activate ${row.name}`}
-            onChange={(checked) => updateHairstyle(row.id, { status: checked ? 'active' : 'inactive' })}
+            onChange={(checked) => toggleActive(row, checked)}
           />
           <EntityStatusBadge status={row.status} />
         </div>
@@ -204,48 +242,63 @@ export default function HairstylesPage() {
       />
 
       <section className="card">
-        <FilterBar
-          query={table.query}
-          onQueryChange={table.setQuery}
-          placeholder="Search by name, tag or ID…"
-          controls={filters}
-          values={table.filterValues}
-          onFilterChange={table.setFilter}
-          chips={table.activeChips}
-          onClearAll={table.clearFilters}
-        />
-
-        <DataTable
-          caption="Hairstyle catalogue"
-          columns={columns}
-          rows={table.rows}
-          rowKey={(row) => row.id}
-          sort={table.sort}
-          onSort={table.toggleSort}
-          actions={actions}
-          cardTitle={(row) => `${row.name} · ${row.id}`}
-          cardActions={(row) => (
-            <>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => setViewing(row)}>
-                View
+        {error ? (
+          <EmptyState
+            title="Couldn't load the catalogue"
+            message={error}
+            action={
+              <button type="button" className="btn btn-secondary btn-sm" onClick={refetch}>
+                <RefreshCw size={14} /> Retry
               </button>
-              <button type="button" className="btn btn-secondary btn-sm" onClick={() => openEdit(row)}>
-                Edit
-              </button>
-            </>
-          )}
-          emptyTitle="No hairstyles match"
-          emptyMessage="Clear the filters or add a new style to the catalogue."
-        />
+            }
+          />
+        ) : (
+          <>
+            <FilterBar
+              query={table.query}
+              onQueryChange={table.setQuery}
+              placeholder="Search by name or category…"
+              controls={filters}
+              values={table.filterValues}
+              onFilterChange={table.setFilter}
+              chips={table.activeChips}
+              onClearAll={table.clearFilters}
+            />
 
-        <Pagination
-          page={table.page}
-          pageCount={table.pageCount}
-          pageSize={table.pageSize}
-          total={table.total}
-          onPageChange={table.setPage}
-          onPageSizeChange={table.setPageSize}
-        />
+            <DataTable
+              caption="Hairstyle catalogue"
+              columns={columns}
+              rows={table.rows}
+              rowKey={(row) => row.id}
+              sort={table.sort}
+              onSort={table.toggleSort}
+              actions={actions}
+              loading={loading}
+              cardTitle={(row) => `${row.name} · ${row.id}`}
+              cardActions={(row) => (
+                <>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setViewing(row)}>
+                    View
+                  </button>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => openEdit(row)}>
+                    Edit
+                  </button>
+                </>
+              )}
+              emptyTitle="No hairstyles match"
+              emptyMessage="Clear the filters or add a new style to the catalogue."
+            />
+
+            <Pagination
+              page={table.page}
+              pageCount={table.pageCount}
+              pageSize={table.pageSize}
+              total={table.total}
+              onPageChange={table.setPage}
+              onPageSizeChange={table.setPageSize}
+            />
+          </>
+        )}
       </section>
 
       <Modal
@@ -259,8 +312,8 @@ export default function HairstylesPage() {
             <button type="button" className="btn btn-secondary" onClick={() => setFormOpen(false)}>
               Cancel
             </button>
-            <button type="button" className="btn btn-primary" onClick={save} disabled={!valid && touched}>
-              {editing ? 'Save changes' : 'Save hairstyle'}
+            <button type="button" className="btn btn-primary" onClick={save} disabled={saving || (!valid && touched)}>
+              {saving ? 'Saving…' : editing ? 'Save changes' : 'Save hairstyle'}
             </button>
           </>
         }
@@ -277,25 +330,55 @@ export default function HairstylesPage() {
           </Field>
 
           <Field label="Category" required>
-            <select
-              className="select"
-              value={form.category}
-              onChange={(event) => setForm({ ...form, category: event.target.value })}
-            >
-              {HAIRSTYLE_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
+            {customCategory ? (
+              <div className="row" style={{ gap: '0.5rem' }}>
+                <input
+                  className="input"
+                  value={form.category}
+                  onChange={(event) => setForm({ ...form, category: event.target.value })}
+                  placeholder="New category name"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    setCustomCategory(false);
+                    setForm({ ...form, category: HAIRSTYLE_CATEGORIES[0] });
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <select
+                className="select"
+                value={form.category}
+                onChange={(event) => {
+                  if (event.target.value === '__new__') {
+                    setCustomCategory(true);
+                    setForm({ ...form, category: '' });
+                  } else {
+                    setForm({ ...form, category: event.target.value });
+                  }
+                }}
+              >
+                {HAIRSTYLE_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+                <option value="__new__">+ Add new category</option>
+              </select>
+            )}
           </Field>
 
-          <Field label="Description" className="form-span-2" hint="Shown under the style in the app.">
+          <Field label="Prompt" className="form-span-2" hint="The prompt sent to the AI generator for this style.">
             <textarea
               className="textarea"
               value={form.description}
               onChange={(event) => setForm({ ...form, description: event.target.value })}
-              placeholder="Short reference note for the generator"
+              placeholder="e.g. A textured crop haircut, short on the sides, tousled on top"
             />
           </Field>
 
@@ -305,17 +388,6 @@ export default function HairstylesPage() {
             </div>
           </Field>
 
-          <Field label="Tags" className="form-span-2" hint="Press Enter or type a comma to add each tag.">
-            <div>
-              <TagInput value={form.tags} onChange={(tags) => setForm({ ...form, tags })} />
-            </div>
-          </Field>
-
-          <Toggle
-            checked={form.featured}
-            onChange={(featured) => setForm({ ...form, featured })}
-            label="Feature on the app home screen"
-          />
           <Toggle
             checked={form.active}
             onChange={(active) => setForm({ ...form, active })}
@@ -356,14 +428,6 @@ export default function HairstylesPage() {
                 <dd>{formatNumber(viewing.generationCount)}</dd>
               </div>
               <div className="stat">
-                <dt>Success rate</dt>
-                <dd>{formatPercent(viewing.successRate)}</dd>
-              </div>
-              <div className="stat">
-                <dt>Featured</dt>
-                <dd>{viewing.featured ? 'Yes' : 'No'}</dd>
-              </div>
-              <div className="stat">
                 <dt>Status</dt>
                 <dd style={{ fontSize: '0.875rem' }}>
                   <EntityStatusBadge status={viewing.status} />
@@ -372,24 +436,9 @@ export default function HairstylesPage() {
             </dl>
 
             <div>
-              <h3 className="section-label">Description</h3>
-              <p>{viewing.description ?? 'No description yet.'}</p>
+              <h3 className="section-label">Prompt</h3>
+              <p>{viewing.description ?? 'No prompt yet.'}</p>
             </div>
-
-            <div>
-              <h3 className="section-label">Tags</h3>
-              <div className="chips">
-                {viewing.tags.map((tag) => (
-                  <span className="chip" key={tag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <p className="note">
-              Generation stats come from the last 90 days of try-on requests and refresh nightly.
-            </p>
           </div>
         ) : null}
       </SidePanel>
@@ -397,13 +446,10 @@ export default function HairstylesPage() {
       <ConfirmDialog
         open={pendingDelete !== null}
         title="Delete this hairstyle?"
-        message={`“${pendingDelete?.name}” will be removed from the catalogue and from the app try-on picker. Past generations keep their history.`}
-        confirmLabel="Delete"
+        message={`“${pendingDelete?.name}” will be removed from the catalogue and from the app try-on picker.`}
+        confirmLabel={deleting ? 'Deleting…' : 'Delete'}
         onCancel={() => setPendingDelete(null)}
-        onConfirm={() => {
-          if (pendingDelete) deleteHairstyle(pendingDelete.id);
-          setPendingDelete(null);
-        }}
+        onConfirm={confirmDelete}
       />
     </>
   );

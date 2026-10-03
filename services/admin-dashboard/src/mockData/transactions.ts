@@ -1,8 +1,14 @@
 import type { AiGenerationCharge, PaymentMethod, Transaction, TransactionStatus } from '../types';
 import { mockBookings } from './bookings';
-import { mockHairstyles } from './hairstyles';
 import { mockUsers } from './users';
 import { isoDaysAgo, isoHoursAgo, pick, randomFloat, randomInt } from './base';
+
+/* Illustrative style names for this mock AI-charge feed only — unrelated to
+   the real hairstyle catalogue, which is now backed by the API. */
+const SAMPLE_STYLE_NAMES = [
+  'Textured crop', 'Skin fade', 'Layer cut · women', 'Beard sculpt',
+  'Holud bridal updo', 'Curtain fringe', 'Balayage caramel', 'Buzz cut',
+];
 
 const METHOD_MIX: PaymentMethod[] = [
   ...Array<PaymentMethod>(18).fill('bkash'),
@@ -41,14 +47,14 @@ const advancedUsers = mockUsers.filter((user) => user.subscriptionTier === 'adva
 
 export const mockAiCharges: AiGenerationCharge[] = Array.from({ length: 24 }, (_, index) => {
   const user = pick(advancedUsers);
-  const style = pick(mockHairstyles);
+  const styleName = pick(SAMPLE_STYLE_NAMES);
   const images = randomInt(1, 4);
   const outcome = index % 9 === 4 ? 'failed' : 'success';
   return {
     id: `AIG-${String(9001 + index)}`,
     userId: user.id,
     userName: user.name,
-    hairstyleName: style.name,
+    hairstyleName: styleName,
     images,
     charge: outcome === 'success' ? images * 15 : 0,
     cost: Number((images * 0.042).toFixed(3)),

@@ -106,6 +106,16 @@ class AuthTestCase(APITestCase):
         return User.objects.create_superuser(phone=phone, password='chairside2026',
                                              name='Platform Admin')
 
+    def admin_session(self, phone: str = '01700000000') -> dict:
+        """A signed-in admin, without going through the login endpoint — the
+        admin-dashboard tests care about what the endpoint under test does,
+        not about re-proving login works on every one of them."""
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        user = self.make_admin(phone)
+        refresh = RefreshToken.for_user(user)
+        return {'access': str(refresh.access_token), 'refresh': str(refresh), 'user': {'id': user.id}}
+
     def as_user(self, session: dict, tenant=None) -> None:
         """Sign in, optionally naming which tenant the requests are about.
 

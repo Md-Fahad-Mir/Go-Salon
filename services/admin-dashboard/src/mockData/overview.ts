@@ -92,27 +92,6 @@ export const topHairstylesByRange: Record<TimeRange, RankedDatum[]> = {
   ],
 };
 
-export const dhakaAreasByRange: Record<TimeRange, RankedDatum[]> = {
-  '30d': [
-    { name: 'Dhanmondi', value: 1860 },
-    { name: 'Gulshan', value: 1512 },
-    { name: 'Uttara', value: 1140 },
-    { name: 'Mirpur', value: 968 },
-  ],
-  '7d': [
-    { name: 'Dhanmondi', value: 431 },
-    { name: 'Gulshan', value: 356 },
-    { name: 'Uttara', value: 268 },
-    { name: 'Mirpur', value: 214 },
-  ],
-  today: [
-    { name: 'Dhanmondi', value: 74 },
-    { name: 'Gulshan', value: 61 },
-    { name: 'Uttara', value: 43 },
-    { name: 'Mirpur', value: 31 },
-  ],
-};
-
 export const kpisByRange: Record<TimeRange, KpiDatum[]> = {
   '30d': [
     { id: 'active-users', label: 'Active users', value: '8,412', footnote: '+12% vs last month', tone: 'positive' },
