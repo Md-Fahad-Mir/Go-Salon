@@ -21,6 +21,7 @@ import { Toggle } from '../components/ui/Toggle';
 import { ImageUploader } from '../components/ui/ImageUploader';
 import { EntityStatusBadge } from '../components/ui/StatusBadge';
 import { RowMenu } from '../components/ui/RowMenu';
+import { Thumb } from '../components/ui/Thumb';
 import { formatDate, formatNumber } from '../utils/format';
 
 interface FormState {
@@ -124,7 +125,9 @@ export default function HairstylesPage() {
       name: form.name.trim(),
       category: form.category,
       description: form.description.trim() || undefined,
-      image: form.image,
+      // '' rather than undefined, so removing the image on an edit clears it
+      // instead of leaving the old one in the app's try-on picker.
+      image: form.image ?? '',
       active: form.active,
     };
     setSaving(true);
@@ -177,9 +180,7 @@ export default function HairstylesPage() {
       hideOnCard: true,
       render: (row) => (
         <div className="row">
-          <span className="thumb" aria-hidden="true">
-            <span className="thumb-art" />
-          </span>
+          <Thumb src={row.image} />
           <div style={{ minWidth: 0 }}>
             <div className="cell-strong truncate">{row.name}</div>
             <div className="dim mono">{row.id}</div>
@@ -383,7 +384,7 @@ export default function HairstylesPage() {
 
           <Field label="Primary image" className="form-span-2">
             <div>
-              <ImageUploader value={form.image} onChange={(image) => setForm({ ...form, image })} />
+              <ImageUploader value={form.image} onChange={(image) => setForm((current) => ({ ...current, image }))} />
             </div>
           </Field>
 
@@ -417,9 +418,7 @@ export default function HairstylesPage() {
       >
         {viewing ? (
           <div className="stack">
-            <div className="thumb thumb-lg" aria-hidden="true">
-              <span className="thumb-art" />
-            </div>
+            <Thumb src={viewing.image} size="lg" />
 
             <dl className="stat-row">
               <div className="stat">

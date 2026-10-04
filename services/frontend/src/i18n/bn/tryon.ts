@@ -76,6 +76,8 @@ export const tryon = {
   'tryon.occasionDate': 'ডেট নাইট',
   'tryon.noStyles': 'কোনো স্টাইল মিলল না',
   'tryon.noStylesBody': 'অন্য শব্দ দিয়ে খুঁজুন বা ফিল্টার মুছুন।',
+  'tryon.catalogueEmpty': 'এখনও কোনো স্টাইল নেই',
+  'tryon.catalogueEmptyBody': 'নতুন স্টাইল যোগ হলেই এখানে দেখা যাবে।',
   'tryon.photoGoneTitle': 'ছবিটা আর নেই',
   'tryon.photoGoneBody': 'ছবিটা আর এই ফোনে নেই। নতুন করে তুলুন।',
   'tryon.renderFailedTitle': 'কাজটা হলো না',

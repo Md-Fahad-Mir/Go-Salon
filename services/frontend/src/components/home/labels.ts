@@ -1,5 +1,5 @@
 import type { TKey } from '../../i18n';
-import type { FaceShape, Feasibility, Hairstyle, Occasion } from '../../types';
+import type { FaceShape, Feasibility, MaintenanceLevel, Occasion } from '../../types';
 
 
 /* Translation keys for the option lists in `src/constants`, keyed by the same
@@ -22,7 +22,7 @@ export const FACE_SHAPE_KEYS: Record<FaceShape, TKey> = {
   oblong: 'home.faceOblong',
 };
 
-export const UPKEEP_KEYS: Record<Hairstyle['maintenance'], TKey> = {
+export const UPKEEP_KEYS: Record<MaintenanceLevel, TKey> = {
   low: 'home.upkeepLow',
   medium: 'home.upkeepMedium',
   high: 'home.upkeepHigh',

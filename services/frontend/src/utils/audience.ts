@@ -1,9 +1,10 @@
-import type { Audience, Gender, Hairstyle, Professional, User } from '../types';
+import type { Audience, Gender, Professional, User } from '../types';
 
-/* One rule, used everywhere the catalogue is narrowed: the hairstyle lists,
-   the try-on picker and the recommendations. Keeping it in a single place is
-   what stops two screens quietly disagreeing about what a customer should
-   see. The salon lists it also narrowed — nearby and search — are gone. */
+/* One rule, used everywhere a list is narrowed by who it is for. Keeping it
+   in a single place is what stops two screens quietly disagreeing about what
+   a customer should see. The salon lists it also narrowed — nearby and
+   search — are gone, and so is the try-on catalogue: the admin curates that
+   one list for everybody, so there is no audience on it to narrow by. */
 
 /** The audience a customer belongs to, or null when they have not said. */
 export const audienceFor = (gender: Gender | undefined): Audience | null =>
@@ -33,12 +34,6 @@ export const professionalsForGender = (
   gender: Gender | undefined,
   override?: Audience | 'all',
 ): Professional[] => forAudience(list, gender, override);
-
-export const hairstylesForGender = (
-  list: Hairstyle[],
-  gender: Gender | undefined,
-  override?: Audience | 'all',
-): Hairstyle[] => forAudience(list, gender, override);
 
 /** Convenience for call sites that already hold the user. */
 export const genderOf = (user: User | null | undefined): Gender | undefined => user?.gender;

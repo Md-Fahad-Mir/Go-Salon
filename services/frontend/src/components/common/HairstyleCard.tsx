@@ -1,12 +1,10 @@
-import { Check, Sparkles } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Hairstyle } from '../../types';
 import { ROUTES } from '../../constants';
 import { useT } from '../../hooks/useLanguage';
 import { cn } from '../../utils/cn';
-import { formatCompact, formatRating } from '../../utils/format';
 import { Art } from './Art';
-import { hairstyleArt } from './hairstyleArt';
 import { Badge } from './Badge';
 
 interface HairstyleCardProps {
@@ -19,20 +17,20 @@ interface HairstyleCardProps {
   className?: string;
 }
 
+/** One admin-curated style: its primary image, its name and its category —
+    exactly what the admin entered, and nothing the catalogue does not carry.
+    A style saved without an image keeps the plain hatch placeholder. */
 export function HairstyleCard({ style, size = 'md', onSelect, selected, badge, className }: HairstyleCardProps) {
   const t = useT();
   const body = (
     <Art
       tone={style.tone}
       ratio="portrait"
-      src={hairstyleArt(style.id, style.tone)}
-      alt={t('style.portraitAlt', { name: style.name })}
+      src={style.image || undefined}
+      alt={t('home.styleHeroAlt', { name: style.name })}
       className="hs-art"
     >
       {badge ? <div className="art-corner"><Badge tone="solid" plain pill>{badge}</Badge></div> : null}
-      {style.trending && !badge ? (
-        <div className="art-corner"><Badge tone="dark" plain pill>{t('biz.trending')}</Badge></div>
-      ) : null}
       {/* Ticked in a picker. The border alone was easy to miss on a busy
           grid, and a picker is the one place being sure matters. */}
       {onSelect && selected ? (
@@ -41,8 +39,7 @@ export function HairstyleCard({ style, size = 'md', onSelect, selected, badge, c
       <div className="art-overlay">
         <span className="hs-name">{style.name}</span>
         <span className="hs-meta">
-          <span><Sparkles size={12} aria-hidden="true" /> {formatCompact(style.tryOns)}</span>
-          <span>★ {formatRating(style.rating)}</span>
+          <span>{style.category}</span>
         </span>
       </div>
     </Art>

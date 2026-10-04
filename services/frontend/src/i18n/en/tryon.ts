@@ -78,6 +78,8 @@ export const tryon = {
   'tryon.occasionDate': 'Date night',
   'tryon.noStyles': 'No styles match',
   'tryon.noStylesBody': 'Try another word or clear the filters.',
+  'tryon.catalogueEmpty': 'No styles to try yet',
+  'tryon.catalogueEmptyBody': 'New styles show up here as soon as they are added.',
   'tryon.photoGoneTitle': 'Your photo is gone',
   'tryon.photoGoneBody': 'Your photo is no longer on this device. Take a new one.',
   'tryon.renderFailedTitle': "That didn't work",

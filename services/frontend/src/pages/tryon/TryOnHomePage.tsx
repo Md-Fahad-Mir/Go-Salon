@@ -1,5 +1,5 @@
 import { Camera, HistoryIcon, ImageIcon, ImageOff, Orbit } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Hairstyle } from '../../types';
 import { ROUTES } from '../../constants';
@@ -13,17 +13,16 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { HairstyleCard } from '../../components/common/HairstyleCard';
 import { IconButton } from '../../components/common/IconButton';
 import { SectionHead } from '../../components/common/SectionHead';
+import { Skeleton } from '../../components/common/Skeleton';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
+import { useHairstyles } from '../../hooks/useHairstyles';
 import { useT } from '../../hooks/useLanguage';
 import type { TKey } from '../../i18n';
-import { mockHairstyles } from '../../mockData';
 import { useAppStore } from '../../store/useAppStore';
 import { PreferenceButtons } from '../../components/home/PreferenceButtons';
 import { useTryOnStore } from '../../store/useTryOnStore';
 import { formatNumber } from '../../utils/format';
-import { hairstylesForGender } from '../../utils/audience';
-import { recommendedHairstyles } from '../../utils/recommend';
 
 const STEPS: TKey[] = ['tryon.step1', 'tryon.step2', 'tryon.step3'];
 
@@ -31,15 +30,17 @@ export default function TryOnHomePage() {
   const t = useT();
   const navigate = useNavigate();
   const user = useAppStore((s) => s.user);
-  const catalogue = useMemo(() => hairstylesForGender(mockHairstyles, user?.gender), [user?.gender]);
   const generations = useAppStore((s) => s.generations);
   const photoKey = useTryOnStore((s) => s.photoKey);
   const setSelectedHairstyle = useTryOnStore((s) => s.setSelectedHairstyle);
   const [tipsOpen, setTipsOpen] = useState(false);
   const [buyOpen, setBuyOpen] = useState(false);
+  /* The admin's catalogue, and only it. A failed or empty fetch drops the row
+     rather than the screen: the try-on itself starts from the buttons above,
+     and the style picker says why there is nothing to choose. */
+  const { hairstyles, loading } = useHairstyles();
 
   const credits = user?.credits ?? 0;
-  const recommended = recommendedHairstyles(user, catalogue, 6);
   const recent = generations.slice(0, 3);
 
   const startWith = (mode: 'camera' | 'gallery') => navigate(ROUTES.tryOnUpload, { state: { mode } });
@@ -134,14 +135,20 @@ export default function TryOnHomePage() {
           </ol>
         </section>
 
-        <section className="section tryon-chapter">
-          <SectionHead title={t('tryon.recommended')} />
-          <div className="hscroll bleed">
-            {recommended.map((style) => (
-              <HairstyleCard key={style.id} style={style} size="sm" onSelect={pickStyle} />
-            ))}
-          </div>
-        </section>
+        {loading || hairstyles.length ? (
+          <section className="section tryon-chapter">
+            <SectionHead title={t('tryon.allStyles')} />
+            <div className="hscroll bleed" aria-busy={loading || undefined}>
+              {loading
+                ? [0, 1, 2].map((index) => (
+                    <Skeleton key={index} width="8.5rem" height="11.33rem" radius="var(--radius-lg)" />
+                  ))
+                : hairstyles.map((style) => (
+                    <HairstyleCard key={style.id} style={style} size="sm" onSelect={pickStyle} />
+                  ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="section tryon-chapter">
           <SectionHead title={t('tryon.recentResults')} action={{ label: t('action.seeAll'), to: ROUTES.tryOnHistory }} />

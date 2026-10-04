@@ -9,17 +9,17 @@
    Real too:
      * **bookings** — availability, the lifecycle and the automated texts,
        `utils/bookingService`
+     * **hairstyles** — the admin-curated try-on catalogue,
+       `utils/hairstyleService`
 
-   Still mock, because they have no backend yet: hairstyles and payments. Those wait a realistic moment so loading states are honest, then
-   answer from `src/mockData` and the stores. Swap the bodies for fetch()
-   calls as the backend grows; the signatures are already shaped like the
-   endpoints. */
+   Still mock, because it has no backend yet: payments. It waits a realistic
+   moment so loading states are honest, then answers from the stores. Swap the
+   body for a fetch() call as the backend grows; the signature is already
+   shaped like the endpoint. */
 
 import type {
-  Audience,
   GeoPoint,
   Hairstyle,
-  Occasion,
   PaymentMethod,
   Professional,
   TryOnAnalysis,
@@ -27,10 +27,10 @@ import type {
   TryOnStyle,
 } from '../types';
 import { CREDIT_PACK_SIZE } from '../constants';
-import { mockHairstyles } from '../mockData';
 import { useDirectoryStore } from '../store/useDirectoryStore';
 import { bookingService } from './bookingService';
 import { directoryService } from './directoryService';
+import { hairstyleService } from './hairstyleService';
 import {
   analyzePhoto,
   generateHairstyle,
@@ -38,7 +38,6 @@ import {
   type AnglePhoto,
   type GenerateInput,
 } from './aiService';
-import { forAudience } from './audience';
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -61,18 +60,10 @@ export const api = {
   },
 
   hairstyles: {
-    async list(
-      filters: { occasion?: Occasion; query?: string; audience?: Audience | 'all' } = {},
-    ): Promise<Hairstyle[]> {
-      await delay(250);
-      let list = forAudience(mockHairstyles, undefined, filters.audience);
-      if (filters.occasion) list = list.filter((s) => s.occasions.includes(filters.occasion as Occasion));
-      if (filters.query) {
-        const q = filters.query.toLowerCase();
-        list = list.filter((s) => `${s.name} ${s.category} ${s.tags.join(' ')}`.toLowerCase().includes(q));
-      }
-      return list;
-    },
+    /** The admin's active styles — the whole of what the try-on offers. */
+    list: (): Promise<Hairstyle[]> => hairstyleService.list(),
+    /** One active style; 404 once the admin has switched it off or deleted it. */
+    get: (id: string): Promise<Hairstyle> => hairstyleService.get(id),
   },
 
   bookings: {

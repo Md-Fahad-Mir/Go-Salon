@@ -1,5 +1,5 @@
-import { AlertTriangle, RefreshCw, Search } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { AlertTriangle, RefreshCw, Scissors, Search } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import type { Hairstyle, HairstyleRecommendation, Occasion, TryOnStyle } from '../../types';
 import { OCCASIONS, ROUTES } from '../../constants';
@@ -17,17 +17,17 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { HairstyleCard } from '../../components/common/HairstyleCard';
 import { Input } from '../../components/common/Input';
 import { SectionHead } from '../../components/common/SectionHead';
+import { Skeleton } from '../../components/common/Skeleton';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
+import { useHairstyles } from '../../hooks/useHairstyles';
 import { useT } from '../../hooks/useLanguage';
 import { usePhotoUrl } from '../../hooks/usePhotoUrl';
 import type { TKey } from '../../i18n';
-import { getHairstyle, mockHairstyles } from '../../mockData';
 import { useAppStore } from '../../store/useAppStore';
 import { useTryOnStore } from '../../store/useTryOnStore';
 import { ApiError, api } from '../../utils/api';
 import { nextId } from '../../utils/id';
-import { hairstylesForGender } from '../../utils/audience';
 import { styleFromHairstyle, styleFromRecommendation } from '../../utils/recommend';
 import { photoStore } from '../../utils/storage';
 import { anglesToRender, renderRing } from '../../utils/threeSixty';
@@ -61,7 +61,15 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
   const t = useT();
   const navigate = useNavigate();
   const user = useAppStore((s) => s.user);
-  const catalogue = useMemo(() => hairstylesForGender(mockHairstyles, user?.gender), [user?.gender]);
+  /* The admin's active styles — the only catalogue the try-on offers. Fetched
+     on every visit, so a style the admin has just added is here and one just
+     switched off is not. */
+  const {
+    hairstyles: catalogue,
+    loading: catalogueLoading,
+    failed: catalogueFailed,
+    reload: reloadCatalogue,
+  } = useHairstyles();
   const toast = useAppStore((s) => s.toast);
   const spendCredit = useAppStore((s) => s.spendCredit);
   const addGeneration = useAppStore((s) => s.addGeneration);
@@ -274,9 +282,10 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
     [credits, ringSize, generate],
   );
 
+  /* The admin's prompt for this style is what the render is told to draw. */
   const selectCatalogue = useCallback(
-    (style: Hairstyle) => select(styleFromHairstyle(style, user, profile)),
-    [select, user, profile],
+    (style: Hairstyle) => select(styleFromHairstyle(style)),
+    [select],
   );
 
   const selectRecommendation = useCallback(
@@ -294,24 +303,37 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
   }, [analysisReady, analysisError, runAnalysis]);
 
   // Auto-start once when a style was chosen before arriving here — after the
-  // analysis, so the render gets the same face and hair context as any other.
+  // analysis, so the render gets the same face and hair context as any other,
+  // and after the catalogue, so it is looked up in the admin's list as it is
+  // now. A style switched off since it was picked is simply not started.
   useEffect(() => {
     if (!autoStyleId || autoRan.current) return;
-    if (busy || (!analysisReady && !analysisError)) return;
+    if (busy || catalogueLoading || (!analysisReady && !analysisError)) return;
     const timer = window.setTimeout(() => {
       autoRan.current = true;
       setSelectedHairstyle(null);
-      const style = getHairstyle(autoStyleId);
+      const style = catalogue.find((item) => item.id === autoStyleId);
       if (style) selectCatalogue(style);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [autoStyleId, busy, analysisReady, analysisError, selectCatalogue, setSelectedHairstyle]);
+  }, [
+    autoStyleId,
+    busy,
+    catalogue,
+    catalogueLoading,
+    analysisReady,
+    analysisError,
+    selectCatalogue,
+    setSelectedHairstyle,
+  ]);
 
+  /* Search reads what the admin entered: the name and the category. The
+     occasion chips no longer narrow the grid — a curated style carries no
+     occasions — but they still tell the analysis and the render what the
+     look is for. */
   const q = query.trim().toLowerCase();
   const styles = catalogue.filter(
-    (style) =>
-      (occasion === 'all' || style.occasions.includes(occasion)) &&
-      (!q || `${style.name} ${style.category} ${style.tags.join(' ')}`.toLowerCase().includes(q)),
+    (style) => !q || `${style.name} ${style.category}`.toLowerCase().includes(q),
   );
   const recommendations = analysisReady ? (analysis?.recommendations ?? []) : [];
 
@@ -440,7 +462,30 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
               </Chip>
             ))}
           </ChipRow>
-          {styles.length ? (
+          {catalogueLoading ? (
+            <div className="grid-2" aria-busy="true">
+              {[0, 1, 2, 3].map((index) => (
+                <Skeleton key={index} height="14rem" radius="var(--radius-lg)" />
+              ))}
+            </div>
+          ) : catalogueFailed ? (
+            <EmptyState
+              icon={<AlertTriangle size={24} aria-hidden="true" />}
+              title={t('state.loadFailedTitle')}
+              description={catalogueFailed}
+              action={
+                <Button variant="secondary" size="sm" onClick={reloadCatalogue}>
+                  {t('state.retry')}
+                </Button>
+              }
+            />
+          ) : !catalogue.length ? (
+            <EmptyState
+              icon={<Scissors size={24} aria-hidden="true" />}
+              title={t('tryon.catalogueEmpty')}
+              description={t('tryon.catalogueEmptyBody')}
+            />
+          ) : styles.length ? (
             <div className="grid-2">
               {styles.map((style) => (
                 <HairstyleCard key={style.id} style={style} onSelect={selectCatalogue} />
@@ -452,14 +497,7 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
               title={t('tryon.noStyles')}
               description={t('tryon.noStylesBody')}
               action={
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    setQuery('');
-                    setOccasion('all');
-                  }}
-                >
+                <Button variant="secondary" size="sm" onClick={() => setQuery('')}>
                   {t('action.clearFilters')}
                 </Button>
               }

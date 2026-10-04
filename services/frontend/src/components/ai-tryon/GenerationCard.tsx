@@ -5,8 +5,8 @@ import type { AIGeneration } from '../../types';
 import { ROUTES } from '../../constants';
 import { useT } from '../../hooks/useLanguage';
 import { usePhotoUrl } from '../../hooks/usePhotoUrl';
-import { getHairstyle } from '../../mockData';
 import { formatClock, formatRelative } from '../../utils/format';
+import { hairstyleTone } from '../../utils/hairstyleService';
 import { Art } from '../common/Art';
 import { Badge } from '../common/Badge';
 import { Spinner } from '../common/Spinner';
@@ -23,7 +23,6 @@ interface GenerationCardProps {
 export function GenerationCard({ generation, showTime, footer }: GenerationCardProps) {
   const t = useT();
   const { url, loading, missing } = usePhotoUrl(generation.resultKey);
-  const style = getHairstyle(generation.hairstyleId);
   const name = generation.hairstyleName;
 
   return (
@@ -33,7 +32,7 @@ export function GenerationCard({ generation, showTime, footer }: GenerationCardP
         className="tryon-gen-link"
         aria-label={t('tryon.genCardLabel', { name, when: formatRelative(generation.createdAt) })}
       >
-        <Art ratio="portrait" src={url} tone={style?.tone ?? 0} alt={url ? t('tryon.genAlt', { name }) : ''}>
+        <Art ratio="portrait" src={url} tone={hairstyleTone(generation.hairstyleId)} alt={url ? t('tryon.genAlt', { name }) : ''}>
           {loading ? (
             <span className="tryon-gen-loading" aria-hidden="true">
               <Spinner size="sm" />

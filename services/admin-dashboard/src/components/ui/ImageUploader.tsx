@@ -1,42 +1,98 @@
 import { useRef, useState } from 'react';
 import { ImagePlus, X } from 'lucide-react';
+import { Thumb } from './Thumb';
 
 interface ImageUploaderProps {
+  /** The picture as a data URL (or an https link); undefined when there is none. */
   value?: string;
-  onChange: (fileName: string | undefined) => void;
+  onChange: (image: string | undefined) => void;
   id?: string;
 }
 
-/** Simulated upload: the file never leaves the browser, we just show a local
-    object URL and hand the file name back to the form. */
+/** What the drop zone promises on its face. */
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const ACCEPTED_TYPES = ['image/png', 'image/jpeg'];
+/** Longest edge kept, in px. Ample for the app's try-on cards, and it keeps
+    the stored data URL to a few hundred KB — the backend refuses a picture
+    past ~1.5 MB of characters (`MAX_IMAGE_CHARS`, backend/Apps/common/images.py). */
+const MAX_EDGE = 900;
+const JPEG_QUALITY = 0.85;
+
+const loadImage = (src: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error('Could not read that image.'));
+    image.src = src;
+  });
+
+/** The file, scaled down and re-encoded as a JPEG data URL — the form the
+    backend stores a picture in, since there is no upload endpoint. */
+async function toDataUrl(file: File): Promise<string> {
+  const url = URL.createObjectURL(file);
+  try {
+    const image = await loadImage(url);
+    const scale = Math.min(1, MAX_EDGE / Math.max(image.naturalWidth, image.naturalHeight));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Canvas unavailable.');
+    // JPEG has no transparency, so a transparent PNG would otherwise go black.
+    context.fillStyle = '#fff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/** Picks an image, previews it, and hands the form the picture itself as a
+    data URL — what the hairstyle's primary image is saved as, and what the
+    app's try-on picker shows. */
 export function ImageUploader({ value, onChange, id }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [preview, setPreview] = useState<string | undefined>(undefined);
+  const [fileName, setFileName] = useState<string | undefined>(undefined);
   const [dragging, setDragging] = useState(false);
+  const [reading, setReading] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
 
-  const accept = (file: File | undefined) => {
+  const accept = async (file: File | undefined) => {
     if (!file) return;
-    setPreview(URL.createObjectURL(file));
-    onChange(file.name);
+    setError(undefined);
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setError('Use a PNG or JPG image.');
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      setError('That image is over 5 MB.');
+      return;
+    }
+    setReading(true);
+    try {
+      onChange(await toDataUrl(file));
+      setFileName(file.name);
+    } catch {
+      setError('That image could not be read. Try another file.');
+    } finally {
+      setReading(false);
+      // Lets the same file be picked again after a removal.
+      if (inputRef.current) inputRef.current.value = '';
+    }
   };
 
   if (value) {
     return (
       <div className="stack-sm">
-        <div className="thumb thumb-lg">
-          {preview ? (
-            <img src={preview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          ) : (
-            <span className="thumb-art" />
-          )}
-        </div>
+        <Thumb src={value} size="lg" />
         <div className="row-between">
-          <span className="dim truncate" style={{ fontSize: '0.75rem' }}>{value}</span>
+          <span className="dim truncate" style={{ fontSize: '0.75rem' }}>{fileName ?? 'Current image'}</span>
           <button
             type="button"
             className="btn btn-ghost btn-sm"
             onClick={() => {
-              setPreview(undefined);
+              setFileName(undefined);
               onChange(undefined);
             }}
           >
@@ -53,6 +109,8 @@ export function ImageUploader({ value, onChange, id }: ImageUploaderProps) {
         type="button"
         className="uploader"
         data-drag={dragging}
+        disabled={reading}
+        aria-busy={reading || undefined}
         onClick={() => inputRef.current?.click()}
         onDragOver={(event) => {
           event.preventDefault();
@@ -62,13 +120,17 @@ export function ImageUploader({ value, onChange, id }: ImageUploaderProps) {
         onDrop={(event) => {
           event.preventDefault();
           setDragging(false);
-          accept(event.dataTransfer.files?.[0]);
+          void accept(event.dataTransfer.files?.[0]);
         }}
       >
         <ImagePlus size={22} strokeWidth={1.5} aria-hidden="true" />
-        <span>
-          <strong style={{ color: 'var(--text-primary)' }}>Click to upload</strong> or drag an image here
-        </span>
+        {reading ? (
+          <span>Preparing image…</span>
+        ) : (
+          <span>
+            <strong style={{ color: 'var(--text-primary)' }}>Click to upload</strong> or drag an image here
+          </span>
+        )}
         <span className="dim" style={{ fontSize: '0.75rem' }}>PNG or JPG · up to 5 MB</span>
       </button>
       <input
@@ -77,8 +139,13 @@ export function ImageUploader({ value, onChange, id }: ImageUploaderProps) {
         type="file"
         accept="image/png,image/jpeg"
         className="sr-only"
-        onChange={(event) => accept(event.target.files?.[0])}
+        onChange={(event) => void accept(event.target.files?.[0])}
       />
+      {error ? (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </>
   );
 }

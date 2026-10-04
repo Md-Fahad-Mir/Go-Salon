@@ -104,24 +104,20 @@ export interface User {
   credits: number;
 }
 
+/** One style from the admin-curated try-on catalogue
+    (`GET /api/hairstyles/catalogue/`). Only active styles ever arrive, so
+    there is no status to check: if it is here, it can be tried on. */
 export interface Hairstyle {
   id: string;
   name: string;
   category: string;
-  audience: Audience;
-  tags: string[];
-  occasions: Occasion[];
-  faceShapes: FaceShape[];
-  hairTypes: HairType[];
-  length: HairLength;
-  description: string;
-  tryOns: number;
-  rating: number;
-  maintenance: 'low' | 'medium' | 'high';
-  /** Which placeholder art tone (0–5) the card draws with. */
+  /** The admin's prompt — what the image model is told this style looks like. */
+  prompt: string;
+  /** Primary image as a data URL or https link; '' when the admin set none. */
+  image: string;
+  /** Which placeholder art tone (0–5) the card draws with while there is no
+      image to show. Derived from the id, so a style keeps its tone. */
   tone: number;
-  featured: boolean;
-  trending: boolean;
 }
 
 export interface Service {
