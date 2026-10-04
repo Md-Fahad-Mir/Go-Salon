@@ -2,54 +2,38 @@ import { Check } from 'lucide-react';
 import { TRY_ON_STAGES, type TryOnStage } from '../../store/useTryOnStore';
 import type { TKey } from '../../i18n';
 import { useT } from '../../hooks/useLanguage';
-import { formatNumber } from '../../utils/format';
 import { Art } from '../common/Art';
 import { Spinner } from '../common/Spinner';
 
 interface ProcessingScreenProps {
-  /** Object URL of the source photo (dimmed behind the shimmer). */
+  /** Object URL of the photo shown behind the shimmer — the customer's own
+      while the hair is styled, the styled still once it is filming. */
   photoUrl: string | null;
-  /** The style being rendered. Absent while the photo is still being read. */
-  styleName?: string;
+  /** The style being rendered. */
+  styleName: string;
   stage: TryOnStage;
-  /** A 360 render is several calls, not one. When it is, the screen counts
-      them: four angles is a minute of waiting, and a bar that does not move
-      for a minute reads as a hung app. */
-  ring?: { done: number; total: number };
 }
 
 /* TRY_ON_STAGES carries English labels for the store; the screen shows the
    translated line for each stage id. */
 const STAGE_KEYS: Record<(typeof TRY_ON_STAGES)[number]['id'], TKey> = {
-  analyzing: 'tryon.stageAnalyzing',
-  generating: 'tryon.stageGenerating',
+  styling: 'tryon.stageStyling',
+  filming: 'tryon.stageFilming',
 };
 
-/** Full-screen "Working on it" while the AI service answers.
+/** Full-screen "Making your 360° video" while the backend and the AI service
+    work.
 
-    Both steps are real network calls, so a tick means that request came back —
-    the screen never runs ahead of the work. */
-export function ProcessingScreen({ photoUrl, styleName, stage, ring }: ProcessingScreenProps) {
+    Both steps are real: a tick means that request came back — the screen
+    never runs ahead of the work. The filming step is the long one and has no
+    honest percentage, so the bar stays indeterminate through it. */
+export function ProcessingScreen({ photoUrl, styleName, stage }: ProcessingScreenProps) {
   const t = useT();
   const total = TRY_ON_STAGES.length;
   const found = TRY_ON_STAGES.findIndex((s) => s.id === stage);
   const index = stage === 'done' ? total : Math.max(0, found);
-  const analysing = stage === 'analyzing';
-  const currentKey = STAGE_KEYS[TRY_ON_STAGES[index]?.id];
-  const counting = Boolean(ring && ring.total > 1);
-  const current = counting
-    ? t('tryon.stageAngle', {
-        done: formatNumber(Math.min(ring!.done + 1, ring!.total)),
-        total: formatNumber(ring!.total),
-      })
-    : stage === 'done'
-      ? t('tryon.stageAlmostThere')
-      : t(currentKey ?? 'tryon.stageGettingReady');
-  /* While a ring is rendering, the bar tracks the angles rather than the two
-     coarse stages — it is the only number on screen that is actually moving. */
-  const percent = counting
-    ? Math.round((ring!.done / ring!.total) * 100)
-    : Math.round(((stage === 'done' ? total : index + 0.5) / total) * 100);
+  const percent = Math.round(((stage === 'done' ? total : index + 0.5) / total) * 100);
+  const current = stage === 'done' ? t('tryon.stageAlmostThere') : t(STAGE_KEYS[TRY_ON_STAGES[index].id]);
 
   return (
     <div className="tryon-processing" aria-busy="true">
@@ -59,10 +43,8 @@ export function ProcessingScreen({ photoUrl, styleName, stage, ring }: Processin
         </Art>
       </div>
       <div className="stack-xs">
-        <h2>{analysing ? t('tryon.analyzingTitle') : t('tryon.processingTitle')}</h2>
-        <p className="caption">
-          {analysing || !styleName ? t('tryon.analyzingBody') : t('tryon.processingBody', { style: styleName })}
-        </p>
+        <h2>{t('tryon.processingTitle')}</h2>
+        <p className="caption">{t('tryon.processingBody', { style: styleName })}</p>
       </div>
       <ol className="tryon-stages">
         {TRY_ON_STAGES.map((item, i) => {
@@ -95,6 +77,7 @@ export function ProcessingScreen({ photoUrl, styleName, stage, ring }: Processin
       <p className="small dim" role="status" aria-live="polite">
         {current}
       </p>
+      <p className="small dim">{t('tryon.processingWait')}</p>
     </div>
   );
 }

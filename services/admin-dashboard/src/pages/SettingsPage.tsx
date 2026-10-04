@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 import type { PlatformSettings, SubscriptionTierPlan } from '../types';
-import { AI_MODELS } from '../mockData/settings';
 import { useStore } from '../store/useStore';
+import { aiGenerationService, type AIGenerationSettings, type VideoModelOption } from '../utils/adminService';
+import { ApiError } from '../utils/apiError';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Toggle } from '../components/ui/Toggle';
 import { Field } from '../components/ui/Field';
@@ -42,6 +45,109 @@ function NumberRow({ label, hint, value, suffix, min = 0, step = 1, onCommit }: 
         />
         {suffix ? <span className="dim">{suffix}</span> : null}
       </div>
+    </div>
+  );
+}
+
+const describeModel = (model: VideoModelOption, defaultModel: string): string =>
+  [
+    model.name,
+    `${model.durationSeconds} s`,
+    model.resolution,
+    model.pricePerVideoUsd === null ? 'price varies' : `≈ $${model.pricePerVideoUsd.toFixed(2)} / video`,
+  ]
+    .filter(Boolean)
+    .join(' · ') + (model.id === defaultModel ? ' — default' : '');
+
+/** The OpenRouter video model behind every 360° try-on — real, unlike the
+    rows around it: read from and saved to the backend, which hands it to the
+    AI service with each video. */
+function VideoModelRow() {
+  const pushToast = useStore((state) => state.pushToast);
+  const [settings, setSettings] = useState<AIGenerationSettings | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    aiGenerationService
+      .get()
+      .then((data) => {
+        if (live) setSettings(data);
+      })
+      .catch((error: unknown) => {
+        if (live) setLoadError(error instanceof ApiError ? error.message : 'Could not reach the server.');
+      });
+    return () => {
+      live = false;
+    };
+  }, [attempt]);
+
+  const retry = () => {
+    setLoadError(null);
+    setSettings(null);
+    setAttempt((n) => n + 1);
+  };
+
+  const choose = async (id: string) => {
+    if (!settings || id === settings.videoModel) return;
+    setSaving(true);
+    try {
+      const next = await aiGenerationService.setVideoModel(id);
+      setSettings(next);
+      pushToast('success', 'Video model saved', next.models.find((model) => model.id === id)?.name ?? id);
+    } catch (error) {
+      pushToast('error', 'Could not save', error instanceof ApiError ? error.message : 'Try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const loading = !settings && !loadError;
+  const problem = loadError ?? settings?.modelsError ?? null;
+  const listed = settings?.models.some((model) => model.id === settings.videoModel) ?? false;
+
+  return (
+    <div className="setting-row setting-row-stacked">
+      <div className="info">
+        <strong>360° video model</strong>
+        <span>Renders every 360° try-on video. Prices are OpenRouter&rsquo;s list price per clip.</span>
+      </div>
+      <div className="control">
+        <select
+          className="select"
+          aria-label="360° video model"
+          value={settings?.videoModel ?? ''}
+          disabled={loading || saving || !settings?.models.length}
+          onChange={(event) => void choose(event.target.value)}
+        >
+          {loading ? <option value="">Loading models…</option> : null}
+          {settings && !listed ? (
+            <option value={settings.videoModel}>{settings.videoModel || 'No model'} — not available</option>
+          ) : null}
+          {settings?.models.map((model) => (
+            <option key={model.id} value={model.id}>
+              {describeModel(model, settings.defaultModel)}
+            </option>
+          ))}
+        </select>
+      </div>
+      {problem ? (
+        <div role="alert" className="alert alert-danger alert-bar">
+          <span>Couldn&rsquo;t load the video models: {problem}</span>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={retry}>
+            <RefreshCw size={14} /> Retry
+          </button>
+        </div>
+      ) : settings?.videoModelAvailable === false ? (
+        <div role="alert" className="alert alert-warning">
+          <AlertTriangle size={16} aria-hidden="true" />
+          <span>
+            The model in use can no longer render a 360° try-on, so every new video will fail. Pick another.
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -213,26 +319,7 @@ export default function SettingsPage() {
             <h2>AI generation</h2>
           </div>
           <div className="card-body">
-            <div className="setting-row">
-              <div className="info">
-                <strong>Image model</strong>
-                <span>Used for every try-on request</span>
-              </div>
-              <div className="control">
-                <select
-                  className="select"
-                  aria-label="AI image model"
-                  value={settings.aiModel}
-                  onChange={(event) => set('aiModel', event.target.value)}
-                >
-                  {AI_MODELS.map((model) => (
-                    <option key={model} value={model}>
-                      {model}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            <VideoModelRow />
             <NumberRow
               label="Max concurrent requests"
               hint="Queue anything above this limit"

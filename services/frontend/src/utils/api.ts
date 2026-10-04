@@ -3,8 +3,11 @@
    Real, against the Django backend through `utils/apiClient`:
      * authentication — `utils/authService`
      * **the directory** — who a customer can book, `utils/directoryService`
-   Real, against the FastAPI hair-AI service in `services/ai`:
-     * `api.tryOn` — `utils/aiService`
+
+   Not here at all: the 360° try-on video, `utils/tryOnVideoService`. It is a
+   job — started, polled, then fetched — rather than one call, so its screen
+   talks to that module directly. The backend relays it to the hair-AI
+   service in `services/ai`; the app never calls that service itself.
 
    Real too:
      * **bookings** — availability, the lifecycle and the automated texts,
@@ -17,27 +20,12 @@
    body for a fetch() call as the backend grows; the signature is already
    shaped like the endpoint. */
 
-import type {
-  GeoPoint,
-  Hairstyle,
-  PaymentMethod,
-  Professional,
-  TryOnAnalysis,
-  TryOnRender,
-  TryOnStyle,
-} from '../types';
+import type { GeoPoint, Hairstyle, PaymentMethod, Professional } from '../types';
 import { CREDIT_PACK_SIZE } from '../constants';
 import { useDirectoryStore } from '../store/useDirectoryStore';
 import { bookingService } from './bookingService';
 import { directoryService } from './directoryService';
 import { hairstyleService } from './hairstyleService';
-import {
-  analyzePhoto,
-  generateHairstyle,
-  type AnalyzeInput,
-  type AnglePhoto,
-  type GenerateInput,
-} from './aiService';
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -110,38 +98,6 @@ export const api = {
         description: `${CREDIT_PACK_SIZE} try-on credits`,
       });
       return { added: CREDIT_PACK_SIZE, reference: charge.reference };
-    },
-  },
-
-  tryOn: {
-    /** Reads the customer's photo and comes back with hairstyles that suit it.
-        One vision call at the AI service; expect roughly 15-25 seconds.
-
-        `angles` makes it a 360 read: every captured view in one call, so the
-        crown, nape and side profile are observations rather than guesses. */
-    async analyze(
-      source: Blob,
-      input: AnalyzeInput,
-      photoKey: string,
-      angles?: AnglePhoto[],
-    ): Promise<TryOnAnalysis> {
-      return analyzePhoto(source, input, photoKey, angles);
-    },
-
-    /** Renders one chosen style onto that same photo — the real image edit, so
-        the face in the result is the customer's own. Roughly 20-60 seconds. */
-    async generate(
-      source: Blob,
-      style: TryOnStyle,
-      context: Omit<GenerateInput, 'hairstyleId' | 'hairstyleName' | 'hairstyleDescription'> = {},
-    ): Promise<TryOnRender> {
-      return generateHairstyle(source, {
-        ...context,
-        hairstyleId: style.id,
-        hairstyleName: style.name,
-        hairstyleDescription: style.description,
-        styleLength: style.length,
-      });
     },
   },
 };

@@ -3,15 +3,15 @@ export const tryon = {
   /* Try-on home */
   'tryon.historyAction': 'হিস্ট্রি',
   'tryon.aiPreview': 'এআই প্রিভিউ',
-  'tryon.heroTitle': '৩০ সেকেন্ডেই নতুন লুক',
-  'tryon.heroBody': 'একটা সেলফি দিন, বুক করার আগেই যেকোনো স্টাইল নিজের চেহারায় দেখে নিন।',
+  'tryon.heroTitle': 'নতুন লুক দেখুন ৩৬০°-এ',
+  'tryon.heroBody': 'একটা সেলফি দিন, বুক করার আগেই যেকোনো স্টাইলে নিজেকে সব দিক থেকে দেখে নিন।',
   'tryon.afterAi': 'এআই-এর পরে',
   'tryon.buyCredits': 'ক্রেডিট কিনুন',
   'tryon.takeSelfie': 'সেলফি তুলুন',
   'tryon.choosePhoto': 'ছবি বেছে নিন',
   'tryon.howItWorks': 'যেভাবে কাজ করে',
   'tryon.step1': 'পরিষ্কার একটা সেলফি তুলুন বা বেছে নিন',
-  'tryon.step2': 'যেকোনো স্টাইল বাছুন — আমরা সেটা আপনার ছবিতে বসিয়ে দেব',
+  'tryon.step2': 'একটা স্টাইল বাছুন — আমরা সেটায় আপনাকে চারপাশ ঘুরিয়ে দেখাব',
   'tryon.step3': 'পছন্দ হলে যিনি এটা করেন তাকে বুক করুন',
   'tryon.recommended': 'আপনার জন্য বাছাই',
   'tryon.recentResults': 'সাম্প্রতিক ফল',
@@ -112,8 +112,8 @@ export const tryon = {
   'tryon.generatedWith': '{model} দিয়ে বানানো',
 
   /* Processing */
-  'tryon.processingTitle': 'কাজ চলছে',
-  'tryon.processingBody': 'আপনার ছবিতে {style} বসানো হচ্ছে',
+  'tryon.processingTitle': 'আপনার ৩৬০° ভিডিও তৈরি হচ্ছে',
+  'tryon.processingBody': 'আপনার ছবিতে {style} বসিয়ে, তারপর চারপাশ ঘুরিয়ে দেখানো হচ্ছে',
   'tryon.stageAnalyzing': 'মুখের গড়ন দেখা হচ্ছে',
   'tryon.stageMapping': 'হেয়ারলাইন মেলানো হচ্ছে',
   'tryon.stageRendering': 'স্টাইল বসানো হচ্ছে',
@@ -240,8 +240,8 @@ export const tryon = {
     'এখনকার চেয়ে অনেক বেশি লম্বা বা অন্য ধরনের চুল লাগবে। স্টাইলিস্ট আপাতত কাছাকাছি একটা লুক বলে দিতে পারবেন।',
 
   /* 360 preview */
-  'tryon.modeSingle': 'একটি ছবি',
-  'tryon.modeSingleBody': 'একটা সেলফি, কয়েক সেকেন্ডে পড়া — আর তাতেই যেকোনো স্টাইল।',
+  'tryon.modeSingle': '৩৬০° ট্রাই অন',
+  'tryon.modeSingleBody': 'একটা স্পষ্ট সেলফি। স্টাইল বাছুন, আর ছোট একটা ভিডিওতে সেই স্টাইলে নিজেকে চারপাশ ঘুরে দেখুন।',
   'tryon.mode360': '৩৬০° প্রিভিউ',
   'tryon.mode360Body': 'মাথার চারপাশে একবার ঘুরুন। মাথার তালু, দুই পাশ আর পেছনও দেখি — তারপর সব দিক থেকে কাটটা দেখাই।',
   'tryon.start360': '৩৬০° ক্যাপচার শুরু করুন',
@@ -305,4 +305,19 @@ export const tryon = {
   'tryon.viewerDrag': 'ঘোরাতে টানুন',
   'tryon.viewerCount': '{count}টি অ্যাঙ্গেল',
   'tryon.ringRendered': '{count}টি অ্যাঙ্গেল থেকে আঁকা: {angles}। চারপাশে একই কাট।',
+
+  /* ৩৬০° ট্রাই অন ভিডিও */
+  'tryon.selectIntro': 'একটা স্টাইল বাছুন — ছোট একটা ৩৬০° ভিডিওতে সেই স্টাইলে নিজেকে সব দিক থেকে দেখবেন।',
+  'tryon.stageStyling': 'আপনার ছবিতে চুল সাজানো হচ্ছে',
+  'tryon.stageFilming': 'আপনার ৩৬০° ঘোরার ভিডিও তৈরি হচ্ছে',
+  'tryon.processingWait': 'এতে এক-দুই মিনিট লাগে — স্ক্রিনটা খোলা রাখুন।',
+  'tryon.errorStyleGone': 'এই স্টাইলটা আর পাওয়া যাচ্ছে না। অন্য একটা বাছুন।',
+  'tryon.videoAlt': '{name}-এ আপনার ৩৬০° ভিডিও',
+  'tryon.badge360': '৩৬০°',
+  'tryon.playVideo': 'চালান',
+  'tryon.pauseVideo': 'থামান',
+  'tryon.videoGoneTitle': 'ভিডিও নেই',
+  'tryon.videoGoneBody': 'ভিডিওটা আর এই ফোনে নেই।',
+  'tryon.saveVideo': 'ভিডিও সেভ করুন',
+  'tryon.toastVideoSaved': 'ভিডিও সেভ হয়েছে',
 } as const;

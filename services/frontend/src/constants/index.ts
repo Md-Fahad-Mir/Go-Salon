@@ -79,7 +79,6 @@ export const ROUTES = {
   proLookbook: '/pro/lookbook',
   tryOn: '/ai-tryon',
   tryOnUpload: '/ai-tryon/upload',
-  tryOnCapture360: '/ai-tryon/capture-360',
   tryOnSelect: '/ai-tryon/select',
   tryOnPreview: (id: string) => `/ai-tryon/preview/${id}`,
   tryOnHistory: '/ai-tryon/history',

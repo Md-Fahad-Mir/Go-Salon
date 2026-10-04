@@ -1,4 +1,4 @@
-import { Camera, HistoryIcon, ImageIcon, ImageOff, Orbit } from 'lucide-react';
+import { Camera, HistoryIcon, ImageIcon, ImageOff } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Hairstyle } from '../../types';
@@ -77,9 +77,8 @@ export default function TryOnHomePage() {
           </Button>
         </div>
 
-        {/* Two ways in, named for what the customer gets rather than for what
-            the app does: one photo and one render, or a walk round the head
-            and a preview that turns. */}
+        {/* One way in, named for what the customer gets: a selfie in, a short
+            video of them turning all the way round in the style out. */}
         <div className="stack-sm tryon-cta">
           <div className="tryon-mode" data-mode="single">
             <div className="tryon-mode-copy">
@@ -100,22 +99,6 @@ export default function TryOnHomePage() {
                 {t('tryon.choosePhoto')}
               </Button>
             </div>
-          </div>
-
-          <div className="tryon-mode" data-mode="360">
-            <div className="tryon-mode-copy">
-              <strong>{t('tryon.mode360')}</strong>
-              <span className="caption">{t('tryon.mode360Body')}</span>
-            </div>
-            <Button
-              block
-              size="lg"
-              variant="outline"
-              icon={<Orbit size={20} aria-hidden="true" />}
-              onClick={() => navigate(ROUTES.tryOnCapture360)}
-            >
-              {t('tryon.start360')}
-            </Button>
           </div>
 
           <button type="button" className="link-btn tryon-center-link" onClick={() => setTipsOpen(true)}>

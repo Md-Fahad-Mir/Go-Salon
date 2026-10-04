@@ -11,11 +11,29 @@ const slug = (value: string) =>
     .replace(/(^-|-$)/g, '');
 
 export const fileNameFor = (generation: AIGeneration): string =>
-  `gosalon-${slug(generation.hairstyleName) || 'look'}.jpg`;
+  `gosalon-${slug(generation.hairstyleName) || 'look'}${generation.videoKey ? '-360.mp4' : '.jpg'}`;
 
-/** Saves the rendered result to the device. False when the blob is gone. */
+/** The result itself: the 360° clip when there is one, else the still. */
+const resultBlob = (generation: AIGeneration): Promise<Blob | undefined> =>
+  photoStore.get(generation.videoKey ?? generation.resultKey);
+
+/** Every stored file a result owns — its still, its clip, and an older
+    multi-angle result's other views — so deleting it orphans nothing. */
+export const resultKeysOf = (generation: AIGeneration): string[] => [
+  generation.resultKey,
+  ...(generation.videoKey ? [generation.videoKey] : []),
+  ...(generation.views ?? []).map((view) => view.resultKey),
+];
+
+/** The customer's own photos a result was made from. */
+export const sourceKeysOf = (generation: AIGeneration): string[] => [
+  generation.sourceKey,
+  ...(generation.views ?? []).map((view) => view.sourceKey),
+];
+
+/** Saves the result to the device. False when the file is gone. */
 export async function downloadGeneration(generation: AIGeneration): Promise<boolean> {
-  const blob = await photoStore.get(generation.resultKey);
+  const blob = await resultBlob(generation);
   if (!blob) return false;
   downloadBlob(fileNameFor(generation), blob);
   return true;
@@ -23,16 +41,18 @@ export async function downloadGeneration(generation: AIGeneration): Promise<bool
 
 export type ShareOutcome = 'shared' | 'copied' | 'failed' | 'missing';
 
-/** Shares the photo itself where the platform allows files, otherwise the text.
-    The caller passes its `t` so the shared caption follows the app language. */
+/** Shares the result itself where the platform allows files, otherwise the
+    text. The caller passes its `t` so the shared caption follows the app
+    language. */
 export async function shareGeneration(generation: AIGeneration, t: TFunction): Promise<ShareOutcome> {
-  const blob = await photoStore.get(generation.resultKey);
+  const blob = await resultBlob(generation);
   if (!blob) return 'missing';
   const name = generation.hairstyleName;
   const title = t('tryon.shareTitle', { name });
   const text = t('tryon.shareText', { name });
   try {
-    const file = new File([blob], fileNameFor(generation), { type: blob.type || 'image/jpeg' });
+    const type = blob.type || (generation.videoKey ? 'video/mp4' : 'image/jpeg');
+    const file = new File([blob], fileNameFor(generation), { type });
     if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title, text });
       return 'shared';
@@ -65,12 +85,12 @@ const ERROR_KEYS: Record<string, TKey> = {
   content_blocked: 'tryon.errorPhoto',
   no_recommendations: 'tryon.errorPhoto',
   needs_more_length: 'tryon.errorNeedsLength',
+  /* The 360° video, through the backend. */
+  ai_service_unreachable: 'tryon.errorBusy',
+  ai_service_unconfigured: 'tryon.errorUnconfigured',
+  hairstyle_unavailable: 'tryon.errorStyleGone',
 };
 
-/** Which sentence to show for a failed analysis or generation. */
+/** Which sentence to show for a failed try-on. */
 export const aiErrorKey = (error: unknown): TKey =>
   (error instanceof ApiError && ERROR_KEYS[error.code]) || 'tryon.errorGeneric';
-
-/** Same, from a stored `ApiError.code` (the store keeps the code, not the Error). */
-export const aiErrorKeyForCode = (code: string | null): TKey =>
-  (code && ERROR_KEYS[code]) || 'tryon.errorGeneric';

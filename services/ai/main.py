@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hmac
 import logging
 import os
 import socket
@@ -8,7 +9,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from openai import APIConnectionError, APITimeoutError, AuthenticationError, PermissionDeniedError, RateLimitError
 from starlette.concurrency import run_in_threadpool
@@ -20,6 +21,13 @@ from hair_generate import (
     HairstyleRequest,
     ImageGenerationError,
     generate_hairstyle_image,
+)
+from hair_video import (
+    VideoGenerationError,
+    download_turnaround,
+    get_turnaround,
+    list_video_models,
+    start_turnaround,
 )
 from image_io import ImageValidationError, guess_suffix, normalize_upload
 
@@ -58,6 +66,12 @@ DEFAULT_CORS_ORIGINS = (
     "http://localhost:5174,http://127.0.0.1:5174,"
     "http://localhost:4174,http://127.0.0.1:4174"
 )
+
+#: Shared secret for the 360° video endpoints. Their caller is the backend,
+#: not a browser, and each call spends real money upstream — so once this is
+#: set, a request without `Authorization: Bearer <it>` is refused. Unset, they
+#: are as open as /generate (fine on a laptop, not on a public host).
+SERVICE_TOKEN = os.getenv("AI_SERVICE_TOKEN", "").strip()
 
 
 def _configure_logging() -> None:
@@ -102,13 +116,16 @@ def _log_startup_banner() -> None:
             port,
         )
     logger.info(
-        "Provider: OpenRouter (%s) | Analysis model: %s | Image model: %s",
+        "Provider: OpenRouter (%s) | Analysis model: %s | Image model: %s | Default video model: %s",
         openrouter.BASE_URL,
         openrouter.ANALYSIS_MODEL,
         IMAGE_MODEL,
+        openrouter.VIDEO_MODEL,
     )
     if not openrouter.has_api_key():
-        logger.warning("OPENROUTER_API_KEY is not set — /analyze and /generate will fail.")
+        logger.warning("OPENROUTER_API_KEY is not set — /analyze, /generate and /videos will fail.")
+    if not SERVICE_TOKEN:
+        logger.warning("AI_SERVICE_TOKEN is not set — the /videos endpoints accept unauthenticated calls.")
     logger.info("Share the LAN URL with teammates on the same network.")
     logger.info("%s", "=" * 78)
 
@@ -199,6 +216,15 @@ async def _read_photo(image: UploadFile, *, max_edge: int = ANALYSIS_MAX_EDGE):
         raise _error(400, exc.code, exc.message) from exc
 
 
+def require_service_token(authorization: str | None = Header(None)) -> None:
+    """Gate for the video endpoints; a no-op until AI_SERVICE_TOKEN is set."""
+    if not SERVICE_TOKEN:
+        return
+    supplied = (authorization or "").removeprefix("Bearer ").strip()
+    if not hmac.compare_digest(supplied.encode(), SERVICE_TOKEN.encode()):
+        raise _error(401, "unauthorized", "This endpoint needs the service token.")
+
+
 def _provider_failure(exc: Exception) -> HTTPException:
     """Map an OpenAI-SDK exception (raised against OpenRouter) to a client status."""
     if isinstance(exc, (AuthenticationError, PermissionDeniedError)):
@@ -227,7 +253,14 @@ def root() -> dict[str, Any]:
         "docs": "/docs",
         "openapi": "/openapi.json",
         "swagger": "/swagger.json",
-        "endpoints": ["POST /analyze", "POST /generate"],
+        "endpoints": [
+            "POST /analyze",
+            "POST /generate",
+            "GET /videos/models",
+            "POST /videos",
+            "GET /videos/{job_id}",
+            "GET /videos/{job_id}/content",
+        ],
     }
 
 
@@ -239,6 +272,7 @@ def health() -> dict[str, Any]:
         # cannot reach is swapped for a working one at request time.
         "analysis_model_configured": openrouter.ANALYSIS_MODEL,
         "image_model": IMAGE_MODEL,
+        "video_model_default": openrouter.VIDEO_MODEL,
         # Says whether a key is present, never anything about the key itself.
         "provider_configured": openrouter.has_api_key(),
     }
@@ -441,6 +475,90 @@ async def generate_image(
         },
     }
 
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 360° VIDEO
+# ─────────────────────────────────────────────────────────────────────────────
+@app.get("/videos/models", tags=["video"], dependencies=[Depends(require_service_token)])
+async def video_models(refresh: bool = False) -> dict[str, Any]:
+    """Every video model the 360° try-on can run on — it must start from a
+    photo and render 2–3 seconds — with OpenRouter's list price for one clip.
+    Lists models; runs none."""
+    try:
+        models = await run_in_threadpool(lambda: list_video_models(refresh=refresh))
+    except VideoGenerationError as exc:
+        raise _error(exc.status, exc.code, exc.message) from exc
+    return {
+        "default_model": openrouter.VIDEO_MODEL,
+        "models": [model.as_dict() for model in models],
+    }
+
+
+@app.post("/videos", tags=["video"], status_code=202, dependencies=[Depends(require_service_token)])
+async def start_video(
+    image: UploadFile = File(...),
+    hairstyle_name: str = Form(..., max_length=120),
+    # The admin's prompt for the style. It shapes the still the video starts
+    # from and is repeated to the video model, so the back and sides continue
+    # the same cut.
+    hairstyle_description: str = Form("", max_length=600),
+    hairstyle_id: str = Form("", max_length=80),
+    # The admin's choice from the dashboard; empty means OPENROUTER_VIDEO_MODEL.
+    video_model: str = Form("", max_length=120),
+) -> dict[str, Any]:
+    """Start a 2–3 second 360° video of the customer wearing the hairstyle.
+
+    Renders the haircut onto the photo first (20–60 s), then hands that still
+    to the video model as the first frame and answers 202 with the upstream
+    job id. Poll `GET /videos/{job_id}`; fetch `GET /videos/{job_id}/content`
+    once it is `completed`. Nothing is stored here.
+    """
+    photo = await _read_photo(image, max_edge=GENERATION_MAX_EDGE)
+    request = HairstyleRequest(name=hairstyle_name, description=hairstyle_description, hairstyle_id=hairstyle_id)
+    try:
+        job = await run_in_threadpool(lambda: start_turnaround(photo, request, model_id=video_model or None))
+    except (VideoGenerationError, ImageGenerationError) as exc:
+        raise _error(exc.status, exc.code, exc.message) from exc
+    except Exception:
+        logger.exception("Unexpected error starting a 360 video")
+        raise _error(500, "internal_error", "Internal server error.") from None
+
+    return {
+        "job": {"id": job.job_id, "status": job.status},
+        "poster": {"b64": job.poster_b64, "mime_type": job.poster_mime_type},
+        "meta": {
+            "video_model": job.model.id,
+            "duration_seconds": job.model.duration,
+            "resolution": job.model.resolution,
+            "aspect_ratio": job.aspect_ratio,
+            "image_model": job.image_model,
+        },
+    }
+
+
+@app.get("/videos/{job_id}", tags=["video"], dependencies=[Depends(require_service_token)])
+async def video_status(job_id: str) -> dict[str, Any]:
+    """`processing`, `completed` or `failed` — the last with a code and a
+    message safe to show."""
+    try:
+        state = await run_in_threadpool(lambda: get_turnaround(job_id))
+    except VideoGenerationError as exc:
+        raise _error(exc.status, exc.code, exc.message) from exc
+    body: dict[str, Any] = {"id": state.job_id, "status": state.status}
+    if state.status == "failed":
+        body["error"] = {"code": state.error_code, "message": state.error_message}
+    return body
+
+
+@app.get("/videos/{job_id}/content", tags=["video"], dependencies=[Depends(require_service_token)])
+async def video_content(job_id: str) -> Response:
+    """The finished clip, streamed through from the provider and kept nowhere."""
+    try:
+        content, content_type = await run_in_threadpool(lambda: download_turnaround(job_id))
+    except VideoGenerationError as exc:
+        raise _error(exc.status, exc.code, exc.message) from exc
+    return Response(content=content, media_type=content_type, headers={"Cache-Control": "no-store"})
 
 if __name__ == "__main__":
     import uvicorn

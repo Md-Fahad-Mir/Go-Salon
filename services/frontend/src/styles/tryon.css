@@ -1552,3 +1552,43 @@
   .tryon-ring-chip,
   .tryon-viewer-dot { transition: none; }
 }
+
+/* --------------------------------------------------------------------------
+   360° turnaround player
+
+   The clip keeps its own shape (3:4, 9:16 or square, whichever the model
+   rendered) and is letterboxed, never cropped: a crop on a turning head takes
+   the top of the hair off, and the hair is the whole point.
+   -------------------------------------------------------------------------- */
+
+.tryon-turnaround {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--tryon-radius-lg);
+  background-color: var(--bg-deep);
+  box-shadow: var(--tryon-bevel), var(--tryon-elev-raised);
+}
+.tryon-turnaround-video {
+  display: block;
+  width: 100%;
+  max-height: min(70dvh, 40rem);
+  aspect-ratio: 3 / 4;
+  object-fit: contain;
+  background-color: var(--bg-deep);
+  cursor: pointer;
+}
+.tryon-turnaround-still { border-radius: 0; }
+.tryon-turnaround-still .art-center { flex-direction: column; gap: var(--space-1); text-align: center; }
+.tryon-turnaround-badge {
+  position: absolute;
+  top: var(--space-3);
+  inset-inline-start: var(--space-3);
+  z-index: 1;
+}
+.tryon-turnaround-toggle {
+  position: absolute;
+  bottom: var(--space-3);
+  inset-inline-end: var(--space-3);
+  z-index: 1;
+}

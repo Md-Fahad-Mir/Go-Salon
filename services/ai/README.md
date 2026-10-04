@@ -1,8 +1,7 @@
 # Hair AI service
 
-FastAPI service behind the customer app's AI Try-On. Two endpoints, one
-OpenRouter key, no database and no file storage — a photo arrives, is used, and
-is gone.
+FastAPI service behind the customer app's AI Try-On. One OpenRouter key, no
+database and no file storage — a photo arrives, is used, and is gone.
 
 ```
 services/frontend  ──►  POST /analyze   ──►  OpenRouter chat (openai/gpt-4o)
@@ -10,6 +9,10 @@ services/frontend  ──►  POST /analyze   ──►  OpenRouter chat (openai
                    ──►  POST /generate  ──►  OpenRouter images
                                              (google/gemini-3.1-flash-image)
                                              the same customer, new hairstyle
+
+services/backend   ──►  POST /videos    ──►  OpenRouter images, then videos
+                                             the haircut on the photo, then a
+                                             2–3 s 360° turn starting from it
 ```
 
 Both calls go through the `openai` SDK pointed at `https://openrouter.ai/api/v1`
@@ -36,6 +39,10 @@ default). Point the app at the service with `VITE_AI_API_URL` in
 | `GET` | `/health` | Liveness, configured models, whether a key is present |
 | `POST` | `/analyze` | Read a photo — or up to 8 angles of one head → face/hair profile + hairstyle recommendations |
 | `POST` | `/generate` | Photo + one chosen hairstyle → edited photo of that person |
+| `GET` | `/videos/models` | Every video model the 360° try-on can use, with its price per clip |
+| `POST` | `/videos` | Photo + hairstyle → starts a 2–3 s 360° video; `202` with a job id |
+| `GET` | `/videos/{job_id}` | `processing` \| `completed` \| `failed` |
+| `GET` | `/videos/{job_id}/content` | The finished clip (`video/mp4`) |
 | `GET` | `/docs` | Swagger UI |
 
 ### `POST /analyze`
@@ -86,6 +93,37 @@ try-on: change the hair, keep the person — and cut, never grow. The hair in th
 photo is the ceiling; a style that needs more is rendered as the closest version
 that hair can give, not with invented length.
 
+### `POST /videos` — the 360° try-on
+
+Called by the backend, never the browser: the backend looks up the hairstyle
+the customer picked and sends its admin-written prompt, so a client cannot
+supply its own. `multipart/form-data`: `image`, `hairstyle_name`, and
+optionally `hairstyle_description` (the admin's prompt), `hairstyle_id` and
+`video_model` (the admin's pick; empty means `OPENROUTER_VIDEO_MODEL`).
+
+Two steps. The haircut is first rendered onto the photo with the same
+identity-preserving edit as `/generate` (20–60 s); that still is then the
+**first frame** of a short image-to-video job asking for one steady full turn —
+front, side, back, side, front — with the face, clothes and background held to
+the frame. Starting from the customer's own (edited) photo is what keeps the
+face theirs. The still is cropped to the video's aspect ratio from the bottom,
+never the top, so the hair is never what gets cut off.
+
+Answers `202` with `job.id`, the still as `poster` (base64 JPEG), and `meta`
+(`video_model`, `duration_seconds`, `resolution`, `aspect_ratio`). Video
+generation is asynchronous upstream: poll `GET /videos/{job_id}` (`processing`
+\| `completed` \| `failed` + `error.code`), then fetch
+`GET /videos/{job_id}/content`. The job id is the only state; nothing is kept
+here.
+
+`GET /videos/models` lists the models from OpenRouter's catalogue that can
+start from a photo and render 2–3 s — the list the admin dashboard picks from —
+each with the duration and resolution it will be asked for and OpenRouter's
+list price for that clip. Cached for ten minutes.
+
+Once `AI_SERVICE_TOKEN` is set, every `/videos` endpoint needs
+`Authorization: Bearer <token>`.
+
 ## Errors
 
 Every failure answers `{"detail": {"code": "...", "message": "..."}}`. The
@@ -95,7 +133,9 @@ Every failure answers `{"detail": {"code": "...", "message": "..."}}`. The
 | --- | --- |
 | 400 | `unsupported_type`, `invalid_image`, `empty_image`, `image_too_small` |
 | 413 | `image_too_large` |
-| 422 | `invalid_hairstyle`, `needs_more_length`, `content_blocked`, `generation_failed` |
+| 401 | `unauthorized` (a `/videos` call without the service token, once one is set) |
+| 404 | `video_not_found` |
+| 422 | `invalid_hairstyle`, `needs_more_length`, `content_blocked`, `generation_failed`, `video_failed` |
 | 429 | `rate_limited` |
 | 502 | `analysis_failed`, `provider_unreachable`, `no_recommendations`, `empty_result` |
 | 503 | `provider_unconfigured`, `model_unavailable` |
@@ -109,6 +149,8 @@ Every failure answers `{"detail": {"code": "...", "message": "..."}}`. The
 | `openrouter.py` | Provider config: key, base URL, models, client factory |
 | `hair_code.py` | Analysis: prompt, schema, chat call, client-facing view. One photo or a whole ring |
 | `hair_generate.py` | Try-on render: prompt, image edit call, provider errors |
+| `hair_video.py` | 360° try-on: model catalogue, turnaround prompt, video job submit/poll/download |
+| `tests/` | `python -m unittest discover -s tests` — against a fake OpenRouter, spends nothing |
 | `image_io.py` | Decode/validate/orient/shrink an upload, shared by both endpoints |
 | `hair_analysis_final.py` | Standalone CLI for the analysis, not used by the API |
 

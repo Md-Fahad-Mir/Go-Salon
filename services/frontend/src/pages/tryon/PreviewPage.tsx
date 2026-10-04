@@ -6,7 +6,13 @@ import { ROUTES } from '../../constants';
 import { AngleViewer } from '../../components/ai-tryon/AngleViewer';
 import { CompareSlider } from '../../components/ai-tryon/CompareSlider';
 import { FeasibilityCallout } from '../../components/ai-tryon/FeasibilityCallout';
-import { downloadGeneration, shareGeneration } from '../../components/ai-tryon/tryonActions';
+import { TurnaroundPlayer } from '../../components/ai-tryon/TurnaroundPlayer';
+import {
+  downloadGeneration,
+  resultKeysOf,
+  shareGeneration,
+  sourceKeysOf,
+} from '../../components/ai-tryon/tryonActions';
 import { ActionSheet } from '../../components/common/ActionSheet';
 import { Badge } from '../../components/common/Badge';
 import { Segmented } from '../../components/common/Tabs';
@@ -73,8 +79,11 @@ function Preview({ generation }: { generation: AIGeneration }) {
   const [side, setSide] = useState<'after' | 'before'>('after');
 
   const views = generation.views ?? [];
-  const isRing = views.length > 0;
-
+  /* A 360° video is what the try-on makes now. A single edited photo or a
+     multi-angle ring is a result from before it, still on this device, and
+     still shown the way it always was. */
+  const isVideo = Boolean(generation.videoKey);
+  const isRing = !isVideo && views.length > 0;
 
   const tryAnother = () => {
     setPhotoKey(generation.sourceKey);
@@ -93,7 +102,7 @@ function Preview({ generation }: { generation: AIGeneration }) {
 
   const download = async () => {
     const ok = await downloadGeneration(generation);
-    if (ok) toast('success', t('tryon.toastPhotoSaved'), t('tryon.toastPhotoSavedBody'));
+    if (ok) toast('success', isVideo ? t('tryon.toastVideoSaved') : t('tryon.toastPhotoSaved'), t('tryon.toastPhotoSavedBody'));
     else toast('error', t('tryon.toastPhotoGone'), t('tryon.toastPhotoGoneBody'));
   };
 
@@ -112,19 +121,12 @@ function Preview({ generation }: { generation: AIGeneration }) {
   const remove = async () => {
     setDeleting(true);
     const sourceShared = generations.some((g) => g.id !== generation.id && g.sourceKey === generation.sourceKey);
-    // Every render this result owns, not just the headline one: a 360 preview
-    // is four or more blobs, and the rest would be orphaned in IndexedDB.
-    await Promise.all([
-      photoStore.remove(generation.resultKey),
-      ...views.map((view) => photoStore.remove(view.resultKey)),
-    ]);
+    // Every file this result owns — the still, the clip, an older ring's
+    // other views — or the rest would be orphaned in IndexedDB.
+    await Promise.all(resultKeysOf(generation).map((key) => photoStore.remove(key)));
     if (!sourceShared) {
-      // The captures are the customer's own photos; a shared front photo still
-      // belongs to another result, so only the unshared ones go.
-      await Promise.all([
-        photoStore.remove(generation.sourceKey),
-        ...views.map((view) => photoStore.remove(view.sourceKey)),
-      ]);
+      // The customer's own photo; one another result was made from stays.
+      await Promise.all(sourceKeysOf(generation).map((key) => photoStore.remove(key)));
       if (photoKey === generation.sourceKey) setPhotoKey(null);
     }
     removeGeneration(generation.id);
@@ -140,7 +142,7 @@ function Preview({ generation }: { generation: AIGeneration }) {
         backTo={ROUTES.tryOn}
         actions={
           <>
-            <IconButton label={t('tryon.savePhoto')} onClick={() => void download()}>
+            <IconButton label={isVideo ? t('tryon.saveVideo') : t('tryon.savePhoto')} onClick={() => void download()}>
               <Download size={22} />
             </IconButton>
             <IconButton label={t('action.share')} onClick={() => void share()} disabled={sharing}>
@@ -153,7 +155,13 @@ function Preview({ generation }: { generation: AIGeneration }) {
         }
       />
       <ScreenBody className="stagger">
-        {isRing ? (
+        {isVideo ? (
+          <TurnaroundPlayer
+            videoKey={generation.videoKey!}
+            posterKey={generation.resultKey}
+            styleName={generation.hairstyleName}
+          />
+        ) : isRing ? (
           <>
             <AngleViewer
               views={views}
@@ -199,7 +207,9 @@ function Preview({ generation }: { generation: AIGeneration }) {
 
         {generation.whyItSuits ? <p className="caption tryon-why">{generation.whyItSuits}</p> : null}
 
-        <FeasibilityCallout feasibility={generation.feasibility} />
+        {/* A curated style carries no length or texture to judge against,
+            so a 360° result makes no claim about how hard it is to reach. */}
+        {isVideo ? null : <FeasibilityCallout feasibility={generation.feasibility} />}
 
         <section className="section tryon-chapter tryon-feedback">
           <h3>{t('tryon.feedbackTitle')}</h3>

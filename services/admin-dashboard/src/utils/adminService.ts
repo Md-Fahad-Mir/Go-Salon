@@ -250,3 +250,78 @@ export const salonService = {
     return { ownerName: result.owner.name, salonName: result.salon.name };
   },
 };
+
+/* --------------------------------------------------------------------------
+   AI generation — /api/admin/settings/ai-generation/
+   Which OpenRouter video model renders every 360° try-on. The list is
+   OpenRouter's own catalogue, narrowed by the AI service to the models that
+   can start from a photo and render 2–3 seconds.
+   -------------------------------------------------------------------------- */
+
+interface VideoModelApi {
+  id: string;
+  name: string;
+  description: string;
+  duration_seconds: number;
+  resolution: string | null;
+  price_per_video_usd: number | null;
+}
+
+interface AIGenerationApi {
+  video_model: string;
+  selected: string;
+  default_model: string;
+  models: VideoModelApi[];
+  video_model_available: boolean | null;
+  models_error: { code: string; message: string } | null;
+  updated_at: string;
+}
+
+export interface VideoModelOption {
+  id: string;
+  name: string;
+  description: string;
+  durationSeconds: number;
+  resolution: string | null;
+  /** OpenRouter's list price for one clip as requested; null when it cannot
+      be known in advance. */
+  pricePerVideoUsd: number | null;
+}
+
+export interface AIGenerationSettings {
+  /** The model in use: the admin's pick, or the AI service's default. */
+  videoModel: string;
+  defaultModel: string;
+  models: VideoModelOption[];
+  /** False when the model in use can no longer render a 360° try-on. */
+  videoModelAvailable: boolean | null;
+  /** Why the list could not be loaded, when it could not. */
+  modelsError: string | null;
+}
+
+const toAIGeneration = (row: AIGenerationApi): AIGenerationSettings => ({
+  videoModel: row.video_model,
+  defaultModel: row.default_model,
+  models: row.models.map((model) => ({
+    id: model.id,
+    name: model.name,
+    description: model.description,
+    durationSeconds: model.duration_seconds,
+    resolution: model.resolution,
+    pricePerVideoUsd: model.price_per_video_usd,
+  })),
+  videoModelAvailable: row.video_model_available,
+  modelsError: row.models_error?.message ?? null,
+});
+
+export const aiGenerationService = {
+  async get(): Promise<AIGenerationSettings> {
+    return toAIGeneration(await api.get<AIGenerationApi>('/admin/settings/ai-generation/'));
+  },
+
+  async setVideoModel(videoModel: string): Promise<AIGenerationSettings> {
+    return toAIGeneration(
+      await api.patch<AIGenerationApi>('/admin/settings/ai-generation/', { video_model: videoModel }),
+    );
+  },
+};

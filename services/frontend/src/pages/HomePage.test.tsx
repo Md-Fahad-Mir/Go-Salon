@@ -94,12 +94,13 @@ describe('with one salon, which is therefore the active one', () => {
   it('switches light and dark from the header, beside the bell', async () => {
     open();
     await screen.findByRole('heading', { name: 'Aurora Salon' });
-    await userEvent.click(screen.getByRole('button', { name: 'Appearance' }));
-    await userEvent.click(screen.getByRole('radio', { name: 'Dark' }));
-    expect(document.documentElement).toHaveClass('dark-theme');
-    await userEvent.click(screen.getByRole('button', { name: 'Appearance' }));
-    await userEvent.click(screen.getByRole('radio', { name: 'Light' }));
-    expect(document.documentElement).toHaveClass('light-theme');
+    const toggle = () => userEvent.click(screen.getByRole('button', { name: /switch to (dark|light) mode/i }));
+    const start = document.documentElement.classList.contains('dark-theme') ? 'dark' : 'light';
+    const other = start === 'dark' ? 'light' : 'dark';
+    await toggle();
+    expect(document.documentElement).toHaveClass(`${other}-theme`);
+    await toggle();
+    expect(document.documentElement).toHaveClass(`${start}-theme`);
   });
 });
 

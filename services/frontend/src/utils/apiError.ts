@@ -1,8 +1,8 @@
 /* The one error type every API path throws.
 
-   It lives in its own module because both the mock API layer (`utils/api.ts`)
-   and the real AI transport (`utils/aiService.ts`) raise it, and api.ts imports
-   aiService — a class shared through that import would be a cycle. */
+   It lives in its own module because the API client, the services and the
+   360° try-on's polling (`utils/tryOnVideoService.ts`) all raise it, and a
+   class shared through any one of them would be an import cycle. */
 
 export class ApiError extends Error {
   code: string;

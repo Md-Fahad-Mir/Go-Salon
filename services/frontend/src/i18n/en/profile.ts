@@ -1,14 +1,8 @@
 /* profile screens — English copy. */
 export const profile = {
   'settings.language': 'Language',
-  'settings.appearance': 'Appearance',
-  'settings.themeLight': 'Light',
-  'settings.themeDark': 'Dark',
-  'settings.themeSystem': 'System',
-  'settings.themeFollowing': 'Following your phone, which is set to {mood}.',
-  'settings.themeFixed': 'Always {mood}, whatever your phone is set to.',
-  'settings.moodLight': 'light',
-  'settings.moodDark': 'dark',
+  'settings.switchToDark': 'Switch to dark mode',
+  'settings.switchToLight': 'Switch to light mode',
 
   /* ---- Bookings list ---- */
   'bookings.title': 'My bookings',

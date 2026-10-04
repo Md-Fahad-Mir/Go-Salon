@@ -258,7 +258,6 @@ export interface PlatformSettings {
   otpResendCooldownMinutes: number;
   smsEnabled: boolean;
   emailEnabled: boolean;
-  aiModel: string;
   aiMaxConcurrent: number;
   aiTimeoutSeconds: number;
   aiRateLimitPerHour: number;

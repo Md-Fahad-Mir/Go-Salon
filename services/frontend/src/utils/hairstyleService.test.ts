@@ -5,7 +5,6 @@ import { useAppStore } from '../store/useAppStore';
 import { sent, serve } from '../test/http';
 import { ApiError } from './apiError';
 import { hairstyleService, hairstyleTone } from './hairstyleService';
-import { styleFromHairstyle } from './recommend';
 
 const ROW = {
   id: 7,
@@ -59,20 +58,5 @@ describe('hairstyleService', () => {
       expect(hairstyleTone(id)).toBeGreaterThanOrEqual(0);
       expect(hairstyleTone(id)).toBeLessThan(6);
     }
-  });
-});
-
-describe('styleFromHairstyle', () => {
-  it('hands the render the admin prompt as the style description', () => {
-    const style = styleFromHairstyle({ ...ROW, id: '7', tone: 2 });
-    expect(style).toMatchObject({
-      id: '7',
-      name: 'Textured crop',
-      description: 'A textured crop haircut, short on the sides, tousled on top',
-      origin: 'catalogue',
-      tone: 2,
-    });
-    // No length is claimed for a curated style, so none is sent to the service.
-    expect(style.length).toBeUndefined();
   });
 });

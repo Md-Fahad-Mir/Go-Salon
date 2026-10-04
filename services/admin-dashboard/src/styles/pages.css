@@ -559,6 +559,10 @@
 .setting-row .control { flex-shrink: 0; }
 .setting-row .control .input { width: 7.5rem; font-variant-numeric: tabular-nums; }
 .setting-row .control .select { width: auto; min-width: 7.5rem; max-width: 11rem; }
+/* A setting whose choices are sentences, not words: the control takes the
+   full width under its label instead of squeezing in beside it. */
+.setting-row-stacked { flex-direction: column; align-items: stretch; gap: 0.625rem; }
+.setting-row-stacked .control .select { width: 100%; max-width: none; }
 
 .tier-card {
   display: flex;

@@ -7,7 +7,6 @@ export const defaultSettings: PlatformSettings = {
   otpResendCooldownMinutes: 2,
   smsEnabled: true,
   emailEnabled: false,
-  aiModel: 'gosalon-hair-v3',
   aiMaxConcurrent: 24,
   aiTimeoutSeconds: 45,
   aiRateLimitPerHour: 60,
@@ -39,5 +38,3 @@ export const SUBSCRIPTION_TIERS: SubscriptionTierPlan[] = [
     ],
   },
 ];
-
-export const AI_MODELS = ['gosalon-hair-v3', 'gosalon-hair-v2', 'gosalon-hair-lite'] as const;

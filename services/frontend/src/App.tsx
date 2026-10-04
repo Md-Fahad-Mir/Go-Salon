@@ -51,7 +51,6 @@ const BookingsPage = lazy(() => import('./pages/BookingsPage'));
 const BookingDetailPage = lazy(() => import('./pages/BookingDetailPage'));
 
 const TryOnHomePage = lazy(() => import('./pages/tryon/TryOnHomePage'));
-const Capture360Page = lazy(() => import('./pages/tryon/Capture360Page'));
 const PhotoUploadPage = lazy(() => import('./pages/tryon/PhotoUploadPage'));
 const StyleSelectPage = lazy(() => import('./pages/tryon/StyleSelectPage'));
 const PreviewPage = lazy(() => import('./pages/tryon/PreviewPage'));
@@ -181,7 +180,6 @@ export default function App() {
                         up the scissors. An independent barber is not in it. */}
                     <Route element={<RoleOnly allow={TRY_ON} />}>
                       <Route path="/ai-tryon" element={<TryOnHomePage />} />
-                      <Route path="/ai-tryon/capture-360" element={<Capture360Page />} />
                       <Route path="/ai-tryon/upload" element={<PhotoUploadPage />} />
                       <Route path="/ai-tryon/select" element={<StyleSelectPage />} />
                       <Route path="/ai-tryon/preview/:id" element={<PreviewPage />} />

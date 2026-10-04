@@ -22,3 +22,6 @@ Dockerfile
 README.md
 *.log
 .DS_Store
+
+# Tests run against a fake provider and have no place in the image
+tests

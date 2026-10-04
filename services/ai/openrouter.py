@@ -32,8 +32,18 @@ ANALYSIS_MODEL = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o")
 #: product needs. See README for the alternatives.
 IMAGE_MODEL = os.getenv("OPENROUTER_IMAGE_MODEL", "google/gemini-3.1-flash-image")
 
+#: Video model behind POST /videos — the 360° turnaround — when the caller does
+#: not name one. The backend names the one an admin picked in the dashboard;
+#: this is only the fallback. It must accept a `first_frame` image and render
+#: 2–3 seconds, which `hair_video.list_video_models()` checks against
+#: OpenRouter's own model catalogue.
+VIDEO_MODEL = os.getenv("OPENROUTER_VIDEO_MODEL", "kwaivgi/kling-v3.0-std")
+
 ANALYSIS_TIMEOUT = float(os.getenv("OPENROUTER_TIMEOUT", "90"))
 IMAGE_TIMEOUT = float(os.getenv("OPENROUTER_IMAGE_TIMEOUT", "180"))
+#: Per HTTP call to the video API — submitting, polling and downloading are
+#: each quick. The render itself runs upstream for minutes and is polled.
+VIDEO_TIMEOUT = float(os.getenv("OPENROUTER_VIDEO_TIMEOUT", "60"))
 
 #: Optional OpenRouter attribution: shows this app on openrouter.ai rankings and
 #: in the account's activity feed. Neither header is required to make a call.

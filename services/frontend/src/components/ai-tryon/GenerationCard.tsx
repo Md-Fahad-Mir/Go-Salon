@@ -1,4 +1,4 @@
-import { ImageOff, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { ImageOff, Orbit, ThumbsDown, ThumbsUp } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import type { AIGeneration } from '../../types';
@@ -19,7 +19,8 @@ interface GenerationCardProps {
   footer?: ReactNode;
 }
 
-/** A rendered result as a portrait tile that opens the preview. */
+/** A rendered result as a portrait tile that opens the preview. A 360° result
+    shows the styled still it turns from, badged, and plays on the preview. */
 export function GenerationCard({ generation, showTime, footer }: GenerationCardProps) {
   const t = useT();
   const { url, loading, missing } = usePhotoUrl(generation.resultKey);
@@ -42,6 +43,13 @@ export function GenerationCard({ generation, showTime, footer }: GenerationCardP
             <div className="art-center" aria-hidden="true">
               <ImageOff size={22} />
               {t('tryon.photoGoneShort')}
+            </div>
+          ) : null}
+          {generation.videoKey ? (
+            <div className="art-corner">
+              <Badge tone="dark" plain pill>
+                <Orbit size={12} aria-hidden="true" /> {t('tryon.badge360')}
+              </Badge>
             </div>
           ) : null}
           {generation.feedback ? (

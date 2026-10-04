@@ -235,7 +235,10 @@ async function send(path: string, options: RequestOptions, token: string | null)
      `application/json` is the only value any of them will accept. Naming the
      content type a handler happens to write earns a 406 and never reaches it. */
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json';
+  /* A photo goes up as `FormData`, and the browser must write that
+     Content-Type itself — only it knows the multipart boundary. */
+  const isForm = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  if (options.body !== undefined && !isForm) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
 
   /* Which salon this is about, beside the token that says who is asking.
@@ -256,7 +259,7 @@ async function send(path: string, options: RequestOptions, token: string | null)
   return fetch(`${BASE_URL}${path}`, {
     method: options.method ?? 'GET',
     headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: options.body === undefined ? undefined : isForm ? (options.body as FormData) : JSON.stringify(options.body),
     signal: options.signal,
   });
 }
@@ -298,8 +301,9 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   return body as T;
 }
 
-/** Fetch binary. One endpoint needs this — the salon's QR code, which answers
-    with a PNG — and it is worth saying why it is not simply `request`.
+/** Fetch binary. Two endpoints need this — the 360° try-on clip, and the
+    salon's QR code, which answers with a PNG — and it is worth saying why it
+    is not simply `request`.
 
     A refusal from that endpoint is still JSON. `TenantContext` and `OwnsTenant`
     raise DRF exceptions, which `Apps/users/exceptions.py` renders as
@@ -334,7 +338,14 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     literal Accept header, and the override rests on an invariant nothing states:
     that success returns a raw `HttpResponse` and failure a DRF `Response`. The
     day `qr_response` returns a DRF `Response`, refusals quietly become PNGs. */
-export async function requestBlob(path: string, options: RequestOptions = {}): Promise<Blob> {
+export async function requestBlob(
+  path: string,
+  options: RequestOptions = {},
+  /* What a success must be. The QR code is an image; a 360° try-on is a
+     video. Only the check on the answer changes — the Accept header stays
+     JSON, for the reason above. */
+  kind: 'image' | 'video' = 'image',
+): Promise<Blob> {
   const response = await exchange(path, options);
 
   if (!response.ok) {
@@ -342,10 +353,10 @@ export async function requestBlob(path: string, options: RequestOptions = {}): P
   }
 
   const blob = await response.blob();
-  if (!blob.type.startsWith('image/')) {
+  if (!blob.type.startsWith(`${kind}/`)) {
     throw new ApiValidationError(
-      'not_an_image',
-      'That did not come back as an image.',
+      kind === 'image' ? 'not_an_image' : 'not_a_video',
+      `That did not come back as ${kind === 'image' ? 'an image' : 'a video'}.`,
       response.status,
     );
   }

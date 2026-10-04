@@ -280,18 +280,17 @@ export interface Booking {
 }
 
 /* ==========================================================================
-   AI try-on. These mirror the FastAPI service in services/ai: `POST /analyze`
-   reads the customer's photo, `POST /generate` renders one recommended style
-   onto it. Field names are camel-cased at the transport boundary
-   (utils/aiService.ts); the wire format is snake_case.
+   AI try-on. A result is a 2–3 second 360° video of the customer turning in
+   the chosen admin hairstyle, made through the backend (utils/
+   tryOnVideoService.ts). Results from before the video — single edited
+   photos and multi-angle rings — are still on some devices and still open,
+   which is what `GeneratedView` and `views` below are kept for.
    ========================================================================== */
 
-export type StylingDifficulty = 'easy' | 'moderate' | 'hard';
 export type MaintenanceLevel = 'low' | 'medium' | 'high';
 
-/** The eight views of one head the 360 capture walks a customer around. The
-    same ids travel to the AI service and back, so one angle is one word from
-    the camera to the prompt. `src/utils/angles.ts` owns the ring order. */
+/** The eight views of one head an older multi-angle result was rendered
+    from. `src/utils/angles.ts` owns the ring order. */
 export type HeadAngle =
   | 'front'
   | 'front_left'
@@ -302,116 +301,11 @@ export type HeadAngle =
   | 'right'
   | 'front_right';
 
-/** One captured view, held while the 360 flow is in progress. The photo itself
-    lives in IndexedDB — only its key travels. */
-export interface CapturedAngle {
-  angle: HeadAngle;
-  photoKey: string;
-}
-
-/** One rendered view of a 360 preview: the photo that went in, and the render
-    that came back. */
+/** One rendered view of an older multi-angle result. */
 export interface GeneratedView {
   angle: HeadAngle;
   sourceKey: string;
   resultKey: string;
-}
-
-/** One hairstyle the AI suggested for this photo. `id` is minted by the AI
-    service and travels back with the generation request, so a recommendation
-    can be followed from analysis to rendered result. */
-export interface HairstyleRecommendation {
-  id: string;
-  name: string;
-  description: string;
-  whyItSuits: string;
-  /** 0–100, the model's own read of how well the style suits this face. */
-  compatibilityScore: number;
-  /** 0–100, how directly a barber could cut this from the hair in the photo
-      today. A separate question from suiting the face, and the one that
-      decides whether the render is honest. Absent on analyses saved before
-      the model was asked for it. */
-  currentHairFit?: number;
-  /** Whether the cut ends up shorter than, or the same as, the hair in the
-      photo. The service drops anything that would need it longer — a haircut
-      cannot add hair — so 'longer' only survives when every pick failed. */
-  lengthChange?: 'shorter' | 'same' | 'longer' | '';
-  stylingDifficulty: StylingDifficulty;
-  maintenanceLevel: MaintenanceLevel;
-  stylingTips: string[];
-  suitability: string;
-}
-
-/** What the AI could see in the photo. Fed back into the generation prompt and
-    shown to the customer so the recommendations are not a black box. Any field
-    may be '' when the model could not tell. */
-export interface HairProfile {
-  faceShape: string;
-  faceShapeConfidence: number;
-  hairTexture: string;
-  hairDensity: string;
-  hairLengthObserved: string;
-  /** The same read as a bucket, so it can stand in for the self-declared
-      profile length when a catalogue style is weighed against real hair. */
-  hairLengthCategory?: 'very_short' | 'short' | 'medium' | 'long' | 'extra_long' | '';
-  currentHairstyle: string;
-  /** What only another angle can show. Empty after a single-photo read — the
-      analysis card omits whatever is blank rather than guessing. */
-  headShape?: string;
-  crownArea?: string;
-  backOfHead?: string;
-  sides?: string;
-  nape?: string;
-  thinning?: string;
-  scalpVisibility?: string;
-  /** Recession, thinning, a high temple — fed back into the render so the
-      model keeps the hairline it was shown instead of restoring one. */
-  hairline?: string;
-  hairHealthScore: number;
-  hairColor: string;
-  skinTone: string;
-  undertone: string;
-  hasBeard: boolean;
-  beardStyle: string;
-}
-
-export interface TryOnAnalysis {
-  recommendations: HairstyleRecommendation[];
-  profile: HairProfile;
-  summary: string;
-  model: string;
-  /** The stored photo this analysis describes — a new photo needs a new run. */
-  photoKey: string;
-  /** Which views it was read from. One entry after a single-photo read; up to
-      eight after a 360 capture, and the card says which. */
-  angles?: HeadAngle[];
-  createdAt: string;
-}
-
-/** A style the customer can render. Either an AI recommendation or a catalogue
-    entry: both reduce to the words the image model needs plus how the card
-    should look. */
-export interface TryOnStyle {
-  id: string;
-  name: string;
-  description: string;
-  origin: 'ai' | 'catalogue';
-  feasibility: Feasibility;
-  /** The length the style needs, for a catalogue entry. Sent with the render
-      so the service can refuse a cut the photo's hair cannot give. An AI pick
-      has none — the analysis already vetted it against the photo. */
-  length?: HairLength;
-  /** Placeholder art tone, for cards that have no photo of their own. */
-  tone: number;
-  compatibilityScore?: number;
-  whyItSuits?: string;
-}
-
-/** What `POST /generate` gives back, once decoded. */
-export interface TryOnRender {
-  blob: Blob;
-  model: string;
-  latencyMs: number;
 }
 
 export interface AIGeneration {
@@ -421,20 +315,21 @@ export interface AIGeneration {
   createdAt: string;
   feedback?: Feedback;
   feasibility: Feasibility;
-  /** IndexedDB keys for the source photo and the rendered result. */
+  /** IndexedDB keys for the source photo and the result's still — for a 360°
+      video, the edited first frame it turns from, which is what every tile,
+      thumbnail and share falls back to. */
   sourceKey: string;
   resultKey: string;
+  /** IndexedDB key of the 360° video. Absent on results made before it. */
+  videoKey?: string;
   /** Where the style came from. Absent on results saved before the AI landed. */
-  origin?: TryOnStyle['origin'];
-  /** Every rendered view of a 360 preview, in ring order. Absent on an
-      ordinary single-photo try-on, which is what makes the two tell apart:
-      `sourceKey`/`resultKey` above always point at the front view, so every
-      screen that knew about single results still works unchanged. */
+  origin?: 'ai' | 'catalogue';
+  /** Every rendered view of an older multi-angle result, in ring order. */
   views?: GeneratedView[];
-  /** The AI's own reads, kept so the preview can show why it was suggested. */
+  /** The AI's own reads, kept so an older result can show why it was suggested. */
   compatibilityScore?: number;
   whyItSuits?: string;
-  /** Image model that rendered this result, e.g. "gpt-image-1". */
+  /** Model that rendered this result — the video model, for a 360° video. */
   model?: string;
 }
 

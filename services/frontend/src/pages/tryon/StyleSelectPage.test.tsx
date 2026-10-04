@@ -1,15 +1,23 @@
-/* The try-on picker offers the admin's catalogue and nothing else, and renders
-   a chosen style with the prompt the admin wrote for it. */
+/* The 360° try-on, from the style picker to a video on the device.
 
-import { screen, waitFor } from '@testing-library/react';
+   The picker offers the admin's catalogue and nothing else, and asks the
+   backend for a video by hairstyle *id* — the admin's prompt and the admin's
+   video model are attached there, so neither may leave the app. */
+
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { StrictMode } from 'react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { LanguageProvider } from '../../components/LanguageProvider';
+import { ThemeProvider } from '../../components/ThemeProvider';
 import type { Mock } from 'vitest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useAppStore } from '../../store/useAppStore';
 import { useTryOnStore } from '../../store/useTryOnStore';
 import { requestsTo, route } from '../../test/http';
+import type { Answer } from '../../test/http';
 import { mount } from '../../test/render';
-import type { HairProfile, User } from '../../types';
+import type { User } from '../../types';
 import { photoStore } from '../../utils/storage';
 import StyleSelectPage from './StyleSelectPage';
 import TryOnHomePage from './TryOnHomePage';
@@ -34,22 +42,25 @@ const BRAIDS = {
 /** Names the old hardcoded catalogue shipped. None may appear any more. */
 const OLD_MOCK_NAMES = ['Skin fade', 'Layer cut', 'Holud bridal updo', 'Wolf cut', 'Pompadour'];
 
-const someone = (): User => ({
+const STARTED = {
+  id: 12,
+  status: 'processing',
+  hairstyle_id: 7,
+  hairstyle_name: 'Admin fade',
+  video_model: 'kwaivgi/kling-v3.0-std',
+  duration_seconds: 3,
+  error: null,
+  created_at: '2026-10-04T10:00:00Z',
+  completed_at: null,
+  poster: 'data:image/jpeg;base64,/9j/4AAQ',
+};
+const COMPLETED = { ...STARTED, status: 'completed', poster: undefined, completed_at: '2026-10-04T10:01:30Z' };
+const CLIP: Answer = { status: 200, blob: new Blob(['mp4-bytes'], { type: 'video/mp4' }) };
+
+const someone = (credits = 5): User => ({
   id: 'U1', name: 'Test Person', role: 'customer',
-  phone: '+8801955000009', createdAt: '2026-01-01T00:00:00.000Z', credits: 5,
+  phone: '+8801955000009', createdAt: '2026-01-01T00:00:00.000Z', credits,
 });
-
-const PROFILE: HairProfile = {
-  faceShape: 'oval', faceShapeConfidence: 80, hairTexture: 'straight', hairDensity: 'medium',
-  hairLengthObserved: 'short', hairLengthCategory: 'short', currentHairstyle: 'crop',
-  hairHealthScore: 80, hairColor: 'black', skinTone: 'medium', undertone: 'warm',
-  hasBeard: false, beardStyle: '',
-};
-
-const GENERATED = {
-  status: 200,
-  body: { image: { b64: btoa('rendered'), mime_type: 'image/png' }, meta: { model: 'test', latency_ms: 1 } },
-};
 
 const PRISTINE_APP = useAppStore.getState();
 const PRISTINE_TRYON = useTryOnStore.getState();
@@ -59,17 +70,18 @@ beforeEach(async () => {
   useAppStore.getState().setAuthStatus('ready');
   useAppStore.getState().setSession({ user: someone(), access: 'a', refresh: 'r' });
   useTryOnStore.setState(PRISTINE_TRYON, true);
-  // An analysis already in hand for this photo, so the screen goes straight
-  // to the catalogue rather than calling the vision model first.
-  useTryOnStore.setState({
-    photoKey: PHOTO,
-    analysis: {
-      recommendations: [], profile: PROFILE, summary: '', model: 'test',
-      photoKey: PHOTO, createdAt: '2026-01-01T00:00:00.000Z',
-    },
-  });
+  useTryOnStore.setState({ photoKey: PHOTO });
   await photoStore.put(PHOTO, new Blob(['photo'], { type: 'image/jpeg' }));
 });
+
+/** The whole backend, by URL. More specific paths first: first match wins. */
+const backend = (overrides: { catalogue?: Answer; start?: Answer; status?: Answer } = {}) =>
+  route([
+    ['/tryon/videos/12/content/', CLIP],
+    ['/tryon/videos/12/', overrides.status ?? { status: 200, body: COMPLETED }],
+    ['/tryon/videos/', overrides.start ?? { status: 201, body: STARTED }],
+    ['/hairstyles/catalogue/', overrides.catalogue ?? { status: 200, body: [FADE, BRAIDS] }],
+  ]);
 
 const openPicker = () =>
   mount({
@@ -80,16 +92,18 @@ const openPicker = () =>
     },
   });
 
-/** The multipart body of the one `/generate` call. */
-const generateForm = (): FormData => {
-  const call = (fetch as Mock).mock.calls.find(([url]) => String(url).includes('/generate'));
-  expect(call, 'no /generate request was made').toBeDefined();
-  return call![1].body as FormData;
+/** The multipart body the app sent to start the video. */
+const startForm = (): FormData => {
+  const call = (fetch as Mock).mock.calls.find(
+    ([url, init]) => String(url).endsWith('/tryon/videos/') && (init as RequestInit)?.method === 'POST',
+  );
+  expect(call, 'no video was started').toBeDefined();
+  return (call![1] as RequestInit).body as FormData;
 };
 
 describe('style picker', () => {
   it('shows the admin styles — name, category and image — and no hardcoded ones', async () => {
-    route([['/hairstyles/catalogue/', { status: 200, body: [FADE, BRAIDS] }]]);
+    backend();
     openPicker();
 
     expect(await screen.findByText('Admin fade')).toBeInTheDocument();
@@ -98,49 +112,147 @@ describe('style picker', () => {
     expect(screen.getByText('Braiding')).toBeInTheDocument();
     expect(screen.getByAltText('Admin fade hairstyle')).toHaveAttribute('src', FADE.image);
     for (const name of OLD_MOCK_NAMES) expect(screen.queryByText(name)).not.toBeInTheDocument();
-    expect(requestsTo('/hairstyles/catalogue/')).toHaveLength(1);
   });
 
-  it('renders a chosen style with the prompt the admin wrote for it', async () => {
-    route([
-      ['/hairstyles/catalogue/', { status: 200, body: [FADE, BRAIDS] }],
-      ['/generate', GENERATED],
-    ]);
+  it('offers nothing but the catalogue — no AI picks, no photo analysis', async () => {
+    backend();
+    openPicker();
+
+    await screen.findByText('Admin fade');
+    expect(requestsTo('/analyze')).toHaveLength(0);
+    expect(screen.queryByText('AI picks for you')).not.toBeInTheDocument();
+  });
+
+  it('asks for the video by style id, waits for it, keeps it and opens it', async () => {
+    backend();
     openPicker();
 
     await userEvent.click(await screen.findByRole('button', { name: /Admin fade/ }));
-
     expect(await screen.findByText('the preview')).toBeInTheDocument();
-    const form = generateForm();
+
+    const form = startForm();
     expect(form.get('hairstyle_id')).toBe('7');
-    expect(form.get('hairstyle_name')).toBe('Admin fade');
-    expect(form.get('hairstyle_description')).toBe('A crisp mid fade with a short textured top');
+    expect(form.get('image')).toBeInstanceOf(Blob);
+    // The prompt is the backend's to attach, from the admin's catalogue.
+    expect(form.has('prompt')).toBe(false);
+    expect(form.has('hairstyle_description')).toBe(false);
+
+    const [result] = useAppStore.getState().generations;
+    expect(result).toMatchObject({ hairstyleId: '7', hairstyleName: 'Admin fade', model: 'kwaivgi/kling-v3.0-std' });
+    expect(result.videoKey).toBeDefined();
+    const clip = await photoStore.get(result.videoKey!);
+    expect(clip?.type).toBe('video/mp4');
+    expect(await photoStore.get(result.resultKey)).toBeDefined();   // the poster
+    expect(useAppStore.getState().user?.credits).toBe(4);
+    expect(useTryOnStore.getState().pending).toBeNull();
   });
 
   it('starts a style picked earlier, looked up in the catalogue as it is now', async () => {
     useTryOnStore.setState({ selectedHairstyleId: '9' });
-    route([
-      ['/hairstyles/catalogue/', { status: 200, body: [FADE, BRAIDS] }],
-      ['/generate', GENERATED],
-    ]);
+    backend({ start: { status: 201, body: { ...STARTED, hairstyle_id: 9, hairstyle_name: 'Admin braids' } } });
     openPicker();
 
     expect(await screen.findByText('the preview')).toBeInTheDocument();
-    expect(generateForm().get('hairstyle_description')).toBe('Medium knotless box braids');
+    expect(startForm().get('hairstyle_id')).toBe('9');
   });
 
   it('does not start a style the admin switched off after it was picked', async () => {
     useTryOnStore.setState({ selectedHairstyleId: '3' });
-    route([['/hairstyles/catalogue/', { status: 200, body: [FADE] }]]);
+    backend({ catalogue: { status: 200, body: [FADE] } });
     openPicker();
 
     expect(await screen.findByText('Admin fade')).toBeInTheDocument();
     await waitFor(() => expect(useTryOnStore.getState().selectedHairstyleId).toBeNull());
-    expect(requestsTo('/generate')).toHaveLength(0);
+    expect(requestsTo('/tryon/videos/')).toHaveLength(0);
+  });
+
+  it('a video that fails upstream costs nothing and says why', async () => {
+    backend({
+      status: {
+        status: 200,
+        body: { ...STARTED, status: 'failed', poster: undefined,
+                error: { code: 'content_blocked', message: 'Try a different photo.' } },
+      },
+    });
+    openPicker();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Admin fade/ }));
+    expect(await screen.findByRole('button', { name: /Admin fade/ })).toBeInTheDocument();
+    expect(useAppStore.getState().generations).toHaveLength(0);
+    expect(useAppStore.getState().user?.credits).toBe(5);
+    expect(useTryOnStore.getState().pending).toBeNull();
+    const [toast] = useAppStore.getState().toasts;
+    expect(toast?.message).toBe('That photo could not be used. Try a clearer, well-lit photo of your face.');
+  });
+
+  it('a style withdrawn mid-pick is explained, and the list refreshed', async () => {
+    backend({
+      start: { status: 404, body: { detail: 'That style is no longer available.', code: 'hairstyle_unavailable', errors: {} } },
+    });
+    openPicker();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Admin fade/ }));
+    await waitFor(() => expect(requestsTo('/hairstyles/catalogue/')).toHaveLength(2));
+    expect(useAppStore.getState().toasts[0]?.message).toBe('That style is no longer available. Pick another one.');
+  });
+
+  it('picks a video back up after the screen was left mid-render', async () => {
+    useTryOnStore.setState({
+      pending: {
+        generationId: 'GEN-resumed', jobId: '12', hairstyleId: '7', hairstyleName: 'Admin fade',
+        sourceKey: PHOTO, posterKey: 'result:GEN-resumed', videoModel: 'kwaivgi/kling-v3.0-std',
+      },
+    });
+    await photoStore.put('result:GEN-resumed', new Blob(['poster'], { type: 'image/jpeg' }));
+    backend();
+    openPicker();
+
+    expect(await screen.findByText('the preview')).toBeInTheDocument();
+    expect(requestsTo('/tryon/videos/').filter((r) => r.method === 'POST')).toHaveLength(0);
+    expect(useAppStore.getState().generations[0]?.id).toBe('GEN-resumed');
+  });
+
+  it('picks a video back up under StrictMode, which mounts the screen twice', async () => {
+    useTryOnStore.setState({
+      pending: {
+        generationId: 'GEN-strict', jobId: '12', hairstyleId: '7', hairstyleName: 'Admin fade',
+        sourceKey: PHOTO, posterKey: 'result:GEN-strict', videoModel: 'kwaivgi/kling-v3.0-std',
+      },
+    });
+    await photoStore.put('result:GEN-strict', new Blob(['poster'], { type: 'image/jpeg' }));
+    backend();
+    // At the root, as src/main.tsx has it: nested under the router, React does
+    // not replay the mount, and the test would prove nothing.
+    render(
+      <StrictMode>
+        <ThemeProvider>
+          <LanguageProvider>
+            <MemoryRouter initialEntries={['/ai-tryon/select']}>
+              <Routes>
+                <Route path="/ai-tryon/select" element={<StyleSelectPage />} />
+                <Route path="/ai-tryon/preview/:id" element={<p>the preview</p>} />
+              </Routes>
+            </MemoryRouter>
+          </LanguageProvider>
+        </ThemeProvider>
+      </StrictMode>,
+    );
+
+    expect(await screen.findByText('the preview')).toBeInTheDocument();
+    expect(useAppStore.getState().generations[0]?.id).toBe('GEN-strict');
+  });
+
+  it('asks for credits before starting when there are none', async () => {
+    useAppStore.getState().setSession({ user: someone(0), access: 'a', refresh: 'r' });
+    backend();
+    openPicker();
+
+    await userEvent.click(await screen.findByRole('button', { name: /Admin fade/ }));
+    expect(requestsTo('/tryon/videos/')).toHaveLength(0);
   });
 
   it('says so when the admin has no active styles', async () => {
-    route([['/hairstyles/catalogue/', { status: 200, body: [] }]]);
+    backend({ catalogue: { status: 200, body: [] } });
     openPicker();
 
     expect(await screen.findByText('No styles to try yet')).toBeInTheDocument();
@@ -148,7 +260,7 @@ describe('style picker', () => {
   });
 
   it('offers a retry when the catalogue could not be loaded', async () => {
-    route([['/hairstyles/catalogue/', 'unreachable']]);
+    backend({ catalogue: 'unreachable' });
     openPicker();
 
     expect(await screen.findByText('We could not load that')).toBeInTheDocument();
@@ -160,7 +272,7 @@ describe('try-on home', () => {
   const openHome = () => mount({ at: '/ai-tryon', routes: { '/ai-tryon': <TryOnHomePage /> } });
 
   it('lists the admin styles and nothing hardcoded', async () => {
-    route([['/hairstyles/catalogue/', { status: 200, body: [FADE, BRAIDS] }]]);
+    backend();
     openHome();
 
     expect(await screen.findByText('Admin fade')).toBeInTheDocument();
@@ -168,8 +280,16 @@ describe('try-on home', () => {
     for (const name of OLD_MOCK_NAMES) expect(screen.queryByText(name)).not.toBeInTheDocument();
   });
 
+  it('offers the 360° try-on as the one way in', async () => {
+    backend();
+    openHome();
+
+    expect(await screen.findByText('360° try-on')).toBeInTheDocument();
+    expect(screen.queryByText('Start 360° capture')).not.toBeInTheDocument();
+  });
+
   it('drops the row when there is nothing to show', async () => {
-    route([['/hairstyles/catalogue/', { status: 200, body: [] }]]);
+    backend({ catalogue: { status: 200, body: [] } });
     openHome();
 
     await waitFor(() => expect(requestsTo('/hairstyles/catalogue/')).toHaveLength(1));

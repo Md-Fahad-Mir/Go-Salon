@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type { AIGeneration } from '../../types';
 import { ROUTES } from '../../constants';
 import { GenerationCard } from '../../components/ai-tryon/GenerationCard';
-import { shareGeneration } from '../../components/ai-tryon/tryonActions';
+import { resultKeysOf, shareGeneration, sourceKeysOf } from '../../components/ai-tryon/tryonActions';
 import { ActionSheet } from '../../components/common/ActionSheet';
 import { LinkButton } from '../../components/common/Button';
 import { Chip, ChipRow } from '../../components/common/Chip';
@@ -95,9 +95,9 @@ export default function HistoryPage() {
     if (!deleting) return;
     setBusy(true);
     const sourceShared = generations.some((g) => g.id !== deleting.id && g.sourceKey === deleting.sourceKey);
-    await photoStore.remove(deleting.resultKey);
+    await Promise.all(resultKeysOf(deleting).map((key) => photoStore.remove(key)));
     if (!sourceShared) {
-      await photoStore.remove(deleting.sourceKey);
+      await Promise.all(sourceKeysOf(deleting).map((key) => photoStore.remove(key)));
       if (photoKey === deleting.sourceKey) setPhotoKey(null);
     }
     removeGeneration(deleting.id);

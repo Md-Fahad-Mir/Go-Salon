@@ -127,6 +127,7 @@ INSTALLED_APPS = [
     'Apps.directory',
     'Apps.bookings',
     'Apps.hairstyles',
+    'Apps.tryon',
 ]
 
 MIDDLEWARE = [
@@ -267,6 +268,20 @@ SMS_TIMEOUT_SECONDS = env_int('SMS_TIMEOUT_SECONDS', 10)
 # Try-on credits a new customer starts with. Mirrors the frontend's own
 # STARTING_CREDITS so a fresh account reads the same on both sides.
 STARTING_TRY_ON_CREDITS = env_int('STARTING_TRY_ON_CREDITS', 3)
+
+# The hair-AI service (services/ai), for the 360° try-on video. The backend is
+# its only caller for that: it looks up the admin's prompt for the chosen
+# hairstyle and the admin's video model, so neither comes from the browser.
+# AI_SERVICE_TOKEN must match the service's own AI_SERVICE_TOKEN once set.
+AI_SERVICE_URL = env('AI_SERVICE_URL', 'http://127.0.0.1:8001').rstrip('/')
+AI_SERVICE_TOKEN = env('AI_SERVICE_TOKEN')
+# Starting a video renders the haircut onto the photo first (20–60 s, longer
+# when the provider is busy), so this one call is allowed a long wait.
+AI_SERVICE_START_TIMEOUT_SECONDS = env_int('AI_SERVICE_START_TIMEOUT_SECONDS', 240)
+AI_SERVICE_TIMEOUT_SECONDS = env_int('AI_SERVICE_TIMEOUT_SECONDS', 60)
+# At most one status check upstream per job in this window, however often the
+# app polls. OpenRouter asks for no more than one poll every ~30 s per job.
+TRYON_VIDEO_POLL_SECONDS = env_int('TRYON_VIDEO_POLL_SECONDS', 10)
 
 
 # CORS

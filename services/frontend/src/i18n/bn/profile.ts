@@ -1,14 +1,8 @@
 /* profile screens — Bangla copy. */
 export const profile = {
   'settings.language': 'ভাষা',
-  'settings.appearance': 'চেহারা',
-  'settings.themeLight': 'উজ্জ্বল',
-  'settings.themeDark': 'গাঢ়',
-  'settings.themeSystem': 'ফোন অনুযায়ী',
-  'settings.themeFollowing': 'আপনার ফোন অনুসরণ করছে, যেটি এখন {mood}।',
-  'settings.themeFixed': 'সবসময় {mood}, ফোনে যাই থাকুক।',
-  'settings.moodLight': 'উজ্জ্বল',
-  'settings.moodDark': 'গাঢ়',
+  'settings.switchToDark': 'গাঢ় মোডে যান',
+  'settings.switchToLight': 'উজ্জ্বল মোডে যান',
 
   /* ---- Bookings list ---- */
   'bookings.title': 'আমার বুকিং',

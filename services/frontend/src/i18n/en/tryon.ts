@@ -3,15 +3,15 @@ export const tryon = {
   /* Try-on home */
   'tryon.historyAction': 'History',
   'tryon.aiPreview': 'AI preview',
-  'tryon.heroTitle': 'Try a new look in 30 seconds',
-  'tryon.heroBody': 'Upload a selfie and see any style on you before you book.',
+  'tryon.heroTitle': 'See your new look in 360°',
+  'tryon.heroBody': 'Upload a selfie and watch yourself in any style, from every side, before you book.',
   'tryon.afterAi': 'After AI',
   'tryon.buyCredits': 'Buy credits',
   'tryon.takeSelfie': 'Take a selfie',
   'tryon.choosePhoto': 'Choose a photo',
   'tryon.howItWorks': 'How it works',
   'tryon.step1': 'Take or pick a clear selfie',
-  'tryon.step2': 'Choose any style — we render it on you',
+  'tryon.step2': 'Choose a style — we turn you all the way round in it',
   'tryon.step3': 'Like it? Book a pro who does it',
   'tryon.recommended': 'Recommended for you',
   'tryon.recentResults': 'Recent results',
@@ -114,8 +114,8 @@ export const tryon = {
   'tryon.generatedWith': 'Rendered by {model}',
 
   /* Processing */
-  'tryon.processingTitle': 'Working on it',
-  'tryon.processingBody': 'Rendering {style} on your photo',
+  'tryon.processingTitle': 'Making your 360° video',
+  'tryon.processingBody': 'Putting {style} on your photo, then turning you all the way round',
   'tryon.stageAnalyzing': 'Reading your face shape',
   'tryon.stageMapping': 'Mapping your hairline',
   'tryon.stageRendering': 'Rendering the style',
@@ -242,8 +242,8 @@ export const tryon = {
     'It needs much more length or a different texture than you have today. A stylist can suggest a closer version for now.',
 
   /* 360 preview */
-  'tryon.modeSingle': 'One photo',
-  'tryon.modeSingleBody': 'A selfie, read in seconds, and any style rendered on it.',
+  'tryon.modeSingle': '360° try-on',
+  'tryon.modeSingleBody': 'One clear selfie. Pick a style and watch a short video of yourself turning all the way round in it.',
   'tryon.mode360': '360° preview',
   'tryon.mode360Body': 'Walk around your head once. We read the crown, sides and back too — then show the cut from every side.',
   'tryon.start360': 'Start 360° capture',
@@ -307,4 +307,19 @@ export const tryon = {
   'tryon.viewerDrag': 'Drag to turn',
   'tryon.viewerCount': '{count} angles',
   'tryon.ringRendered': 'Rendered from {count} angles: {angles}. The same cut all the way round.',
+
+  /* 360° try-on video */
+  'tryon.selectIntro': 'Pick a style to see yourself in it from every side, in a short 360° video.',
+  'tryon.stageStyling': 'Styling your hair on your photo',
+  'tryon.stageFilming': 'Filming your 360° turn',
+  'tryon.processingWait': 'This takes a minute or two — keep this screen open.',
+  'tryon.errorStyleGone': 'That style is no longer available. Pick another one.',
+  'tryon.videoAlt': '360° video of you with {name}',
+  'tryon.badge360': '360°',
+  'tryon.playVideo': 'Play',
+  'tryon.pauseVideo': 'Pause',
+  'tryon.videoGoneTitle': 'Video gone',
+  'tryon.videoGoneBody': 'The video is no longer on this device.',
+  'tryon.saveVideo': 'Save video',
+  'tryon.toastVideoSaved': 'Video saved',
 } as const;
