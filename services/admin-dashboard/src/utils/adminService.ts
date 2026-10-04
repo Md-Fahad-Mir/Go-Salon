@@ -227,6 +227,8 @@ export interface CreateSalonInput {
   ownerName: string;
   phone: string;
   email?: string;
+  /** The owner's initial password; without one the backend sets a random one. */
+  password?: string;
   city: string;
   address: string;
   bio?: string;
@@ -240,6 +242,7 @@ export const salonService = {
       owner_name: input.ownerName,
       owner_phone: input.phone,
       owner_email: input.email ?? '',
+      ...(input.password && { owner_password: input.password }),
       city: input.city,
       address: input.address,
       bio: input.bio ?? '',

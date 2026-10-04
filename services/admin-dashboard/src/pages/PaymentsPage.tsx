@@ -278,7 +278,7 @@ export default function PaymentsPage() {
       </div>
 
       <section className="card">
-        <div style={{ padding: '0 1rem' }}>
+        <div className="card-tabs">
           <Tabs
             label="Payment records"
             active={tab}

@@ -268,21 +268,9 @@ export default function UsersPage() {
     );
   };
 
-  const counts = useMemo(
-    () => ({
-      total: users.length,
-      suspended: users.filter((user) => user.status === 'suspended').length,
-      advanced: users.filter((user) => user.subscriptionTier === 'advanced').length,
-    }),
-    [users],
-  );
-
   return (
     <>
-      <PageHeader
-        title="Users"
-        description={`${formatNumber(counts.total)} accounts · ${counts.advanced} on Advanced · ${counts.suspended} suspended`}
-      />
+      <PageHeader title="Users" />
 
       <section className="card">
         {error ? (

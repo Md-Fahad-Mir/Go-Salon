@@ -1,10 +1,13 @@
 /* ==========================================================================
-   Go Salon Admin — Design tokens
+   Go Salon Admin — Design tokens  ·  "Onyx & Champagne"
 
-   Two moods around one gold accent:
-     Day    warm sand ground, off-white cards, espresso ink
-     Night  warm charcoal — the darks carry the gold's hue so the accent
-            belongs to the surface rather than sitting on top of it
+   Two moods around one champagne accent:
+     Day    porcelain ground, white cards, onyx ink and onyx primary actions
+     Night  near-black ground, graphite cards, champagne primary actions
+
+   The sidebar is onyx in both moods, so the frame of the console never
+   changes — only the canvas inside it does. Champagne is used sparingly:
+   the active nav item, focus, toggles, meters and highlighted chart marks.
 
    Every colour in the app resolves through one of these variables, so a single
    class swap on <html> repaints the entire UI.
@@ -23,119 +26,154 @@
 :root {
   color-scheme: light;
 
-  /* --- Surfaces ---------------------------------------------------------
-     L*  92.6 ground -> 95.3 muted -> 98.0 card: an even, readable ladder. */
-  --bg-primary: #efe9e0;
-  --bg-secondary: #fbf9f5;
-  --bg-elevated: #fffdfa;
-  --bg-muted: #f5f1ea;
-  --bg-inverse: #2a2521;
-  --text-inverse: #f7f3ec;
+  /* --- Type families ---------------------------------------------------- */
+  --font-sans: 'Geist', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Instrument Serif', 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
-  /* Day keeps the sidebar white so it reads as paper next to the sand ground;
-     night drops it to near-black. Because the panel flips, every token that
-     lands on it flips too — including the focus ring, further down. */
-  --primary-sidebar: #ffffff;
-  --sidebar-border: var(--border-color);
-  --sidebar-accent: #8a5f22;
-  --sidebar-mark: #c08a4a;
-  --sidebar-text: #574f45;
-  --sidebar-text-strong: #2a2521;
-  --sidebar-text-dim: #6f675c;
-  --sidebar-hover: rgba(192, 138, 74, 0.1);
-  --sidebar-active: rgba(192, 138, 74, 0.16);
-  --sidebar-badge: #d32f2f;
+  /* --- Surfaces --------------------------------------------------------- */
+  --bg-primary: #f5f3ee;
+  --bg-secondary: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-muted: #faf9f6;
+  --bg-inverse: #16181d;
+  --text-inverse: #f7f5f0;
+  --header-bg: rgba(245, 243, 238, 0.82);
+  --glow: rgba(168, 131, 79, 0.07);
+
+  /* --- Sidebar (onyx in both moods) ------------------------------------- */
+  --primary-sidebar: #111318;
+  --sidebar-gradient: linear-gradient(180deg, #15171d 0%, #0f1115 100%);
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-divider: rgba(255, 255, 255, 0.07);
+  --sidebar-accent: #d9bc8c;
+  /* The customer app's own gold tile, as it sits on a dark surface (its
+     Welcome masthead): satin sheen over the night accent gradient. */
+  --sidebar-mark: linear-gradient(105deg, rgba(255, 244, 226, 0.16) 0%, rgba(255, 244, 226, 0) 42%),
+    linear-gradient(145deg, #f0cfa0 0%, #dcae76 52%, #bb8b4e 100%);
+  --sidebar-mark-solid: #dcae76;
+  --sidebar-mark-ink: #1a1509;
+  --sidebar-text: #a4a8b1;
+  --sidebar-text-strong: #f4f2ed;
+  --sidebar-text-dim: #80858f;
+  --sidebar-hover: rgba(255, 255, 255, 0.05);
+  --sidebar-active: linear-gradient(90deg, rgba(217, 188, 140, 0.16) 0%, rgba(217, 188, 140, 0.04) 100%);
+  --sidebar-badge: #c8453d;
+
+  /* --- Overview key-figures band (onyx in both moods, like the sidebar) - */
+  --hero-bg-solid: #121419;
+  --hero-bg: linear-gradient(135deg, #1d2028 0%, #13151a 55%, #0e1014 100%);
+  --hero-border: transparent;
+  --hero-line: rgba(255, 255, 255, 0.08);
 
   /* --- Type ------------------------------------------------------------- */
-  /* Three levels, each >= 4.5:1 on every surface it lands on. Tertiary is
-     real content here (record ids, timestamps, column headers), not decoration,
-     so it carries the same floor as body text. */
-  --text-primary: #2a2521;
-  --text-secondary: #574f45;
-  --text-tertiary: #6f675c;
+  /* Three levels, each >= 4.5:1 on every surface it lands on, hover tints
+     included. Tertiary is real content here (record ids, timestamps, column
+     headers), not decoration, so it carries the same floor as body text. */
+  --text-primary: #16181d;
+  --text-secondary: #4b505a;
+  --text-tertiary: #666b75;
 
   /* --- Lines ------------------------------------------------------------ */
-  --border-color: #ddd4c4;
-  --border-light: #ebe4d8;
-  --border-strong: #cabda8;
+  --border-color: #e7e3da;
+  --border-light: #efece6;
+  --border-strong: #d6d0c4;
 
   /* --- Accent -----------------------------------------------------------
-     `--accent` fills (buttons, meters, toggles); `--accent-ink` is the gold
-     that has to survive as text on a light ground. */
-  --accent: #c08a4a;
-  --accent-hover: #a97538;
-  --accent-ink: #8a5f22;
-  --accent-on: #241d12;
-  --accent-bg: rgba(192, 138, 74, 0.16);
+     `--accent` fills (toggles, meters, focus borders); `--accent-ink` is the
+     champagne that has to survive as text on a light ground. */
+  --accent: #a8834f;
+  --accent-hover: #94713f;
+  --accent-ink: #7f6031;
+  --accent-on: #17130b;
+  --accent-bg: rgba(168, 131, 79, 0.12);
+  --accent-line: rgba(168, 131, 79, 0.35);
+
+  /* Primary action. Onyx by day, champagne by night. */
+  --btn-primary-bg: #16181d;
+  --btn-primary-hover: #2b2e36;
+  --btn-primary-text: #ffffff;
 
   /* Solid destructive button: white has to sit on this, so it stays deep in
      both moods rather than following the light `-ink` shade. */
-  --danger-solid: #c62828;
+  --danger-solid: #b3362f;
 
   /* --- Controls --------------------------------------------------------- */
   --input-bg: #ffffff;
-  --input-border: #ded5c7;
+  --input-border: #e1ddd3;
   --input-focus: var(--accent);
-  --hover-bg: #f2ece2;
-  --active-bg: #e8e0d3;
-  --ring: rgba(192, 138, 74, 0.3);
-  --focus-ring: #6b4a16;
+  --hover-bg: #f4f1ea;
+  --row-hover: #faf8f3;
+  --active-bg: #ebe7de;
+  --ring: rgba(168, 131, 79, 0.2);
+  --focus-ring: #7f6031;
+
+  /* --- Avatars ---------------------------------------------------------- */
+  --avatar-bg: linear-gradient(140deg, #2a2d35 0%, #16181d 100%);
+  --avatar-text: #e3cfa8;
 
   /* --- Status ----------------------------------------------------------- */
-  --status-success: #4caf50;
-  --status-warning: #ff9800;
-  --status-danger: #f44336;
-  --status-info: #2196f3;
-  --status-neutral: #6f675c;
+  --status-success: #2e8b62;
+  --status-warning: #c98a1b;
+  --status-danger: #c8453d;
+  --status-info: #3c6fb0;
+  --status-neutral: #6a6f79;
 
-  --status-success-ink: #276b2b;
-  --status-warning-ink: #96500a;
-  --status-danger-ink: #c62828;
-  --status-info-ink: #1565c0;
-  --status-neutral-ink: #5c554d;
+  --status-success-ink: #1d6b49;
+  --status-warning-ink: #85570b;
+  --status-danger-ink: #a83229;
+  --status-info-ink: #2b5a94;
+  --status-neutral-ink: #545964;
 
-  --status-success-bg: rgba(76, 175, 80, 0.14);
-  --status-warning-bg: rgba(255, 152, 0, 0.16);
-  --status-danger-bg: rgba(244, 67, 54, 0.13);
-  --status-info-bg: rgba(33, 150, 243, 0.13);
-  --status-neutral-bg: rgba(111, 103, 92, 0.14);
+  --status-success-bg: rgba(46, 139, 98, 0.1);
+  --status-warning-bg: rgba(201, 138, 27, 0.12);
+  --status-danger-bg: rgba(200, 69, 61, 0.1);
+  --status-info-bg: rgba(60, 111, 176, 0.1);
+  --status-neutral-bg: rgba(106, 111, 121, 0.1);
 
   /* --- Data-viz ---------------------------------------------------------
      Payment hues are validated for colour-vision deficiency against this
      mood's card surface; Card sits on cyan because blue collides with
      Rocket's purple under deuteranopia. */
-  --chart-bar: #ded4c2;
-  --chart-bar-hi: #b8873f;
-  --chart-line: #2a2521;
-  --chart-grid: #e7dfd2;
-  --chart-axis: #6f675c;
+  --chart-bar: #e8e3d8;
+  --chart-bar-hi: #b08b55;
+  --chart-line: #16181d;
+  --chart-grid: #efece5;
+  --chart-axis: #666b75;
   --pay-bkash: #e2136e;
   --pay-nagad: #e85d18;
   --pay-rocket: #8a2be2;
   --pay-card: #0e94b0;
 
   /* --- Depth ------------------------------------------------------------
-     Shadows are brown-black rather than neutral, so they warm the surface
-     they fall on instead of greying it. */
-  --shadow-sm: 0 2px 8px rgba(58, 44, 26, 0.08);
-  --shadow-md: 0 4px 16px rgba(58, 44, 26, 0.11);
-  --shadow-lg: 0 8px 24px rgba(58, 44, 26, 0.14);
-  --overlay: rgba(36, 29, 20, 0.5);
+     Layered, low-opacity shadows: a tight contact shadow plus a soft ambient
+     one, so cards lift off the porcelain without a grey halo. */
+  --shadow-xs: 0 1px 2px rgba(20, 22, 28, 0.05);
+  --shadow-sm: 0 1px 2px rgba(20, 22, 28, 0.04), 0 2px 8px rgba(20, 22, 28, 0.04);
+  --shadow-md: 0 2px 4px rgba(20, 22, 28, 0.04), 0 10px 28px rgba(20, 22, 28, 0.08);
+  --shadow-lg: 0 4px 10px rgba(20, 22, 28, 0.05), 0 24px 56px rgba(20, 22, 28, 0.16);
+  --overlay: rgba(14, 15, 19, 0.42);
+  --skeleton: #efece5;
+  --skeleton-hi: #f8f6f1;
 
   /* --- Motion ----------------------------------------------------------- */
-  --transition-speed: 0.3s;
+  --transition-speed: 0.2s;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* --- Radii ------------------------------------------------------------ */
-  --radius-sm: 0.375rem;
-  --radius: 0.5rem;
-  --radius-lg: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
   --radius-pill: 999px;
 
   /* --- Metrics (overridden per breakpoint below) ------------------------ */
-  --sidebar-width: 15rem;
+  --sidebar-width: 16rem;
+  --rail-width: 4.75rem;
   --header-height: 3.5rem;
-  --content-padding: 0.75rem;
+  --content-padding: 1rem;
+  --card-padding: 1rem;
   --avatar-size: 2rem;
   --chart-height: 15.625rem;
 }
@@ -143,86 +181,99 @@
 .dark-theme {
   color-scheme: dark;
 
-  /* L*  6.1 ground -> 10.1 muted -> 14.7 card -> 20.3 elevated. */
-  --bg-primary: #16130f;
-  --bg-secondary: #2b241c;
-  --bg-elevated: #373026;
-  --bg-muted: #201b15;
-  --bg-inverse: #ece7e0;
-  --text-inverse: #16130f;
+  --bg-primary: #0d0e11;
+  --bg-secondary: #15171b;
+  --bg-elevated: #1c1e23;
+  --bg-muted: #111317;
+  --bg-inverse: #f1efe9;
+  --text-inverse: #121316;
+  --header-bg: rgba(13, 14, 17, 0.78);
+  --glow: rgba(212, 180, 131, 0.05);
 
-  --primary-sidebar: #0f0d0b;
-  --sidebar-border: transparent;
-  --sidebar-accent: #d4a574;
-  --sidebar-mark: #d4a574;
-  --sidebar-text: #8d857b;
-  --sidebar-text-strong: #ece7e0;
-  --sidebar-hover: rgba(212, 165, 116, 0.12);
-  --sidebar-active: rgba(212, 165, 116, 0.18);
-  --sidebar-badge: #d32f2f;
+  --primary-sidebar: #08090b;
+  --sidebar-gradient: linear-gradient(180deg, #0b0c0f 0%, #070809 100%);
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-text: #9a9ea7;
+  --sidebar-text-dim: #7a7f89;
 
-  --text-primary: #ece7e0;
-  --text-secondary: #bdb3a8;
-  --text-tertiary: #a39990;
-  --sidebar-text-dim: #857c72;
+  /* Lifted a step off the night ground so the band still reads as a panel. */
+  --hero-bg-solid: #17191e;
+  --hero-bg: linear-gradient(135deg, #20232a 0%, #17191e 55%, #121418 100%);
+  --hero-border: #2a2d34;
+  --hero-line: rgba(255, 255, 255, 0.07);
 
-  --border-color: #443b30;
-  --border-light: #4e4437;
-  --border-strong: #564a3c;
+  --text-primary: #eeece6;
+  --text-secondary: #b3b1aa;
+  --text-tertiary: #8f8d87;
 
-  --accent: #d4a574;
-  --accent-hover: #e3b98c;
-  --accent-ink: #e0b183;
-  --accent-on: #241d12;
-  --accent-bg: rgba(212, 165, 116, 0.18);
-  --danger-solid: #c62828;
+  --border-color: #25272d;
+  --border-light: #1f2126;
+  --border-strong: #33363d;
 
-  --input-bg: #373026;
-  --input-border: #4e4337;
-  --input-focus: var(--accent);
-  --hover-bg: #373026;
-  --active-bg: #443b30;
-  --ring: rgba(212, 165, 116, 0.4);
-  --focus-ring: #e6bd8c;
+  --accent: #d4b483;
+  --accent-hover: #e2c597;
+  --accent-ink: #dcc093;
+  --accent-on: #17130b;
+  --accent-bg: rgba(212, 180, 131, 0.12);
+  --accent-line: rgba(212, 180, 131, 0.35);
 
-  --status-success: #66bb6a;
-  --status-warning: #ffb74d;
-  --status-danger: #ef5350;
-  --status-info: #42a5f5;
-  --status-neutral: #a39990;
+  --btn-primary-bg: #d4b483;
+  --btn-primary-hover: #e2c597;
+  --btn-primary-text: #17130b;
+  --danger-solid: #b3362f;
 
-  --status-success-ink: #7ecf83;
-  --status-warning-ink: #ffc470;
-  --status-danger-ink: #ff8a85;
-  --status-info-ink: #6db8f7;
-  --status-neutral-ink: #b7ada2;
+  --input-bg: #1a1c21;
+  --input-border: #2c2f36;
+  --hover-bg: #1d1f24;
+  --row-hover: #191b20;
+  --active-bg: #25272d;
+  --ring: rgba(212, 180, 131, 0.26);
+  --focus-ring: #e2c597;
 
-  --status-success-bg: rgba(102, 187, 106, 0.18);
-  --status-warning-bg: rgba(255, 183, 77, 0.18);
-  --status-danger-bg: rgba(239, 83, 80, 0.18);
-  --status-info-bg: rgba(66, 165, 245, 0.18);
-  --status-neutral-bg: rgba(163, 153, 144, 0.18);
+  --avatar-bg: linear-gradient(140deg, #2c2e35 0%, #1e2025 100%);
+  --avatar-text: #dcc093;
 
-  --chart-bar: #443b30;
-  --chart-bar-hi: #d4a574;
-  --chart-line: #ece7e0;
-  --chart-grid: #332c24;
-  --chart-axis: #a39990;
+  --status-success: #4fb488;
+  --status-warning: #e0a845;
+  --status-danger: #e0675f;
+  --status-info: #6a9be0;
+  --status-neutral: #8f8d87;
+
+  --status-success-ink: #6fcca2;
+  --status-warning-ink: #edc070;
+  --status-danger-ink: #f08c85;
+  --status-info-ink: #8fb5ec;
+  --status-neutral-ink: #aeaca5;
+
+  --status-success-bg: rgba(79, 180, 136, 0.14);
+  --status-warning-bg: rgba(224, 168, 69, 0.14);
+  --status-danger-bg: rgba(224, 103, 95, 0.14);
+  --status-info-bg: rgba(106, 155, 224, 0.14);
+  --status-neutral-bg: rgba(143, 141, 135, 0.14);
+
+  --chart-bar: #2a2c32;
+  --chart-bar-hi: #d4b483;
+  --chart-line: #eeece6;
+  --chart-grid: #1f2126;
+  --chart-axis: #8f8d87;
   --pay-bkash: #e83f7d;
   --pay-nagad: #d4762b;
   --pay-rocket: #b061f5;
   --pay-card: #189cb8;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
-  --overlay: rgba(10, 8, 6, 0.72);
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4), 0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.45), 0 28px 64px rgba(0, 0, 0, 0.6);
+  --overlay: rgba(4, 5, 6, 0.66);
+  --skeleton: #1f2126;
+  --skeleton-hi: #2a2c32;
 }
 
-/* Only the night sidebar needs a lifted focus colour; the white day sidebar
-   uses the page ring, which already clears 8:1 on white. */
-.dark-theme .sidebar {
-  --focus-ring: #e6bd8c;
+/* The sidebar is onyx in both moods, so it always needs the light champagne
+   focus colour rather than the page ring. */
+.sidebar {
+  --focus-ring: #e2c597;
 }
 
 /* --------------------------------------------------------------------------
@@ -230,27 +281,29 @@
    -------------------------------------------------------------------------- */
 
 @media (min-width: 30rem) { /* 480px — large phones */
-  :root { --header-height: 3.75rem; --content-padding: 1rem; }
+  :root { --header-height: 3.75rem; --content-padding: 1.125rem; }
 }
 
 @media (min-width: 48rem) { /* 768px — tablet */
   :root {
     --header-height: 4rem;
-    --content-padding: 1.25rem;
-    --avatar-size: 2.5rem;
+    --content-padding: 1.5rem;
+    --card-padding: 1.25rem;
+    --avatar-size: 2.375rem;
     --chart-height: 18.75rem;
   }
 }
 
 @media (min-width: 64rem) { /* 1024px — desktop */
   :root {
-    --header-height: 4.375rem;
-    --content-padding: 1.5rem;
-    --avatar-size: 2.75rem;
-    --chart-height: 25rem;
+    --header-height: 4.5rem;
+    --content-padding: 2rem;
+    --card-padding: 1.5rem;
+    --avatar-size: 2.5rem;
+    --chart-height: 24rem;
   }
 }
 
 @media (min-width: 80rem) { /* 1280px — desktop XL */
-  :root { --content-padding: 2rem; --chart-height: 28.125rem; }
+  :root { --chart-height: 26rem; }
 }

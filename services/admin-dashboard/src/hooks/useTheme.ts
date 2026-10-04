@@ -41,5 +41,5 @@ export const applyTheme = (theme: Theme): void => {
   root.classList.add(`${theme}-theme`);
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute('content', theme === 'dark' ? '#0f0f0f' : '#f5f3f0');
+    ?.setAttribute('content', theme === 'dark' ? '#0d0e11' : '#f5f3ee');
 };

@@ -1,11 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, RefreshCw } from 'lucide-react';
+import {
+  ArrowUpRight,
+  ChartColumn,
+  Coins,
+  RefreshCw,
+  Scissors,
+  Store,
+  Users,
+  Wallet,
+  WandSparkles,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import type { KpiDatum, TimeRange } from '../types';
 import { ROUTES } from '../constants';
 import {
-  RANGE_CAPTIONS,
-  RANGE_LABELS,
   generationSeries,
   kpisByRange,
   revenueByMethod,
@@ -15,13 +24,21 @@ import { overviewService } from '../utils/adminService';
 import { ApiError } from '../utils/apiError';
 import { GenerationsChart } from '../components/charts/GenerationsChart';
 import { RankedList } from '../components/charts/RankedList';
-import { ShareBar } from '../components/charts/ShareBar';
+import { RevenueDonut } from '../components/charts/RevenueDonut';
 import { KpiCard, KpiSkeletonCard } from '../components/ui/KpiCard';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Skeleton } from '../components/ui/Skeleton';
-import { formatBdtCompact } from '../utils/format';
+import { formatShortDate } from '../utils/format';
 
-const RANGES: TimeRange[] = ['30d', '7d', 'today'];
+/** The overview always covers the last 30 days. */
+const RANGE: TimeRange = '30d';
+
+const KPI_ICONS: Record<string, LucideIcon> = {
+  'active-users': Users,
+  generations: WandSparkles,
+  spend: Coins,
+  'new-salons': Store,
+};
 
 interface LiveKpis {
   activeUsers: KpiDatum;
@@ -29,14 +46,13 @@ interface LiveKpis {
 }
 
 export default function OverviewPage() {
-  const [range, setRange] = useState<TimeRange>('30d');
   const [loading, setLoading] = useState(true);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [liveKpis, setLiveKpis] = useState<LiveKpis | null>(null);
 
-  const fetchStats = (selectedRange: TimeRange) => {
+  const fetchStats = () => {
     overviewService
-      .stats(selectedRange)
+      .stats(RANGE)
       .then((stats) => {
         setLiveKpis(stats);
         setLoading(false);
@@ -48,27 +64,18 @@ export default function OverviewPage() {
   };
 
   useEffect(() => {
-    // Runs once on mount, for the default range `useState('30d')` already set.
-    fetchStats(range);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Runs once on mount.
+    fetchStats();
   }, []);
-
-  const changeRange = (next: TimeRange) => {
-    if (next === range) return;
-    setRange(next);
-    setLoading(true);
-    setStatsError(null);
-    fetchStats(next);
-  };
 
   const retryStats = () => {
     setLoading(true);
     setStatsError(null);
-    fetchStats(range);
+    fetchStats();
   };
 
-  const slices = revenueByMethod[range];
-  const total = slices.reduce((sum, slice) => sum + slice.amount, 0);
+  const series = generationSeries[RANGE];
+  const period = `${formatShortDate(series[0].date)} – ${formatShortDate(series[series.length - 1].date)}`;
 
   // Active users and New salons Created are real, platform-wide counts once
   // `liveKpis` lands; AI Image Generations, AI spend vs revenue, the
@@ -76,7 +83,7 @@ export default function OverviewPage() {
   // try-on call is logged anywhere in this system yet (that wiring lives in
   // the AI service and customer app, both out of scope here), so there is
   // nothing real to show for them.
-  const kpis: KpiDatum[] = kpisByRange[range].map((datum) => {
+  const kpis: KpiDatum[] = kpisByRange[RANGE].map((datum) => {
     if (datum.id === 'active-users' && liveKpis) return liveKpis.activeUsers;
     if (datum.id === 'new-salons' && liveKpis) return liveKpis.newSalons;
     return datum;
@@ -84,38 +91,11 @@ export default function OverviewPage() {
 
   return (
     <>
-      <PageHeader
-        title="Overview"
-        actions={
-          <div className="segmented" role="group" aria-label="Time period">
-            {RANGES.map((item) => (
-              <button
-                key={item}
-                type="button"
-                aria-pressed={range === item}
-                onClick={() => changeRange(item)}
-              >
-                {RANGE_LABELS[item]}
-              </button>
-            ))}
-          </div>
-        }
-      />
+      <PageHeader title="Overview" />
 
       {statsError ? (
-        <div
-          className="card"
-          role="alert"
-          style={{
-            padding: '0.75rem 1rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '0.75rem',
-            flexWrap: 'wrap',
-          }}
-        >
-          <span className="dim">
+        <div className="alert alert-warning alert-bar" role="alert">
+          <span>
             Live counts for Active users and New salons Created are unavailable right now — showing the
             last known figures.
           </span>
@@ -125,63 +105,88 @@ export default function OverviewPage() {
         </div>
       ) : null}
 
-      <div className="kpi-grid">
-        {loading
-          ? Array.from({ length: kpis.length }, (_, index) => <KpiSkeletonCard key={index} />)
-          : kpis.map((datum) => <KpiCard key={datum.id} datum={datum} />)}
-      </div>
+      <section className="ov-hero" aria-labelledby="ov-hero-title">
+        <h2 className="ov-eyebrow" id="ov-hero-title">
+          Last 30 days <span className="ov-eyebrow-range">{period}</span>
+        </h2>
+        <dl className="kpi-band">
+          {loading
+            ? Array.from({ length: kpis.length }, (_, index) => <KpiSkeletonCard key={index} />)
+            : kpis.map((datum) => (
+                <KpiCard key={datum.id} datum={datum} icon={KPI_ICONS[datum.id] ?? ChartColumn} />
+              ))}
+        </dl>
+      </section>
 
-      <div className="analytics-grid">
-        <section className="card" aria-labelledby="generations-heading">
-          <div className="card-head">
-            <h2 id="generations-heading">Generations per day</h2>
-            <span className="card-sub">{RANGE_CAPTIONS[range]}</span>
+      <div className="ov-grid">
+        <section className="card ov-card ov-chart" aria-labelledby="generations-heading">
+          <div className="card-head ov-card-head">
+            <div className="ov-card-title">
+              <span className="icon-tile" aria-hidden="true">
+                <ChartColumn size={17} strokeWidth={1.8} />
+              </span>
+              <h2 id="generations-heading">Generations per day</h2>
+            </div>
+            <ul className="ov-legend" aria-label="Legend">
+              <li>
+                <span className="ov-swatch ov-swatch-peak" aria-hidden="true" />
+                Weekend (Fri–Sat)
+              </li>
+              <li>
+                <span className="ov-swatch" aria-hidden="true" />
+                Weekdays
+              </li>
+            </ul>
           </div>
           <div className="card-body">
             {loading ? (
-              <Skeleton height="var(--chart-height)" radius="0.5rem" />
+              <Skeleton height="var(--chart-height)" radius="0.75rem" />
             ) : (
-              <>
-                <GenerationsChart data={generationSeries[range]} range={range} />
-                <p className="hint">
-                  Gold bars mark the {range === 'today' ? 'evening rush (17:00–20:00)' : 'Friday–Saturday weekend'},
-                  when salon traffic peaks.
-                </p>
-              </>
+              <GenerationsChart data={series} range={RANGE} />
             )}
           </div>
         </section>
 
-        <div className="side-stack">
-          <section className="card" aria-labelledby="revenue-heading">
-            <div className="card-head">
+        <section className="card ov-card ov-revenue" aria-labelledby="revenue-heading">
+          <div className="card-head ov-card-head">
+            <div className="ov-card-title">
+              <span className="icon-tile" aria-hidden="true">
+                <Wallet size={17} strokeWidth={1.8} />
+              </span>
               <h2 id="revenue-heading">Revenue by method</h2>
-              <span className="card-sub">{formatBdtCompact(total)} total</span>
             </div>
-            <div className="card-body">
-              {loading ? <Skeleton height="11rem" radius="0.5rem" /> : <ShareBar slices={slices} />}
-            </div>
-            <div className="card-foot">
-              <span className="card-sub">Settled through the payment gateway</span>
-              <Link className="btn btn-ghost btn-sm" to={ROUTES.payments}>
-                All transactions <ArrowUpRight size={14} />
-              </Link>
-            </div>
-          </section>
+          </div>
+          <div className="card-body ov-revenue-body">
+            {loading ? (
+              <Skeleton height="16rem" radius="0.75rem" />
+            ) : (
+              <RevenueDonut slices={revenueByMethod[RANGE]} />
+            )}
+          </div>
+          <div className="card-foot card-foot-end">
+            <Link className="btn btn-ghost btn-sm" to={ROUTES.payments}>
+              All transactions <ArrowUpRight size={14} />
+            </Link>
+          </div>
+        </section>
 
-          <section className="card" aria-labelledby="tops-heading">
-            <div className="card-head">
+        <section className="card ov-card ov-top" aria-labelledby="tops-heading">
+          <div className="card-head ov-card-head">
+            <div className="ov-card-title">
+              <span className="icon-tile" aria-hidden="true">
+                <Scissors size={17} strokeWidth={1.8} />
+              </span>
               <h2 id="tops-heading">Top hairstyles</h2>
             </div>
-            <div className="card-body">
-              {loading ? (
-                <Skeleton height="12rem" radius="0.5rem" />
-              ) : (
-                <RankedList items={topHairstylesByRange[range]} />
-              )}
-            </div>
-          </section>
-        </div>
+          </div>
+          <div className="card-body">
+            {loading ? (
+              <Skeleton height="7.5rem" radius="0.75rem" />
+            ) : (
+              <RankedList items={topHairstylesByRange[RANGE]} />
+            )}
+          </div>
+        </section>
       </div>
     </>
   );

@@ -184,6 +184,30 @@ class AdminCreateSalonTests(AuthTestCase):
         self.assertTrue(owner.salons.exists())
         self.assertTrue(owner.salons.first().tenant)
 
+    def test_sets_the_password_the_admin_chose(self):
+        response = self.client.post('/api/admin/salons/', {
+            'business_name': 'Elegance Hair Studio', 'business_type': 'salon',
+            'owner_name': 'Farhana Ahmed', 'owner_phone': '01755555555',
+            'owner_password': 'Scissors-and-silk-42',
+            'address': 'Road 11, Dhanmondi',
+        }, format='json')
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertNotIn('owner_password', response.data)
+
+        owner = User.objects.get(phone='+8801755555555')
+        self.assertTrue(owner.check_password('Scissors-and-silk-42'))
+
+    def test_refuses_a_password_that_fails_the_policy(self):
+        response = self.client.post('/api/admin/salons/', {
+            'business_name': 'Elegance Hair Studio', 'business_type': 'salon',
+            'owner_name': 'Farhana Ahmed', 'owner_phone': '01755555555',
+            'owner_password': '12345678',
+            'address': 'Road 11, Dhanmondi',
+        }, format='json')
+        self.assertEqual(response.status_code, 400, response.data)
+        self.assertIn('owner_password', response.data['errors'])
+        self.assertFalse(User.objects.filter(phone='+8801755555555').exists())
+
     def test_refuses_a_phone_already_in_use(self):
         self.make_customer()
         response = self.client.post('/api/admin/salons/', {

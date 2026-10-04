@@ -233,7 +233,6 @@ export default function HairstylesPage() {
     <>
       <PageHeader
         title="Hairstyle catalogue"
-        description={`${hairstyles.length} styles power the AI try-on. Deactivating one hides it from the app immediately.`}
         actions={
           <button type="button" className="btn btn-primary" onClick={openCreate}>
             <Plus size={16} /> Add hairstyle

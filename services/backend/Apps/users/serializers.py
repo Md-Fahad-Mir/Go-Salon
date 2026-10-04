@@ -1232,11 +1232,13 @@ class AdminSalonCreateSerializer(serializers.Serializer):
     """An admin opening an account for a salon or parlour directly, rather
     than the owner signing themselves up.
 
-    No OTP, no password from the owner: the admin has already satisfied
-    themselves of who this is, so the phone is marked verified immediately
-    and a random password is set. The owner sets their own through
-    `/auth/password/forgot/` the first time they need to sign in — the same
-    endpoint self-registered owners use to recover a lost one.
+    No OTP: the admin has already satisfied themselves of who this is, so the
+    phone is marked verified immediately. The admin dashboard sends
+    `owner_password` — an initial password the admin hands over, held to the
+    same policy as registration. Without one a random password is set, and
+    the owner sets their own through `/auth/password/forgot/` the first time
+    they need to sign in — the same endpoint self-registered owners use to
+    recover a lost one.
     """
 
     business_name = serializers.CharField(max_length=60, min_length=2)
@@ -1244,6 +1246,7 @@ class AdminSalonCreateSerializer(serializers.Serializer):
     owner_name = serializers.CharField(max_length=80, min_length=2)
     owner_phone = serializers.CharField(max_length=20)
     owner_email = serializers.EmailField(required=False, allow_blank=True, default='')
+    owner_password = serializers.CharField(write_only=True, max_length=128, required=False)
     city = serializers.CharField(max_length=60, required=False, allow_blank=True, default='')
     address = serializers.CharField(max_length=160, min_length=6)
     bio = serializers.CharField(max_length=2000, required=False, allow_blank=True, default='')
@@ -1257,6 +1260,9 @@ class AdminSalonCreateSerializer(serializers.Serializer):
             )
         return phone
 
+    def validate_owner_password(self, value: str) -> str:
+        return _check_password_policy(value)
+
     @transaction.atomic
     def create(self, validated_data: dict) -> dict:
         data = validated_data
@@ -1269,7 +1275,7 @@ class AdminSalonCreateSerializer(serializers.Serializer):
             is_active=True,
             terms_accepted_at=timezone.now(),
         )
-        owner.set_password(secrets.token_urlsafe(18))
+        owner.set_password(data.get('owner_password') or secrets.token_urlsafe(18))
         owner.save()
 
         salon = Salon.objects.create(

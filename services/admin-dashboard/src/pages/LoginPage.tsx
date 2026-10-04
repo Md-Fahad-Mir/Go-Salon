@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Field } from '../components/ui/Field';
+import { GoSalonMark } from '../components/ui/GoSalonMark';
 import { useAuthStore, selectIsAuthenticated } from '../store/useAuthStore';
 import { authService } from '../utils/authService';
 import { ApiError } from '../utils/apiError';
@@ -41,59 +42,69 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '1.5rem',
-      }}
-    >
-      <form className="card" style={{ width: '100%', maxWidth: '24rem' }} onSubmit={handleSubmit}>
-        <div className="card-head" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '0.25rem' }}>
-          <span className="sidebar-mark" aria-hidden="true" style={{ marginBottom: '0.5rem' }}>
-            E
+    <div className="login">
+      <aside className="login-aside" aria-hidden="true">
+        <div className="login-brand">
+          <span className="sidebar-mark">
+            <GoSalonMark />
           </span>
-          <h2>Go Salon admin</h2>
-          <span className="card-sub">Sign in with your admin credentials</span>
+          <span className="sidebar-wordmark">
+            Go Salon <span>ADMIN</span>
+          </span>
         </div>
-        <div className="card-body stack-sm">
-          {error ? (
-            <div role="alert" className="setting-row" style={{ color: 'var(--status-danger-ink)' }}>
-              {error}
-            </div>
-          ) : null}
-
-          <Field label="Phone" required>
-            <input
-              className="input"
-              type="tel"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              placeholder="01XXXXXXXXX"
-              autoComplete="username"
-              autoFocus
-              required
-            />
-          </Field>
-
-          <Field label="Password" required>
-            <input
-              className="input"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              required
-            />
-          </Field>
-
-          <button type="submit" className="btn btn-primary" disabled={submitting}>
-            {submitting ? 'Signing in…' : 'Sign in'}
-          </button>
+        <div>
+          <p className="login-eyebrow">Admin console</p>
+          <p className="login-headline">Hairstyles, users, salons and payments, in one place.</p>
         </div>
-      </form>
+        <p className="login-aside-foot">v0.9 · dhaka-prod</p>
+      </aside>
+
+      <main className="login-main">
+        <form className="card login-card" onSubmit={handleSubmit}>
+          <header className="login-head">
+            <span className="sidebar-mark" aria-hidden="true">
+              <GoSalonMark />
+            </span>
+            <h1>Go Salon admin</h1>
+            <p>Sign in with your admin credentials</p>
+          </header>
+          <div className="stack">
+            {error ? (
+              <div role="alert" className="alert alert-danger">
+                {error}
+              </div>
+            ) : null}
+
+            <Field label="Phone" required>
+              <input
+                className="input"
+                type="tel"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="01XXXXXXXXX"
+                autoComplete="username"
+                autoFocus
+                required
+              />
+            </Field>
+
+            <Field label="Password" required>
+              <input
+                className="input"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </Field>
+
+            <button type="submit" className="btn btn-primary btn-block login-submit" disabled={submitting}>
+              {submitting ? 'Signing in…' : 'Sign in'}
+            </button>
+          </div>
+        </form>
+      </main>
     </div>
   );
 }

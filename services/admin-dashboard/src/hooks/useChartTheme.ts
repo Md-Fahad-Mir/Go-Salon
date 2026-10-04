@@ -25,11 +25,11 @@ export function useChartTheme(): ChartTheme {
     () => ({
       // `mode` doubles as the memo key: the resolved values change with it.
       mode: theme,
-      bar: readVar('--chart-bar', '#e4ded3'),
-      barHighlight: readVar('--chart-bar-hi', '#c19a3f'),
-      line: readVar('--chart-line', '#2d2d2d'),
-      grid: readVar('--chart-grid', '#ebe8e3'),
-      axis: readVar('--chart-axis', '#999999'),
+      bar: readVar('--chart-bar', '#e8e3d8'),
+      barHighlight: readVar('--chart-bar-hi', '#b08b55'),
+      line: readVar('--chart-line', '#16181d'),
+      grid: readVar('--chart-grid', '#efece5'),
+      axis: readVar('--chart-axis', '#666b75'),
       surface: readVar('--bg-secondary', '#ffffff'),
     }),
     [theme],

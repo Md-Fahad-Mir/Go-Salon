@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { Bell, LayoutGrid, Scissors, Settings, Store, Users, Wallet, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { ROUTES } from '../../constants';
+import { GoSalonMark } from '../ui/GoSalonMark';
 
 interface NavItem {
   to: string;
@@ -14,7 +15,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: ROUTES.overview, label: 'Overview', icon: LayoutGrid, end: true },
   { to: ROUTES.hairstyles, label: 'AI Hairstyles', icon: Scissors },
   { to: ROUTES.users, label: 'Users', icon: Users },
-  { to: ROUTES.salons, label: 'Salons & barbers', icon: Store },
+  { to: ROUTES.salons, label: 'Salons & Parlour', icon: Store },
   { to: ROUTES.payments, label: 'Payments', icon: Wallet },
   { to: ROUTES.notifications, label: 'Notifications', icon: Bell },
   { to: ROUTES.settings, label: 'Settings', icon: Settings },
@@ -30,7 +31,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     <nav className="sidebar" data-open={open} aria-label="Main">
       <div className="sidebar-brand">
         <span className="sidebar-mark" aria-hidden="true">
-          E
+          <GoSalonMark />
         </span>
         <span className="sidebar-wordmark">
           Go Salon <span>ADMIN</span>

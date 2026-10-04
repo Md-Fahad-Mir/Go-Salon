@@ -113,12 +113,6 @@ export const kpisByRange: Record<TimeRange, KpiDatum[]> = {
   ],
 };
 
-export const RANGE_LABELS: Record<TimeRange, string> = {
-  '30d': '30 days',
-  '7d': '7 days',
-  today: 'Today',
-};
-
 export const RANGE_CAPTIONS: Record<TimeRange, string> = {
   '30d': 'last 30 days',
   '7d': 'last 7 days',

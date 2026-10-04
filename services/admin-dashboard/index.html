@@ -2,17 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- ?v= changes whenever the art does: browsers cache favicons by URL and
+         keep showing the old one otherwise. The PNG is for browsers without
+         SVG favicons (Safari). Same art as services/frontend. -->
+    <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon-64.png?v=2" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes"
     />
-    <meta name="theme-color" content="#f5f3f0" />
+    <meta name="theme-color" content="#f5f3ee" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta
       name="description"
       content="Go Salon admin console — hairstyles, users, salons, bookings, payments and moderation."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&family=Instrument+Serif&display=swap"
     />
     <title>Go Salon Admin</title>
     <script>
@@ -29,7 +39,7 @@
           document.documentElement.classList.add(theme + '-theme');
           document
             .querySelector('meta[name="theme-color"]')
-            .setAttribute('content', theme === 'dark' ? '#0f0f0f' : '#f5f3f0');
+            .setAttribute('content', theme === 'dark' ? '#0d0e11' : '#f5f3ee');
         } catch (error) {
           document.documentElement.classList.add('light-theme');
         }

@@ -1,5 +1,5 @@
+import type { LucideIcon } from 'lucide-react';
 import type { KpiDatum } from '../../types';
-import { TrendIndicator } from './TrendIndicator';
 
 /** Renders the metric value with any trailing unit kept visually secondary. */
 const splitValue = (value: string): [string, string | null] => {
@@ -10,27 +10,32 @@ const splitValue = (value: string): [string, string | null] => {
   return match ? [match[1], match[2]] : [value, null];
 };
 
-export function KpiCard({ datum }: { datum: KpiDatum }) {
+/** One figure in the Overview's key-figures band. Renders a dt/dd pair, so
+    it belongs inside a <dl>. */
+export function KpiCard({ datum, icon: Icon }: { datum: KpiDatum; icon: LucideIcon }) {
   const [main, unit] = splitValue(datum.value);
 
   return (
-    <article className="card kpi">
-      <h2 className="kpi-label">{datum.label}</h2>
-      <p className="kpi-value">
+    <div className="kpi">
+      <dt className="kpi-label">
+        <span className="kpi-icon" aria-hidden="true">
+          <Icon size={15} strokeWidth={1.8} />
+        </span>
+        {datum.label}
+      </dt>
+      <dd className="kpi-value">
         {main}
         {unit ? <small>{unit}</small> : null}
-      </p>
-      <TrendIndicator tone={datum.tone}>{datum.footnote}</TrendIndicator>
-    </article>
+      </dd>
+    </div>
   );
 }
 
 export function KpiSkeletonCard() {
   return (
-    <article className="card kpi" aria-hidden="true">
-      <span className="skeleton" style={{ display: 'block', width: '60%', height: '0.75rem' }} />
-      <span className="skeleton" style={{ display: 'block', width: '80%', height: '1.75rem' }} />
-      <span className="skeleton" style={{ display: 'block', width: '50%', height: '0.75rem' }} />
-    </article>
+    <div className="kpi" aria-hidden="true">
+      <span className="skeleton" style={{ display: 'block', width: '55%', height: '1.875rem' }} />
+      <span className="skeleton" style={{ display: 'block', width: '70%', height: '2.125rem' }} />
+    </div>
   );
 }
