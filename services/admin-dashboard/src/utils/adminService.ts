@@ -14,6 +14,7 @@ import type {
   Hairstyle,
   KpiDatum,
   SubscriptionTier,
+  SubscriptionTierPlan,
   TimeRange,
   User,
   UserBusiness,
@@ -83,6 +84,103 @@ export const hairstyleService = {
 
   async remove(id: string): Promise<void> {
     await api.delete(`/hairstyles/${id}/`);
+  },
+};
+
+/* --------------------------------------------------------------------------
+   Subscription tiers — /api/admin/subscription-tiers/
+   -------------------------------------------------------------------------- */
+
+interface SubscriptionTierApi {
+  id: number;
+  slug: string;
+  name: string;
+  price_bdt: number;
+  monthly_credits: number | null;
+  features: string[];
+  is_featured: boolean;
+  is_default: boolean;
+  position: number;
+  subscriber_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+const toSubscriptionTier = (row: SubscriptionTierApi): SubscriptionTierPlan => ({
+  id: String(row.id),
+  slug: row.slug,
+  name: row.name,
+  price: row.price_bdt,
+  monthlyCredits: row.monthly_credits,
+  featured: row.is_featured,
+  isDefault: row.is_default,
+  features: row.features,
+  subscriberCount: row.subscriber_count,
+});
+
+export interface SubscriptionTierInput {
+  name: string;
+  price: number;
+  /** Null for unlimited. */
+  monthlyCredits: number | null;
+  features: string[];
+  featured: boolean;
+  isDefault: boolean;
+}
+
+const subscriptionTierPayload = (input: Partial<SubscriptionTierInput>) => ({
+  ...(input.name !== undefined && { name: input.name }),
+  ...(input.price !== undefined && { price_bdt: input.price }),
+  ...(input.monthlyCredits !== undefined && { monthly_credits: input.monthlyCredits }),
+  ...(input.features !== undefined && { features: input.features }),
+  ...(input.featured !== undefined && { is_featured: input.featured }),
+  ...(input.isDefault !== undefined && { is_default: input.isDefault }),
+});
+
+/** The backend's field names, for mapping its per-field errors onto the form. */
+export const SUBSCRIPTION_TIER_FIELDS: Record<string, keyof SubscriptionTierInput> = {
+  name: 'name',
+  price_bdt: 'price',
+  monthly_credits: 'monthlyCredits',
+  features: 'features',
+  is_featured: 'featured',
+  is_default: 'isDefault',
+};
+
+export const subscriptionTierService = {
+  /** Every tier in display order, each with how many accounts are on it. */
+  async list(): Promise<SubscriptionTierPlan[]> {
+    const rows = await api.get<SubscriptionTierApi[]>('/admin/subscription-tiers/');
+    return rows.map(toSubscriptionTier);
+  },
+
+  async create(input: SubscriptionTierInput): Promise<SubscriptionTierPlan> {
+    const row = await api.post<SubscriptionTierApi>('/admin/subscription-tiers/', subscriptionTierPayload(input));
+    return toSubscriptionTier(row);
+  },
+
+  async update(id: string, input: Partial<SubscriptionTierInput>): Promise<SubscriptionTierPlan> {
+    const row = await api.patch<SubscriptionTierApi>(
+      `/admin/subscription-tiers/${id}/`,
+      subscriptionTierPayload(input),
+    );
+    return toSubscriptionTier(row);
+  },
+
+  /** Deletes a tier, first moving any accounts on it to `moveTo`. The
+      backend refuses a tier with accounts on it when `moveTo` is missing,
+      and always refuses the default tier. */
+  async remove(id: string, moveTo?: string): Promise<void> {
+    const query = moveTo ? `?move_to=${encodeURIComponent(moveTo)}` : '';
+    await api.delete(`/admin/subscription-tiers/${id}/${query}`);
+  },
+
+  /** Saves the display order: every tier's id, first to last. */
+  async reorder(ids: string[]): Promise<SubscriptionTierPlan[]> {
+    const rows = await api.post<SubscriptionTierApi[]>('/admin/subscription-tiers/reorder/', {
+      order: ids.map(Number),
+    });
+    return rows.map(toSubscriptionTier);
   },
 };
 

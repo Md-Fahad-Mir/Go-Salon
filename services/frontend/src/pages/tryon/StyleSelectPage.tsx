@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import type { Hairstyle } from '../../types';
 import { ROUTES } from '../../constants';
-import { BuyCreditsSheet } from '../../components/ai-tryon/BuyCreditsSheet';
-import { CreditsPill } from '../../components/ai-tryon/CreditsPill';
+import { CreditsBar } from '../../components/ai-tryon/CreditsBar';
+import { PlansSheet } from '../../components/ai-tryon/PlansSheet';
 import { ProcessingScreen } from '../../components/ai-tryon/ProcessingScreen';
 import { aiErrorKey } from '../../components/ai-tryon/tryonActions';
 import { Art } from '../../components/common/Art';
@@ -18,10 +18,12 @@ import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
 import { useHairstyles } from '../../hooks/useHairstyles';
 import { useT } from '../../hooks/useLanguage';
+import { useTryOnCredits } from '../../hooks/useTryOnCredits';
 import { usePhotoUrl } from '../../hooks/usePhotoUrl';
 import { useAppStore } from '../../store/useAppStore';
 import { useTryOnStore, type PendingVideo } from '../../store/useTryOnStore';
 import { ApiError } from '../../utils/apiError';
+import { canSpend } from '../../utils/creditsService';
 import { nextId } from '../../utils/id';
 import { photoStore } from '../../utils/storage';
 import { tryOnVideoService, waitForVideo } from '../../utils/tryOnVideoService';
@@ -40,9 +42,8 @@ const isAbort = (error: unknown) => (error as DOMException)?.name === 'AbortErro
 function StyleSelect({ photoKey }: { photoKey: string }) {
   const t = useT();
   const navigate = useNavigate();
-  const user = useAppStore((s) => s.user);
   const toast = useAppStore((s) => s.toast);
-  const spendCredit = useAppStore((s) => s.spendCredit);
+  const setTryOnCredits = useAppStore((s) => s.setTryOnCredits);
   const addGeneration = useAppStore((s) => s.addGeneration);
   const stage = useTryOnStore((s) => s.stage);
   const setStage = useTryOnStore((s) => s.setStage);
@@ -63,8 +64,7 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
   const [query, setQuery] = useState('');
   /** The style being made, and the styled still once there is one. */
   const [busy, setBusy] = useState<{ styleName: string; posterKey?: string } | null>(null);
-  const [buyOpen, setBuyOpen] = useState(false);
-  const [waiting, setWaiting] = useState<Hairstyle | null>(null);
+  const [plansOpen, setPlansOpen] = useState(false);
   /** A style chosen before this screen (hairstyle detail, the home row). */
   const [autoStyleId] = useState(() => useTryOnStore.getState().selectedHairstyleId);
   const { url: posterUrl } = usePhotoUrl(busy?.posterKey);
@@ -72,14 +72,16 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
   const autoRan = useRef(false);
   const abort = useRef<AbortController | null>(null);
 
-  const credits = user?.credits ?? 0;
+  /* The backend spends the credit when it starts the video and hands it back
+     if the video fails; this only ever shows its count. */
+  const { credits, refresh: refreshCredits } = useTryOnCredits();
 
   // Leaving the screen stops the polling, not the video: the job stays in the
   // session and the next visit picks it up where this one left off.
   useEffect(() => () => abort.current?.abort(), []);
 
-  /** Wait for a started video, keep it on the device, open it. One credit,
-      spent only for a video that actually arrived. */
+  /** Wait for a started video, keep it on the device, open it. The credit
+      was taken by the backend when the video started. */
   const finish = useCallback(
     async (job: PendingVideo, signal: AbortSignal) => {
       setStage('filming');
@@ -87,7 +89,6 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
       const clip = await tryOnVideoService.content(job.jobId);
       const videoKey = `video:${job.generationId}`;
       await photoStore.put(videoKey, clip);
-      spendCredit();
       addGeneration({
         id: job.generationId,
         hairstyleId: job.hairstyleId,
@@ -104,9 +105,10 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
       });
       setPending(null);
       setStage('done');
+      void refreshCredits();
       navigate(ROUTES.tryOnPreview(job.generationId), { replace: true });
     },
-    [setStage, spendCredit, addGeneration, setPending, navigate],
+    [setStage, addGeneration, setPending, navigate, refreshCredits],
   );
 
   /** Anything but leaving the screen ends the job and says why. */
@@ -118,6 +120,13 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
         void photoStore.remove(job.posterKey);
       }
       setStage('idle');
+      // A video that failed has given its credit back; a refusal means the
+      // count on screen was out of date. Either way, ask again.
+      void refreshCredits();
+      if (error instanceof ApiError && error.code === 'no_credits') {
+        setPlansOpen(true);
+        return;
+      }
       if (error instanceof ApiError && error.code === 'missing_photo') {
         toast('error', t('tryon.photoGoneTitle'), t('tryon.photoGoneBody'));
         setPhotoKey(null);
@@ -131,7 +140,7 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
       }
       toast('error', t('tryon.renderFailedTitle'), t(aiErrorKey(error)));
     },
-    [setPending, setStage, setPhotoKey, toast, t, navigate, reloadCatalogue],
+    [setPending, setStage, setPhotoKey, toast, t, navigate, reloadCatalogue, refreshCredits],
   );
 
   const generate = useCallback(
@@ -147,6 +156,7 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
         const source = await photoStore.get(photoKey);
         if (!source) throw new ApiError('missing_photo', 'The photo is no longer on this device.');
         const started = await tryOnVideoService.start(source, style.id);
+        if (started.credits) setTryOnCredits(started.credits);
         const generationId = nextId('GEN');
         job = {
           generationId,
@@ -169,7 +179,7 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
         working.current = false;
       }
     },
-    [photoKey, setStage, setPending, finish, fail],
+    [photoKey, setStage, setPending, setTryOnCredits, finish, fail],
   );
 
   // Pick up a video that was still being made when the screen was last left.
@@ -197,9 +207,8 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
   const select = useCallback(
     (style: Hairstyle) => {
       if (working.current) return;
-      if (credits < 1) {
-        setWaiting(style);
-        setBuyOpen(true);
+      if (!canSpend(credits)) {
+        setPlansOpen(true);
         return;
       }
       void generate(style);
@@ -249,14 +258,11 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
         }
       />
       <ScreenBody className="stagger">
-        <div className="between tryon-bar">
-          <CreditsPill credits={credits} />
-          {credits < 2 ? (
-            <button type="button" className="link-btn" onClick={() => setBuyOpen(true)}>
-              {t('tryon.buyCredits')}
-            </button>
-          ) : null}
-        </div>
+        {/* The way to more credits only once they are running low. */}
+        <CreditsBar
+          credits={credits}
+          onUpgrade={credits?.remaining != null && credits.remaining < 2 ? () => setPlansOpen(true) : undefined}
+        />
 
         <p className="caption">{t('tryon.selectIntro')}</p>
 
@@ -315,14 +321,7 @@ function StyleSelect({ photoKey }: { photoKey: string }) {
         </section>
       </ScreenBody>
 
-      <BuyCreditsSheet
-        open={buyOpen}
-        onClose={() => setBuyOpen(false)}
-        onPurchased={() => {
-          if (waiting) void generate(waiting);
-          setWaiting(null);
-        }}
-      />
+      <PlansSheet open={plansOpen} onClose={() => setPlansOpen(false)} credits={credits} />
     </Screen>
   );
 }

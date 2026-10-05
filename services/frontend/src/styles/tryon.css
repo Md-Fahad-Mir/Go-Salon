@@ -121,6 +121,50 @@
   box-shadow: var(--tryon-bevel);
 }
 
+/* The rail, the month's usage as a hairline meter, and the sentence that
+   says it — the meter is for the eye, the sentence is what is read out. */
+.tryon-credit-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 0.5rem);
+}
+.tryon-credit-main {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  min-width: 0;
+}
+.tryon-credit-plan {
+  overflow: hidden;
+  font-size: var(--fs-sm, 0.8125rem);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tryon-credit-meter {
+  display: block;
+  height: 3px;
+  margin-inline: var(--space-4, 1rem);
+  border-radius: var(--radius-pill);
+  background-color: var(--border-color);
+  overflow: hidden;
+}
+.tryon-credit-meter::before {
+  content: '';
+  display: block;
+  width: calc(var(--used, 0) * 100%);
+  height: 100%;
+  border-radius: inherit;
+  background-image: var(--tryon-gold);
+  transition: width var(--speed, 0.2s) var(--ease, ease);
+}
+.tryon-credit-usage {
+  padding-inline: var(--space-4, 1rem);
+  font-size: var(--fs-xs, 0.75rem);
+  color: var(--text-tertiary);
+}
+
 /* The two ways in. The primary is the loudest thing below the hero; the
    secondary steps back to a hairline so there is a loud thing and a quiet
    thing rather than two equal slabs. */
@@ -972,128 +1016,93 @@
 }
 
 /* --------------------------------------------------------------------------
-   8. Buy credits — the customer's checkout
+   8. Plans — where "more credits" leads
 
-   The strongest surface in the flow. `.option` and `.radio-mark` are shared
-   with the professional payment sheets, so every rule here is reached through
-   `.tryon-pay` and can never match one of theirs.
+   No checkout: changing plan is the team's to do until the app takes
+   payments. Each plan is a card in the flow's own material, the account's
+   own lit in gold, so the answer to "what am I on?" is the brightest thing.
    -------------------------------------------------------------------------- */
 
-/* The pack, as a gold plate. The sheen is a pseudo-element, so it never
-   touches the card's own background and never animates layout. */
-.tryon-pack-card {
-  position: relative;
-  overflow: hidden;
-  background-image: var(--tryon-gold-soft);
-}
-.tryon-pack-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px var(--accent-bg-strong);
-  pointer-events: none;
-}
-.tryon-pack-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background-image: var(--tryon-sheen);
-  pointer-events: none;
-}
-.tryon-pack {
-  position: relative;
-  z-index: 1;
+.tryon-plans { gap: var(--space-2, 0.5rem); }
+
+.tryon-plan {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4, 1rem);
-}
-/* A count, not a price: no ৳ and no mixed script, so the display face is
-   safe here. `.price` beside it stays on the UI face — see R4. */
-.tryon-pack-title {
-  font-family: var(--tryon-display);
-  font-size: var(--fs-xl, 1.5rem);
-  font-weight: 600;
-  letter-spacing: var(--tracking-tighter, -0.035em);
-  line-height: 1.1;
-  color: var(--text-primary);
-}
-.tryon-pack .small { margin-top: 0.125rem; }
-
-.tryon-pay { gap: var(--space-2, 0.5rem); }
-/* .option-title / .option-sub are inline spans in ui.css; stack them here. */
-.tryon-pay .option-title,
-.tryon-pay .option-sub { display: block; }
-.tryon-pay .option-title {
-  font-size: var(--fs-base, 0.9375rem);
-  font-weight: 650;
-}
-
-.tryon-pay .option {
-  min-height: 3.75rem;
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  border-width: 1px;
+  flex-direction: column;
+  gap: var(--space-2, 0.5rem);
+  padding: var(--space-4, 1rem);
+  border: 1px solid var(--border-color);
   border-radius: var(--tryon-radius);
   background-color: var(--bg-secondary);
   box-shadow: var(--tryon-bevel), var(--tryon-elev-card);
-  transition:
-    border-color var(--speed) var(--ease),
-    background-color var(--speed) var(--ease),
-    box-shadow var(--speed) var(--ease),
-    transform var(--tryon-fast) var(--ease-out);
 }
-.tryon-pay .option[aria-checked='true'] {
+.tryon-plan.is-current {
   border-color: var(--accent);
-  background-color: var(--bg-elevated);
   background-image: var(--tryon-gold-soft);
   box-shadow: var(--tryon-bevel), var(--tryon-glow);
 }
-.tryon-pay .option:active:not(:disabled) { transform: scale(0.99); }
-.tryon-pay .radio-mark { box-shadow: var(--tryon-bevel); }
-.tryon-pay .option[aria-checked='true'] .radio-mark::after {
-  background-image: var(--tryon-gold);
-}
 
-/* Brand hues stay exactly as they are: these dots are recognition cues, not
-   palette. Only the lit edge is added. */
-.tryon-pay-dot {
-  width: 0.75rem;
-  height: 0.75rem;
+.tryon-plan-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3, 0.75rem);
+}
+.tryon-plan-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2, 0.5rem);
+  min-width: 0;
+}
+.tryon-plan-title strong {
+  font-size: var(--fs-lg, 1.0625rem);
+  font-weight: 650;
+  letter-spacing: var(--tracking-tight, -0.02em);
+  color: var(--text-primary);
+}
+.tryon-plan-price {
   flex-shrink: 0;
-  border-radius: 50%;
-  box-shadow: var(--tryon-bevel);
+  font-size: var(--fs-lg, 1.0625rem);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
 }
-.tryon-pay-dot[data-method='bkash'] { background-color: var(--pay-bkash); }
-.tryon-pay-dot[data-method='nagad'] { background-color: var(--pay-nagad); }
-.tryon-pay-dot[data-method='rocket'] { background-color: var(--pay-rocket); }
-.tryon-pay-dot[data-method='card'] { background-color: var(--pay-card); }
+.tryon-plan-price small {
+  font-size: var(--fs-sm, 0.8125rem);
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
 
-/* Paid, or declined. */
-.tryon-result {
+.tryon-plan-credits {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--fs-sm, 0.8125rem);
+  font-weight: 650;
+  color: var(--accent-ink, var(--accent));
+}
+.tryon-plan-credits svg { flex-shrink: 0; }
+
+.tryon-plan-features {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-2, 0.5rem);
-  padding: var(--space-6, 1.5rem) 0 var(--space-2, 0.5rem);
-  text-align: center;
+  gap: 0.25rem;
+  padding-top: var(--space-2, 0.5rem);
+  border-top: 1px solid var(--border-light, var(--border-color));
 }
-.tryon-result .icon-circle {
-  width: 4.5rem;
-  height: 4.5rem;
-  margin-bottom: var(--space-3, 0.75rem);
+.tryon-plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  font-size: var(--fs-sm, 0.8125rem);
+  line-height: 1.45;
+  color: var(--text-secondary);
 }
-/* The halo answers in the circle's own tone rather than in gold. */
-.tryon-result .icon-circle-success {
-  box-shadow: var(--tryon-bevel), 0 0 0 8px var(--status-success-bg);
+.tryon-plan-features svg {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+  color: var(--status-success, var(--accent));
 }
-.tryon-result .icon-circle-danger {
-  box-shadow: var(--tryon-bevel), 0 0 0 8px var(--status-danger-bg);
-}
-.tryon-result h2 { font-size: var(--fs-xl, 1.5rem); }
-.tryon-result .caption { max-width: 20rem; }
-.tryon-result .btn { width: 100%; }
 
 /* --- AI hero (compare) ----------------------------------------------------
    One photograph shown twice: the left cooled to read as "before", the right
@@ -1544,8 +1553,7 @@
 
   .tryon-gen-link:active,
   .tryon-gen-link:hover,
-  .tryon-dropzone:active,
-  .tryon-pay .option:active:not(:disabled) { transform: none; }
+  .tryon-dropzone:active { transform: none; }
   .tryon-shutter:active:not(:disabled) > span { transform: none; }
 
   .tryon-ring-dot,

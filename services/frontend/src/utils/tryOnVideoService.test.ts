@@ -13,7 +13,7 @@ const job = (status: string, extra: Record<string, unknown> = {}) => ({
 
 beforeEach(() => {
   useAppStore.getState().setSession({
-    user: { id: 'U1', name: 'T', role: 'customer', phone: '+8801955000009', createdAt: '', credits: 3 },
+    user: { id: 'U1', name: 'T', role: 'customer', phone: '+8801955000009', createdAt: '' },
     access: 'a',
     refresh: 'r',
   });

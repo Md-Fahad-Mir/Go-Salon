@@ -22,7 +22,6 @@ const someone = (): User => ({
   name: 'Test Person',
   phone: '+8801955000009',
   createdAt: '2026-01-01T00:00:00.000Z',
-  credits: 3,
 });
 
 /* The refusals, exactly as the backend was observed to render them. */

@@ -100,8 +100,36 @@ export interface User {
   hairLength?: HairLength;
   location?: Location;
   createdAt: string;
-  /** AI try-on credits. Each generation spends one. */
-  credits: number;
+  /** The plan and this month's try-on credits, as the backend counts them.
+      Absent until the account has been read from the server. */
+  tryOnCredits?: TryOnCredits;
+}
+
+/** An account's plan and what it leaves of this month's 360° try-ons
+    (`GET /api/tryon/credits/`). One credit is one video; the backend counts
+    them off its own log, so this is only ever a copy of its answer. */
+export interface TryOnCredits {
+  plan: { slug: string; name: string };
+  /** What the plan allows each month; null when it is unlimited. */
+  total: number | null;
+  used: number;
+  /** Null when the plan is unlimited. */
+  remaining: number | null;
+  /** When this month's allowance starts over (ISO). */
+  resetsAt: string;
+}
+
+/** A subscription plan as the pricing list shows it
+    (`GET /api/subscription-tiers/`), in the admin's order. */
+export interface SubscriptionPlan {
+  slug: string;
+  name: string;
+  /** Monthly price in whole taka; 0 is free. */
+  price: number;
+  /** Try-ons a month; null is unlimited. */
+  monthlyCredits: number | null;
+  features: string[];
+  featured: boolean;
 }
 
 /** One style from the admin-curated try-on catalogue

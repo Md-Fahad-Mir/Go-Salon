@@ -55,7 +55,12 @@ export default function OTPPage() {
       toast(
         'success',
         t('auth.welcomeToast', { name: firstNameOf(user.name) }),
-        user.role === 'customer' ? t('auth.freeTryOns', { count: formatNumber(user.credits) }) : undefined,
+        user.role === 'customer' && user.tryOnCredits?.remaining
+          ? t('auth.freeTryOns', {
+              count: user.tryOnCredits.remaining,
+              value: formatNumber(user.tryOnCredits.remaining),
+            })
+          : undefined,
       );
       // Where every sign-up ends, so it is where an interrupted journey has
       // to be picked back up: nothing between here and the login screen keeps

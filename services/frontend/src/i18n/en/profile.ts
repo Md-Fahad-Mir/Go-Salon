@@ -126,8 +126,9 @@ export const profile = {
   'profile.statBookings': 'Bookings',
   'profile.account': 'Account',
   'profile.memberSince': 'Customer · Member since {date}',
-  'profile.credits_one': '{count} try-on credit',
-  'profile.credits_other': '{count} try-on credits',
+  'profile.credits_one': '{value} try-on left · {plan} plan',
+  'profile.credits_other': '{value} try-ons left · {plan} plan',
+  'profile.creditsUnlimited': 'Unlimited try-ons · {plan} plan',
   'profile.phone': 'Phone',
   /* The account rows only report; the one Edit profile button above them
      is what changes any of it, so nothing here asks to be tapped. */
@@ -190,9 +191,9 @@ export const profile = {
   'profile.faqCancelQ': 'Can I cancel a booking?',
   'profile.faqCreditsQ': 'What are try-on credits?',
   'profile.faqCreditsA1':
-    'Every AI try-on spends one credit. New accounts start with {credits}, and you can top up {pack} more for {price} from the Try on tab.',
+    'Every 360° try-on uses one credit. Your plan comes with a set number each month, and the Try on tab shows how many are left.',
   'profile.faqCreditsA2':
-    'Credits never expire and re-running the same style on a new photo costs one credit each time.',
+    'Credits start over on the 1st of every month, and unused ones don’t carry over. A try-on that fails gives its credit back. For more each month, ask us to move you to a bigger plan.',
   'profile.faqTryOnQ': 'How does the try-on work?',
   'profile.faqTryOnA1':
     'Take or upload a clear, front-facing photo with your hair visible. We read your face shape and hairline, then render the style onto your photo in a few seconds.',

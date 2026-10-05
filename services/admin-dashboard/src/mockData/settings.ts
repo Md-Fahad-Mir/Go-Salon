@@ -1,4 +1,4 @@
-import type { PlatformSettings, SubscriptionTierPlan } from '../types';
+import type { PlatformSettings } from '../types';
 
 export const defaultSettings: PlatformSettings = {
   platformFee: 5,
@@ -7,30 +7,3 @@ export const defaultSettings: PlatformSettings = {
   smsEnabled: true,
   emailEnabled: false,
 };
-
-export const SUBSCRIPTION_TIERS: SubscriptionTierPlan[] = [
-  {
-    id: 'free',
-    name: 'Free',
-    price: 0,
-    features: ['Browse salons and barbers', 'Book appointments', '3 AI try-ons per month'],
-  },
-  {
-    id: 'basic',
-    name: 'Basic',
-    price: 199,
-    features: ['Everything in Free', '30 AI try-ons per month', 'Priority booking slots', 'Booking history export'],
-  },
-  {
-    id: 'advanced',
-    name: 'Advanced',
-    price: 499,
-    featured: true,
-    features: [
-      'Everything in Basic',
-      'Unlimited AI hairstyle generation',
-      'Highest-resolution renders',
-      'Early access to new styles',
-    ],
-  },
-];

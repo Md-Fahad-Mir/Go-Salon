@@ -128,6 +128,7 @@ INSTALLED_APPS = [
     'Apps.bookings',
     'Apps.hairstyles',
     'Apps.tryon',
+    'Apps.subscriptions',
 ]
 
 MIDDLEWARE = [
@@ -264,10 +265,6 @@ SMS_API_SECRET = env('SMS_API_SECRET')
 SMS_SENDER_ID = env('SMS_SENDER_ID')
 SMS_BASE_URL = env('SMS_BASE_URL')
 SMS_TIMEOUT_SECONDS = env_int('SMS_TIMEOUT_SECONDS', 10)
-
-# Try-on credits a new customer starts with. Mirrors the frontend's own
-# STARTING_CREDITS so a fresh account reads the same on both sides.
-STARTING_TRY_ON_CREDITS = env_int('STARTING_TRY_ON_CREDITS', 3)
 
 # The hair-AI service (services/ai), for the 360° try-on video. The backend is
 # its only caller for that: it looks up the admin's prompt for the chosen

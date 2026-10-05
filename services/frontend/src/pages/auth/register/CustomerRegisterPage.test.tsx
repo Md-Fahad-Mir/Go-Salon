@@ -30,7 +30,7 @@ const REGISTERED = {
   expires_in_minutes: 10,
   user: {
     id: 42, phone: '+8801712345678', name: 'Test Person', email: '', role: 'customer',
-    is_phone_verified: false, try_on_credits: 3, date_joined: '2026-09-24T04:30:00Z',
+    is_phone_verified: false, date_joined: '2026-09-24T04:30:00Z',
   },
 };
 

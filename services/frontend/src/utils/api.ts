@@ -21,7 +21,6 @@
    shaped like the endpoint. */
 
 import type { GeoPoint, Hairstyle, PaymentMethod, Professional } from '../types';
-import { CREDIT_PACK_SIZE } from '../constants';
 import { useDirectoryStore } from '../store/useDirectoryStore';
 import { bookingService } from './bookingService';
 import { directoryService } from './directoryService';
@@ -87,17 +86,6 @@ export const api = {
         method: input.method,
         amount: input.amount,
       };
-    },
-  },
-
-  credits: {
-    async purchase(method: PaymentMethod): Promise<{ added: number; reference: string }> {
-      const charge = await api.payments.charge({
-        method,
-        amount: 199,
-        description: `${CREDIT_PACK_SIZE} try-on credits`,
-      });
-      return { added: CREDIT_PACK_SIZE, reference: charge.reference };
     },
   },
 };

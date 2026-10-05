@@ -42,6 +42,26 @@ const BRAIDS = {
 /** Names the old hardcoded catalogue shipped. None may appear any more. */
 const OLD_MOCK_NAMES = ['Skin fade', 'Layer cut', 'Holud bridal updo', 'Wolf cut', 'Pompadour'];
 
+/** The backend's count — `Apps/tryon/credits.py`. */
+const credits = (used: number, total: number | null = 3) => ({
+  plan: total === null ? { slug: 'advanced', name: 'Advanced' } : { slug: 'free', name: 'Free' },
+  total,
+  used,
+  remaining: total === null ? null : Math.max(0, total - used),
+  unlimited: total === null,
+  period_start: '2026-10-01T00:00:00+06:00',
+  resets_at: '2026-11-01T00:00:00+06:00',
+});
+
+const PLANS = [
+  { slug: 'free', name: 'Free', price_bdt: 0, monthly_credits: 3, features: ['Book appointments'],
+    is_featured: false, is_default: true },
+  { slug: 'basic', name: 'Basic', price_bdt: 199, monthly_credits: 30, features: [],
+    is_featured: false, is_default: false },
+  { slug: 'advanced', name: 'Advanced', price_bdt: 499, monthly_credits: null, features: [],
+    is_featured: true, is_default: false },
+];
+
 const STARTED = {
   id: 12,
   status: 'processing',
@@ -53,13 +73,16 @@ const STARTED = {
   created_at: '2026-10-04T10:00:00Z',
   completed_at: null,
   poster: 'data:image/jpeg;base64,/9j/4AAQ',
+  credits: credits(1),
 };
-const COMPLETED = { ...STARTED, status: 'completed', poster: undefined, completed_at: '2026-10-04T10:01:30Z' };
+const COMPLETED = {
+  ...STARTED, status: 'completed', poster: undefined, credits: undefined, completed_at: '2026-10-04T10:01:30Z',
+};
 const CLIP: Answer = { status: 200, blob: new Blob(['mp4-bytes'], { type: 'video/mp4' }) };
 
-const someone = (credits = 5): User => ({
+const someone = (): User => ({
   id: 'U1', name: 'Test Person', role: 'customer',
-  phone: '+8801955000009', createdAt: '2026-01-01T00:00:00.000Z', credits,
+  phone: '+8801955000009', createdAt: '2026-01-01T00:00:00.000Z',
 });
 
 const PRISTINE_APP = useAppStore.getState();
@@ -75,13 +98,19 @@ beforeEach(async () => {
 });
 
 /** The whole backend, by URL. More specific paths first: first match wins. */
-const backend = (overrides: { catalogue?: Answer; start?: Answer; status?: Answer } = {}) =>
+const backend = (
+  overrides: { catalogue?: Answer; start?: Answer; status?: Answer; credits?: Answer } = {},
+) =>
   route([
     ['/tryon/videos/12/content/', CLIP],
     ['/tryon/videos/12/', overrides.status ?? { status: 200, body: COMPLETED }],
     ['/tryon/videos/', overrides.start ?? { status: 201, body: STARTED }],
+    ['/tryon/credits/', overrides.credits ?? { status: 200, body: credits(0) }],
+    ['/subscription-tiers/', { status: 200, body: PLANS }],
     ['/hairstyles/catalogue/', overrides.catalogue ?? { status: 200, body: [FADE, BRAIDS] }],
   ]);
+
+const creditReads = () => requestsTo('/tryon/credits/').filter((request) => request.method === 'GET');
 
 const openPicker = () =>
   mount({
@@ -124,7 +153,8 @@ describe('style picker', () => {
   });
 
   it('asks for the video by style id, waits for it, keeps it and opens it', async () => {
-    backend();
+    // What the backend says once this video's credit is taken.
+    backend({ credits: { status: 200, body: credits(1) } });
     openPicker();
 
     await userEvent.click(await screen.findByRole('button', { name: /Admin fade/ }));
@@ -143,7 +173,10 @@ describe('style picker', () => {
     const clip = await photoStore.get(result.videoKey!);
     expect(clip?.type).toBe('video/mp4');
     expect(await photoStore.get(result.resultKey)).toBeDefined();   // the poster
-    expect(useAppStore.getState().user?.credits).toBe(4);
+    // The count is the backend's — read on arrival and again after the video —
+    // never one the app worked out for itself.
+    expect(useAppStore.getState().user?.tryOnCredits).toMatchObject({ used: 1, remaining: 2 });
+    await waitFor(() => expect(creditReads().length).toBeGreaterThanOrEqual(2));
     expect(useTryOnStore.getState().pending).toBeNull();
   });
 
@@ -179,7 +212,9 @@ describe('style picker', () => {
     await userEvent.click(await screen.findByRole('button', { name: /Admin fade/ }));
     expect(await screen.findByRole('button', { name: /Admin fade/ })).toBeInTheDocument();
     expect(useAppStore.getState().generations).toHaveLength(0);
-    expect(useAppStore.getState().user?.credits).toBe(5);
+    // A failed video hands its credit back on the backend; the app asks again.
+    await waitFor(() => expect(creditReads().length).toBeGreaterThanOrEqual(2));
+    expect(useAppStore.getState().user?.tryOnCredits?.remaining).toBe(3);
     expect(useTryOnStore.getState().pending).toBeNull();
     const [toast] = useAppStore.getState().toasts;
     expect(toast?.message).toBe('That photo could not be used. Try a clearer, well-lit photo of your face.');
@@ -242,13 +277,36 @@ describe('style picker', () => {
     expect(useAppStore.getState().generations[0]?.id).toBe('GEN-strict');
   });
 
-  it('asks for credits before starting when there are none', async () => {
-    useAppStore.getState().setSession({ user: someone(0), access: 'a', refresh: 'r' });
-    backend();
+  it('shows the plans instead of starting when the month is spent', async () => {
+    backend({ credits: { status: 200, body: credits(3) } });
+    openPicker();
+
+    expect(await screen.findByText('No credits')).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', { name: /Admin fade/ }));
+    expect(await screen.findByText('This month’s credits are used up')).toBeInTheDocument();
+    expect(await screen.findByText('Your plan')).toBeInTheDocument();
+    expect(screen.getByText('Unlimited try-ons')).toBeInTheDocument();
+    expect(requestsTo('/tryon/videos/')).toHaveLength(0);
+  });
+
+  it('opens the plans when the backend refuses for want of credits', async () => {
+    backend({
+      start: { status: 403, body: { detail: 'Used up.', code: 'no_credits', errors: {} } },
+    });
     openPicker();
 
     await userEvent.click(await screen.findByRole('button', { name: /Admin fade/ }));
-    expect(requestsTo('/tryon/videos/')).toHaveLength(0);
+    expect(await screen.findByText('Plans and credits')).toBeInTheDocument();
+    expect(useAppStore.getState().generations).toHaveLength(0);
+  });
+
+  it('never stops an unlimited plan', async () => {
+    backend({ credits: { status: 200, body: credits(40, null) } });
+    openPicker();
+
+    expect(await screen.findByText('Unlimited try-ons')).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', { name: /Admin fade/ }));
+    expect(await screen.findByText('the preview')).toBeInTheDocument();
   });
 
   it('says so when the admin has no active styles', async () => {
@@ -270,6 +328,18 @@ describe('style picker', () => {
 
 describe('try-on home', () => {
   const openHome = () => mount({ at: '/ai-tryon', routes: { '/ai-tryon': <TryOnHomePage /> } });
+
+  it('shows the plan and this month’s credits from the backend', async () => {
+    backend({ credits: { status: 200, body: credits(1) } });
+    openHome();
+
+    expect(await screen.findByText('2 credits left')).toBeInTheDocument();
+    expect(screen.getByText('Free plan')).toBeInTheDocument();
+    expect(screen.getByText(/1 of 3 used this month/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Upgrade' }));
+    expect(await screen.findByText('Plans and credits')).toBeInTheDocument();
+    expect(await screen.findByText('Basic')).toBeInTheDocument();
+  });
 
   it('lists the admin styles and nothing hardcoded', async () => {
     backend();

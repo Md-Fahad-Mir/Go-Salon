@@ -36,7 +36,6 @@ const someone = (id = 'U1', role: User['role'] = 'customer'): User => ({
   name: 'Test Person',
   phone: '+8801955000009',
   createdAt: '2026-01-01T00:00:00.000Z',
-  credits: 3,
 });
 
 /* Zustand stores are singletons, so each test puts this one back as it found

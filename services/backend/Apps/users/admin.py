@@ -26,7 +26,7 @@ class UserAdmin(DjangoUserAdmin):
             'fields': ('role', 'is_phone_verified', 'is_active', 'is_staff', 'is_superuser',
                        'groups', 'user_permissions'),
         }),
-        (_('App'), {'fields': ('try_on_credits', 'terms_accepted_at')}),
+        (_('App'), {'fields': ('terms_accepted_at',)}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined', 'updated_at')}),
     )
     add_fieldsets = (

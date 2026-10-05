@@ -437,81 +437,539 @@
   overflow: hidden;
 }
 
-/* --- Settings ------------------------------------------------------------ */
+/* --- Settings ------------------------------------------------------------
+   Two groups under editorial eyebrows: the platform's settings as a grid of
+   themed cards, then the subscription tiers as a showcase of pricing cards. */
+
+.settings-group + .settings-group { margin-top: 2rem; }
+
+@media (min-width: 64rem) {
+  .settings-group + .settings-group { margin-top: 2.5rem; }
+}
+
+/* A champagne rule, the group's name, then a hairline to the edge. */
+.settings-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-ink);
+}
+
+.settings-eyebrow::before {
+  content: '';
+  width: 1.75rem;
+  height: 1px;
+  background-color: currentColor;
+}
+
+.settings-eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background-color: var(--border-color);
+}
 
 .settings-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
-  align-items: start;
 }
-
-@media (min-width: 64rem) { .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; } }
-@media (min-width: 96rem) { .settings-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-
-/* Cards of wildly different heights read better packed than aligned to a
-   grid row, so the settings page uses columns rather than a grid. */
-.masonry { display: block; }
-.masonry > * { break-inside: avoid; margin-bottom: 1rem; }
 
 @media (min-width: 64rem) {
-  .masonry { columns: 2; column-gap: 1.25rem; }
-  .masonry > * { margin-bottom: 1.25rem; }
+  .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
 }
 
-@media (min-width: 96rem) {
-  .masonry { columns: 3; }
+.set-card { display: flex; flex-direction: column; }
+
+.set-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: var(--card-padding) var(--card-padding) 1rem;
+}
+
+.set-card-titles { min-width: 0; padding-top: 0.0625rem; }
+
+.set-card-titles h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.set-card-titles p {
+  margin-top: 0.1875rem;
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+}
+
+.set-card-body {
+  flex: 1;
+  margin-inline: var(--card-padding);
+  padding-block: 0.25rem 0.5rem;
+  border-top: 1px solid var(--border-light);
 }
 
 .setting-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.875rem 0;
+  gap: 0.75rem 1rem;
+  padding: 1rem 0;
   border-bottom: 1px solid var(--border-light);
 }
-.setting-row:first-child { padding-top: 0.25rem; }
-.setting-row:last-child { border-bottom: none; padding-bottom: 0.25rem; }
-.setting-row .info { min-width: 0; }
+.setting-row:last-child { border-bottom: none; }
+.setting-row .info { flex: 1 1 12rem; min-width: 0; }
 .setting-row .info strong { display: block; font-size: 0.875rem; color: var(--text-primary); font-weight: 600; }
-.setting-row .info span { font-size: 0.75rem; color: var(--text-tertiary); }
+.setting-row .info span { display: block; margin-top: 0.125rem; font-size: 0.8125rem; color: var(--text-tertiary); }
 .setting-row .control { flex-shrink: 0; }
-.setting-row .control .input { width: 7.5rem; font-variant-numeric: tabular-nums; }
-.setting-row .control .select { width: auto; min-width: 7.5rem; max-width: 11rem; }
+
 /* A setting whose choices are sentences, not words: the control takes the
    full width under its label instead of squeezing in beside it. */
-.setting-row-stacked { flex-direction: column; align-items: stretch; gap: 0.625rem; }
-.setting-row-stacked .control .select { width: 100%; max-width: none; }
+.setting-row-stacked { flex-direction: column; align-items: stretch; }
+.setting-row-stacked .info { flex-basis: auto; }
+.setting-row-stacked .control .select { width: 100%; }
 
-.tier-card {
+/* Numbers with their unit set inside the field. */
+.unit-input {
+  display: flex;
+  align-items: stretch;
+  width: 8.5rem;
+  min-height: 2.75rem;
+  overflow: hidden;
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+  transition:
+    border-color var(--transition-speed) var(--ease),
+    box-shadow var(--transition-speed) var(--ease);
+}
+.unit-input:hover { border-color: var(--border-strong); }
+.unit-input:focus-within { border-color: var(--input-focus); box-shadow: 0 0 0 4px var(--ring); }
+.unit-input[data-disabled='true'] { opacity: 0.55; }
+.unit-input[data-disabled='true']:hover { border-color: var(--input-border); }
+
+.unit-input input {
+  flex: 1;
+  min-width: 0;
+  padding-inline: 0.75rem;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.unit-input input::-webkit-outer-spin-button,
+.unit-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.unit-input input::placeholder { color: var(--text-tertiary); }
+.unit-input input:disabled { cursor: not-allowed; }
+
+.unit-input-unit {
+  display: grid;
+  place-items: center;
+  min-width: 2.5rem;
+  padding-inline: 0.625rem;
+  background-color: var(--bg-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  user-select: none;
+}
+.unit-input[data-placement='prefix'] .unit-input-unit { border-inline-end: 1px solid var(--border-light); }
+.unit-input[data-placement='suffix'] .unit-input-unit { border-inline-start: 1px solid var(--border-light); }
+
+@media (min-width: 64rem) {
+  .unit-input { min-height: 2.5rem; }
+}
+
+/* Inside a form the price box spans its column like any other input. */
+.form-grid .unit-input { width: 100%; min-height: 3rem; }
+
+@media (min-width: 48rem) {
+  .form-grid .unit-input { min-height: 2.625rem; }
+}
+
+/* The video model in use, spelled out under the picker. */
+.model-specs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background-color: var(--bg-muted);
+}
+
+.model-specs > div { min-width: 0; padding: 0.75rem 0.875rem; }
+.model-specs > div + div { border-inline-start: 1px solid var(--border-light); }
+
+.model-specs dt {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.model-specs dd {
+  margin-top: 0.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.model-specs dd small { font-size: 0.75rem; font-weight: 500; color: var(--text-tertiary); }
+
+/* --- Subscription tiers: a showcase of pricing cards ---------------------- */
+
+.tiers-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  padding-inline-end: var(--card-padding);
+}
+
+.tiers-head .set-card-head { flex: 1 1 20rem; }
+
+.tiers-head-end {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0 0 var(--card-padding) var(--card-padding);
+}
+
+@media (min-width: 48rem) {
+  .tiers-head-end { padding: var(--card-padding) 0; }
+}
+
+.tiers-stats { display: flex; gap: 1.5rem; }
+.tiers-stats > div + div { padding-inline-start: 1.5rem; border-inline-start: 1px solid var(--border-light); }
+
+.tiers-stats dt {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.tiers-stats dd {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* The cards sit on a recessed stage so each one reads as an object. */
+.tiers-stage {
+  padding: var(--card-padding);
+  border-top: 1px solid var(--border-light);
+  background-color: var(--bg-muted);
+  border-end-start-radius: calc(var(--radius-lg) - 1px);
+  border-end-end-radius: calc(var(--radius-lg) - 1px);
+}
+
+.tiers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 64rem) {
+  .tiers-grid { gap: 1.25rem; }
+}
+
+.tier {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.875rem;
-  padding: 1.125rem;
+  min-width: 0;
+  padding: 0.875rem 1.25rem 1.25rem;
+  background-color: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: calc(var(--radius-lg) - 0.125rem);
-  background-color: var(--bg-muted);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--transition-speed) var(--ease),
+    box-shadow var(--transition-speed) var(--ease);
+}
+.tier:hover { border-color: var(--border-strong); box-shadow: var(--shadow-md); }
+
+/* An open action menu has to sit above the cards that follow it. */
+.tier:has(.menu) { z-index: 2; }
+
+.tier[data-featured='true'] {
+  border-color: var(--accent-line);
+  background-image: linear-gradient(170deg, var(--accent-bg) 0%, transparent 42%);
+  box-shadow: var(--shadow-md);
+}
+
+/* Light catching a bevel along the featured card's top edge. */
+.tier[data-featured='true']::before {
+  content: '';
+  position: absolute;
+  inset-inline: 1.25rem;
+  top: -1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.tier-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  margin-inline-end: -0.625rem;
+}
+
+.tier-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+
+.tier-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1875rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--status-neutral-bg);
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--status-neutral-ink);
+}
+
+.tier-tag-featured {
+  background-color: var(--accent-bg);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+  color: var(--accent-ink);
+}
+
+.tier-name {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.tier[data-featured='true'] .tier-name { color: var(--accent-ink); }
+
+.tier-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 0.25rem;
+  margin-top: 0.375rem;
+  color: var(--text-primary);
+}
+
+.tier-currency {
+  align-self: flex-start;
+  margin-top: 0.375rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.tier-amount {
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: lining-nums;
+}
+
+.tier-period {
+  margin-inline-start: 0.125rem;
+  font-size: 0.8125rem;
+  color: var(--text-tertiary);
+}
+
+.tier-credits {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+}
+.tier-credits svg { flex-shrink: 0; }
+
+.tier-subs {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-tertiary);
+}
+
+.tier-features {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 1.125rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.tier-features li {
+  display: flex;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.tier-features-empty { font-size: 0.8125rem; font-style: italic; color: var(--text-tertiary); }
+
+.tier-check {
+  display: grid;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.0625rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: var(--accent-bg);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
+  color: var(--accent-ink);
+}
+
+.tier-edit { margin-top: 1.25rem; }
+
+/* The empty seat at the end of the row. */
+.tier-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-height: 14rem;
+  padding: 1.5rem;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background-color: transparent;
+  text-align: center;
+  cursor: pointer;
   transition:
     border-color var(--transition-speed) var(--ease),
     background-color var(--transition-speed) var(--ease);
 }
-.tier-card[data-featured='true'] {
-  border-color: var(--accent-line);
+.tier-add:hover { border-color: var(--accent); background-color: var(--accent-bg); }
+.tier-add:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+.tier-add-icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 0.375rem;
+  border-radius: 50%;
   background-color: var(--bg-secondary);
-  background-image: linear-gradient(160deg, var(--accent-bg), transparent 55%);
+  box-shadow: inset 0 0 0 1px var(--accent-line), var(--shadow-xs);
+  color: var(--accent-ink);
+  transition: transform var(--transition-speed) var(--ease);
 }
-.tier-card .setting-row { padding-block: 0.25rem; border-bottom: none; }
-.tier-card > .dim {
-  font-size: 0.75rem;
+.tier-add:hover .tier-add-icon { transform: scale(1.06); }
+
+.tier-add strong { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
+.tier-add > span:last-child { font-size: 0.75rem; color: var(--text-tertiary); }
+
+/* Monthly credits: the amount, and beside it the switch that lifts the cap. */
+.tier-credits-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
+}
+/* Down by the label's height, so the switch lines up with the box. */
+.tier-credits-unlimited { padding-top: 1.875rem; }
+
+/* The add / edit dialog: the form beside a live preview of the card. */
+.tier-editor {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 56rem) {
+  .tier-editor { grid-template-columns: minmax(0, 1fr) 17.5rem; gap: 2rem; }
+}
+
+.tier-editor-switches {
+  margin-top: 1.25rem;
+  padding: 0.25rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background-color: var(--bg-muted);
+}
+
+.tier-editor-preview {
+  align-self: start;
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-muted);
+  border: 1px solid var(--border-light);
+}
+
+@media (min-width: 56rem) {
+  .tier-editor-preview { position: sticky; top: 0; }
+}
+
+.tier-editor-preview-label {
+  margin-bottom: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border-light);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
 }
-.tier-card ul { display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.5rem; }
-.tier-card li { display: flex; gap: 0.375rem; font-size: 0.8125rem; color: var(--text-secondary); }
-.tier-card li svg { color: var(--status-success-ink); flex-shrink: 0; margin-top: 0.125rem; }
+
+.tier-editor-preview .tier:hover { border-color: var(--border-color); box-shadow: var(--shadow-sm); }
+.tier-editor-preview .tier[data-featured='true']:hover { border-color: var(--accent-line); box-shadow: var(--shadow-md); }
+
+/* A dialog's message beside its marker — the delete and blocked prompts. */
+.dialog-message { display: flex; align-items: flex-start; gap: 0.75rem; }
+.dialog-message p { margin: 0; padding-top: 0.375rem; }
+
+.dialog-mark {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-ink);
+}
+.dialog-mark-neutral { background-color: var(--accent-bg); color: var(--accent-ink); }
 
 /* --- Audit log ----------------------------------------------------------- */
 

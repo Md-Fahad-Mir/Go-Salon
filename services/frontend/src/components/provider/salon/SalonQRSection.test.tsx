@@ -18,7 +18,7 @@ const png = (mark: string) => new Blob([mark], { type: 'image/png' });
 
 const owner = (): User => ({
   id: 'U1', name: 'Owner', role: 'salon_owner',
-  phone: '+8801955000001', createdAt: '2026-01-01T00:00:00.000Z', credits: 0,
+  phone: '+8801955000001', createdAt: '2026-01-01T00:00:00.000Z',
 });
 
 const PRISTINE = useAppStore.getState();

@@ -27,6 +27,7 @@ import type {
   VerificationRequired,
 } from '../types';
 import { api } from './apiClient';
+import { toCredits, type ApiCredits } from './creditsService';
 
 /* --- what the API returns -------------------------------------------------- */
 
@@ -45,7 +46,8 @@ interface ApiUser {
   email: string;
   role: UserRole;
   is_phone_verified: boolean;
-  try_on_credits: number;
+  /** The plan and this month's try-on credits. */
+  credits?: ApiCredits;
   date_joined: string;
   profile?: {
     avatar?: string;
@@ -115,7 +117,7 @@ export function mapUser(user: ApiUser): User {
       toLocation(profile.barber?.location) ??
       toLocation(profile.salon?.location),
     createdAt: user.date_joined,
-    credits: user.try_on_credits,
+    tryOnCredits: user.credits ? toCredits(user.credits) : undefined,
   };
 }
 

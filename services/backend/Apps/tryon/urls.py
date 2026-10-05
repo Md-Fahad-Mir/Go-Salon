@@ -1,6 +1,7 @@
 """    /api/tryon/videos/                       start a 360° try-on video
     /api/tryon/videos/<pk>/                  its status
     /api/tryon/videos/<pk>/content/          the finished clip
+    /api/tryon/credits/                      the plan and this month's credits
     /api/admin/settings/ai-generation/       which video model renders them — admin only
 """
 
@@ -14,6 +15,7 @@ urlpatterns = [
     path('tryon/videos/', views.TryOnVideoCreateView.as_view(), name='videos'),
     path('tryon/videos/<int:pk>/', views.TryOnVideoDetailView.as_view(), name='video'),
     path('tryon/videos/<int:pk>/content/', views.TryOnVideoContentView.as_view(), name='video-content'),
+    path('tryon/credits/', views.TryOnCreditsView.as_view(), name='credits'),
     path('admin/settings/ai-generation/', views.AdminAIGenerationSettingsView.as_view(),
          name='admin-ai-generation'),
 ]

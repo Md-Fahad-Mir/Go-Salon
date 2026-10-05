@@ -14,7 +14,10 @@ export type AccountType =
   | 'parlour_owner'
   | 'parlour_employee'
   | 'admin';
-export type SubscriptionTier = 'free' | 'basic' | 'advanced';
+/** A subscription tier's slug — what an account's plan points at. Tiers are
+    curated in Settings, so this is any slug the backend knows, not a fixed
+    set ('free', 'basic' and 'advanced' are only the seeded three). */
+export type SubscriptionTier = string;
 export type AccountStatus = 'active' | 'inactive' | 'suspended';
 export type Audience = 'men' | 'women' | 'unisex';
 export type EntityStatus = 'active' | 'inactive';
@@ -286,11 +289,20 @@ export interface PlatformSettings {
 }
 
 export interface SubscriptionTierPlan {
-  id: SubscriptionTier;
+  id: string;
+  /** Minted from the name on creation and fixed after — accounts point at it. */
+  slug: SubscriptionTier;
   name: string;
+  /** Monthly price in whole taka; 0 is a free plan. */
   price: number;
-  featured?: boolean;
+  /** 360° try-on videos the plan allows each month — one credit each. Null
+      is unlimited. */
+  monthlyCredits: number | null;
+  featured: boolean;
+  /** The plan new accounts start on. Exactly one tier has it. */
+  isDefault: boolean;
   features: string[];
+  subscriberCount: number;
 }
 
 /* --- UI-level shapes ------------------------------------------------------ */

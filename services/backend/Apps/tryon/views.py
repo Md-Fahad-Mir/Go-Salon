@@ -1,8 +1,9 @@
 """The 360° try-on video, for the app; and its model, for the admin.
 
-    POST /api/tryon/videos/                  photo + hairstyle id → a video job
+    POST /api/tryon/videos/                  photo + hairstyle id → a video job, for one credit
     GET  /api/tryon/videos/<pk>/             where it is
     GET  /api/tryon/videos/<pk>/content/     the finished clip
+    GET  /api/tryon/credits/                 the account's plan and this month's credits
     GET|PATCH /api/admin/settings/ai-generation/   the video model and price, admin only
 
 The app sends a hairstyle *id*, never a prompt. The prompt is read here from
@@ -29,7 +30,7 @@ from Apps.hairstyles.models import Hairstyle
 from Apps.users.models import Role
 from Apps.users.permissions import IsAdmin
 
-from . import ai_service
+from . import ai_service, credits
 from .ai_service import AIServiceError
 from .models import TryOnSettings, TryOnVideo, VideoStatus
 from .serializers import TryOnVideoSerializer
@@ -132,27 +133,30 @@ class TryOnVideoCreateView(GenericAPIView):
         if hairstyle is None:
             return _not_found('That style is no longer available.', 'hairstyle_unavailable')
 
-        started = ai_service.start_video(
-            photo=photo.read(),
-            content_type=photo.content_type or 'image/jpeg',
-            hairstyle_name=hairstyle.name,
-            prompt=hairstyle.description,
-            hairstyle_id=str(hairstyle.pk),
-            video_model=TryOnSettings.load().video_model,
-        )
-        job = started.get('job') or {}
-        meta = started.get('meta') or {}
-        if not job.get('id'):
-            raise AIServiceError('invalid_response', 'The AI service did not start the video.', 502)
+        # The credit is taken before the AI service is asked — that call is
+        # the one that costs money — and handed back if no job comes of it.
+        video = credits.reserve(request.user, hairstyle)
+        try:
+            started = ai_service.start_video(
+                photo=photo.read(),
+                content_type=photo.content_type or 'image/jpeg',
+                hairstyle_name=hairstyle.name,
+                prompt=hairstyle.description,
+                hairstyle_id=str(hairstyle.pk),
+                video_model=TryOnSettings.load().video_model,
+            )
+            job = started.get('job') or {}
+            if not job.get('id'):
+                raise AIServiceError('invalid_response', 'The AI service did not start the video.', 502)
+        except Exception:
+            video.delete()
+            raise
 
-        video = TryOnVideo.objects.create(
-            user=request.user,
-            hairstyle=hairstyle,
-            hairstyle_name=hairstyle.name,
-            job_id=str(job['id'])[:128],
-            video_model=str(meta.get('video_model') or '')[:120],
-            duration_seconds=meta.get('duration_seconds') or None,
-        )
+        meta = started.get('meta') or {}
+        video.job_id = str(job['id'])[:128]
+        video.video_model = str(meta.get('video_model') or '')[:120]
+        video.duration_seconds = meta.get('duration_seconds') or None
+        video.save(update_fields=['job_id', 'video_model', 'duration_seconds'])
         poster = started.get('poster') or {}
         body = self.get_serializer(video).data
         # The still the video starts from, so the app has something to show
@@ -161,7 +165,19 @@ class TryOnVideoCreateView(GenericAPIView):
         body['poster'] = (
             f'data:{poster.get("mime_type") or "image/jpeg"};base64,{poster["b64"]}' if poster.get('b64') else ''
         )
+        # The balance after this video, so the app can show it straight away.
+        body['credits'] = credits.summary(request.user)
         return Response(body, status=status.HTTP_201_CREATED)
+
+
+class TryOnCreditsView(GenericAPIView):
+    """The account's plan and what it leaves of this month's try-ons — the
+    only place the app's credit count comes from."""
+
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response(credits.summary(request.user))
 
 
 class TryOnVideoDetailView(GenericAPIView):

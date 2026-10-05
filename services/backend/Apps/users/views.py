@@ -676,7 +676,10 @@ def _admin_users():
     """Accounts with everything `AdminUserSerializer` reads per row already
     loaded, so listing them costs a fixed number of queries."""
     return User.objects.select_related('customer_profile').prefetch_related(
-        'salons', 'employments__salon')
+        'salons', 'employments__salon',
+    ).annotate(
+        completed_videos=Count('try_on_videos', filter=Q(try_on_videos__status=VideoStatus.COMPLETED)),
+    )
 
 
 class AdminUserListView(GenericAPIView):

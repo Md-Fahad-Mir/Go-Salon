@@ -4,7 +4,6 @@ import type {
   Audience,
   NotificationStatus,
   PaymentMethod,
-  SubscriptionTier,
   TransactionStatus,
   UserType,
   VerificationStatus,
@@ -110,17 +109,11 @@ export const AUDIENCE_LABELS: Record<Audience, string> = {
   unisex: 'Everyone',
 };
 
-export const TIER_LABELS: Record<SubscriptionTier, string> = {
-  free: 'Free',
-  basic: 'Basic',
-  advanced: 'Advanced',
-};
-
-export const TIER_TONES: Record<SubscriptionTier, Tone> = {
-  free: 'neutral',
-  basic: 'info',
-  advanced: 'accent',
-};
+/** How a plan's badge is tinted. Plans are curated in Settings, so this reads
+    the plan rather than a fixed table: featured ones take the champagne
+    accent, free ones stay neutral, and every other paid plan is blue. */
+export const tierTone = (plan: { featured: boolean; price: number }): Tone =>
+  plan.featured ? 'accent' : plan.price === 0 ? 'neutral' : 'info';
 
 export const ACCOUNT_STATUS_TONES: Record<AccountStatus, Tone> = {
   active: 'success',

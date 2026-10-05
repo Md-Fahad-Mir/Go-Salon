@@ -8,7 +8,6 @@ bottom rather than as nullable columns on the account itself.
 
 from __future__ import annotations
 
-from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -16,6 +15,7 @@ from django.db import models
 from django.utils import timezone
 
 from Apps.common.images import ImageRefField
+from Apps.subscriptions.models import default_tier_slug
 
 from .phone import normalize_phone
 
@@ -52,15 +52,6 @@ class Audience(models.TextChoices):
 class BusinessType(models.TextChoices):
     SALON = 'salon', 'Salon'
     BARBER = 'barber', 'Barbershop'
-
-
-class SubscriptionTier(models.TextChoices):
-    """The app plan an account is on. Independent of `role` — a customer and
-    a barber are both billed through the same three tiers."""
-
-    FREE = 'free', 'Free'
-    BASIC = 'basic', 'Basic'
-    ADVANCED = 'advanced', 'Advanced'
 
 
 class AccountStatus(models.TextChoices):
@@ -188,12 +179,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     account_status = models.CharField(
         max_length=10, choices=AccountStatus.choices, default=AccountStatus.ACTIVE,
     )
-    subscription_tier = models.CharField(
-        max_length=10, choices=SubscriptionTier.choices, default=SubscriptionTier.FREE,
+    #: The plan the account is on. Independent of `role` — a customer and a
+    #: barber are billed through the same tiers, which admins curate (see
+    #: Apps.subscriptions). Keyed by the tier's slug, so the column still
+    #: holds 'free', 'basic', 'advanced' rather than ids. A new account gets
+    #: the default tier in `save()` — not as the field's default, which
+    #: Django evaluates whenever a `User()` is built, system checks included.
+    subscription_tier = models.ForeignKey(
+        'subscriptions.SubscriptionTier', to_field='slug', db_column='subscription_tier',
+        on_delete=models.PROTECT, related_name='subscribers',
     )
-
-    #: AI try-on credits. Part of the account the frontend reads on sign-in.
-    try_on_credits = models.PositiveIntegerField(default=0)
 
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
     date_joined = models.DateTimeField(default=timezone.now)
@@ -216,6 +211,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def save(self, *args, **kwargs):
         self.phone = normalize_phone(self.phone)
+        if self._state.adding and not self.subscription_tier_id:
+            self.subscription_tier_id = default_tier_slug()
         super().save(*args, **kwargs)
 
     # --- Role helpers. Read by the permission classes and the serializers. ---
@@ -503,6 +500,3 @@ class OTPCode(models.Model):
     def created_at_or_now(self):
         return self.created_at or timezone.now()
 
-
-def starting_credits() -> int:
-    return getattr(settings, 'STARTING_TRY_ON_CREDITS', 0)

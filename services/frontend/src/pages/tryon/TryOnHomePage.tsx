@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import type { Hairstyle } from '../../types';
 import { ROUTES } from '../../constants';
 import { AiHero } from '../../components/ai-tryon/AiHero';
-import { BuyCreditsSheet } from '../../components/ai-tryon/BuyCreditsSheet';
-import { CreditsPill } from '../../components/ai-tryon/CreditsPill';
+import { CreditsBar } from '../../components/ai-tryon/CreditsBar';
 import { GenerationCard } from '../../components/ai-tryon/GenerationCard';
 import { PhotoTipsSheet } from '../../components/ai-tryon/PhotoTipsSheet';
+import { PlansSheet } from '../../components/ai-tryon/PlansSheet';
 import { Button } from '../../components/common/Button';
 import { EmptyState } from '../../components/common/EmptyState';
 import { HairstyleCard } from '../../components/common/HairstyleCard';
@@ -18,6 +18,7 @@ import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
 import { useHairstyles } from '../../hooks/useHairstyles';
 import { useT } from '../../hooks/useLanguage';
+import { useTryOnCredits } from '../../hooks/useTryOnCredits';
 import type { TKey } from '../../i18n';
 import { useAppStore } from '../../store/useAppStore';
 import { PreferenceButtons } from '../../components/home/PreferenceButtons';
@@ -34,13 +35,13 @@ export default function TryOnHomePage() {
   const photoKey = useTryOnStore((s) => s.photoKey);
   const setSelectedHairstyle = useTryOnStore((s) => s.setSelectedHairstyle);
   const [tipsOpen, setTipsOpen] = useState(false);
-  const [buyOpen, setBuyOpen] = useState(false);
+  const [plansOpen, setPlansOpen] = useState(false);
+  const { credits } = useTryOnCredits();
   /* The admin's catalogue, and only it. A failed or empty fetch drops the row
      rather than the screen: the try-on itself starts from the buttons above,
      and the style picker says why there is nothing to choose. */
   const { hairstyles, loading } = useHairstyles();
 
-  const credits = user?.credits ?? 0;
   const recent = generations.slice(0, 3);
 
   const startWith = (mode: 'camera' | 'gallery') => navigate(ROUTES.tryOnUpload, { state: { mode } });
@@ -70,12 +71,7 @@ export default function TryOnHomePage() {
       <ScreenBody className="stagger">
         <AiHero />
 
-        <div className="between tryon-bar">
-          <CreditsPill credits={credits} />
-          <Button variant="ghost" size="sm" onClick={() => setBuyOpen(true)}>
-            {t('tryon.buyCredits')}
-          </Button>
-        </div>
+        <CreditsBar credits={credits} onUpgrade={() => setPlansOpen(true)} />
 
         {/* One way in, named for what the customer gets: a selfie in, a short
             video of them turning all the way round in the style out. */}
@@ -153,7 +149,7 @@ export default function TryOnHomePage() {
       </ScreenBody>
 
       <PhotoTipsSheet open={tipsOpen} onClose={() => setTipsOpen(false)} />
-      <BuyCreditsSheet open={buyOpen} onClose={() => setBuyOpen(false)} />
+      <PlansSheet open={plansOpen} onClose={() => setPlansOpen(false)} credits={credits} />
     </Screen>
   );
 }

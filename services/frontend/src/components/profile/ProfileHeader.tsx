@@ -12,10 +12,19 @@ export function ProfileHeader({ user }: { user: User }) {
       <Avatar name={user.name} src={user.avatar} size="2xl" ring />
       <h2>{user.name}</h2>
       <p className="caption">{t('profile.memberSince', { date: formatMemberSince(user.createdAt) })}</p>
-      <Badge tone="accent" plain pill>
-        <Sparkles size={12} aria-hidden="true" />
-        {t('profile.credits', { count: formatNumber(user.credits) })}
-      </Badge>
+      {/* The plan and what it leaves this month, as the backend last said. */}
+      {user.tryOnCredits ? (
+        <Badge tone="accent" plain pill>
+          <Sparkles size={12} aria-hidden="true" />
+          {user.tryOnCredits.remaining === null
+            ? t('profile.creditsUnlimited', { plan: user.tryOnCredits.plan.name })
+            : t('profile.credits', {
+                count: user.tryOnCredits.remaining,
+                value: formatNumber(user.tryOnCredits.remaining),
+                plan: user.tryOnCredits.plan.name,
+              })}
+        </Badge>
+      ) : null}
     </section>
   );
 }

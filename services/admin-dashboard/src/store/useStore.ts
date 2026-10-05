@@ -6,7 +6,6 @@ import type {
   Booking,
   PlatformSettings,
   SmsTemplate,
-  SubscriptionTierPlan,
   Toast,
   ToastTone,
   Transaction,
@@ -18,7 +17,6 @@ import {
   mockNotifications,
   mockTemplates,
   mockTransactions,
-  SUBSCRIPTION_TIERS,
 } from '../mockData';
 import { ADMIN_USER } from '../constants';
 import { nextId } from '../utils/id';
@@ -52,7 +50,6 @@ export interface AdminStore {
   templates: SmsTemplate[];
   auditLog: AuditLogEntry[];
   settings: PlatformSettings;
-  subscriptionTiers: SubscriptionTierPlan[];
 
   /* ---- ui ---- */
   toasts: Toast[];
@@ -76,7 +73,6 @@ export interface AdminStore {
 
   /* ---- settings ---- */
   updateSettings: (patch: Partial<PlatformSettings>) => void;
-  updateSubscriptionTier: (id: string, patch: Partial<SubscriptionTierPlan>) => void;
 }
 
 export const useStore = create<AdminStore>((set, get) => ({
@@ -87,7 +83,6 @@ export const useStore = create<AdminStore>((set, get) => ({
   templates: mockTemplates,
   auditLog: [],
   settings: defaultSettings,
-  subscriptionTiers: SUBSCRIPTION_TIERS,
 
   toasts: [],
   sidebarCollapsed: readCollapsed(),
@@ -231,21 +226,5 @@ export const useStore = create<AdminStore>((set, get) => ({
       before: String(before[key as keyof PlatformSettings] ?? ''),
       after: String(value),
     });
-  },
-
-  updateSubscriptionTier: (id, patch) => {
-    const before = get().subscriptionTiers.find((tier) => tier.id === id);
-    set((state) => ({
-      subscriptionTiers: state.subscriptionTiers.map((tier) =>
-        tier.id === id ? { ...tier, ...patch } : tier,
-      ),
-    }));
-    get().recordAudit({
-      actionType: 'update',
-      resourceType: 'SubscriptionTier',
-      resourceId: id,
-      details: `Updated subscription tier "${before?.name ?? id}"`,
-    });
-    get().pushToast('success', 'Subscription tier saved', before?.name);
   },
 }));

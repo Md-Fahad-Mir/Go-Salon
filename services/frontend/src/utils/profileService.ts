@@ -20,6 +20,7 @@ import type {
   ProviderRole,
 } from '../types/provider';
 import { api } from './apiClient';
+import { toCredits, type ApiCredits } from './creditsService';
 
 /* --- What the wire looks like --------------------------------------------- */
 
@@ -38,7 +39,7 @@ interface ApiAccount {
   email: string;
   role: ProviderRole | 'customer' | 'admin';
   is_phone_verified: boolean;
-  try_on_credits: number;
+  credits?: ApiCredits;
   date_joined: string;
 }
 
@@ -161,7 +162,7 @@ export function toUser(profile: ApiProfile): User {
     hairLength: customer?.hair_length || undefined,
     location: customer?.location ? toLocation(customer.location) : undefined,
     createdAt: account.date_joined,
-    credits: account.try_on_credits,
+    tryOnCredits: account.credits ? toCredits(account.credits) : undefined,
   };
 }
 

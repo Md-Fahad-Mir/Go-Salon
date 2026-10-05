@@ -47,9 +47,9 @@ export const auth = {
   'auth.completeSignUp': 'সাইন আপ শেষ করুন',
   'auth.registerFailedTitle': 'সাইন আপ শেষ করা যায়নি',
   'auth.welcomeToast': 'স্বাগতম, {name}',
-  'auth.freeTryOns': 'আপনার {count}টি ফ্রি ট্রাই অন আছে।',
-  'auth.freeTryOns_one': 'আপনার {count}টি ফ্রি ট্রাই অন আছে।',
-  'auth.freeTryOns_other': 'আপনার {count}টি ফ্রি ট্রাই অন আছে।',
+  'auth.freeTryOns': 'এ মাসে আপনার {value}টি ট্রাই অন আছে।',
+  'auth.freeTryOns_one': 'এ মাসে আপনার {value}টি ট্রাই অন আছে।',
+  'auth.freeTryOns_other': 'এ মাসে আপনার {value}টি ট্রাই অন আছে।',
 
   /* --- Step 1: about you --------------------------------------------------- */
   'auth.nameTitle': 'আপনাকে কী নামে ডাকব?',

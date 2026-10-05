@@ -10,10 +10,11 @@ import type {
   Tenant,
   Toast,
   ToastTone,
+  TryOnCredits,
   User,
   UserPreferences,
 } from '../types';
-import { STARTING_CREDITS, STORAGE_KEYS } from '../constants';
+import { STORAGE_KEYS } from '../constants';
 import { nextId } from '../utils/id';
 import { tenantService } from '../utils/tenantService';
 import { useDirectoryStore } from './useDirectoryStore';
@@ -48,7 +49,7 @@ const welcomeNotification = (): AppNotification => ({
   id: nextId('NTF'),
   kind: 'system',
   title: 'Welcome to Go Salon',
-  body: `Your first ${STARTING_CREDITS} try-ons are on us. See the cut before the cut.`,
+  body: 'Your plan comes with 360° try-ons every month. See the cut before the cut.',
   createdAt: new Date().toISOString(),
   read: false,
   link: '/ai-tryon',
@@ -220,8 +221,8 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   removeGeneration: (id: string) => void;
   clearGenerations: () => void;
   setGenerationFeedback: (id: string, feedback: Feedback | undefined) => void;
-  spendCredit: () => boolean;
-  addCredits: (amount: number) => void;
+  /** The backend's latest word on the plan and this month's credits. */
+  setTryOnCredits: (credits: TryOnCredits) => void;
 
   /* ---- notifications ---- */
   pushNotification: (notification: Omit<AppNotification, 'id' | 'createdAt' | 'read'>) => void;
@@ -515,17 +516,10 @@ export const useAppStore = create<AppStore>()(
       setGenerationFeedback: (id, feedback) =>
         set({ generations: get().generations.map((g) => (g.id === id ? { ...g, feedback } : g)) }),
 
-      spendCredit: () => {
-        const user = get().user;
-        if (!user || user.credits <= 0) return false;
-        set({ user: { ...user, credits: user.credits - 1 } });
-        return true;
-      },
-
-      addCredits: (amount) => {
+      setTryOnCredits: (tryOnCredits) => {
         const user = get().user;
         if (!user) return;
-        set({ user: { ...user, credits: user.credits + amount } });
+        set({ user: { ...user, tryOnCredits } });
       },
 
       /* ---- notifications ---- */

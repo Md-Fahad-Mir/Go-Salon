@@ -9,8 +9,10 @@
    `start` answers once the haircut is on the photo and the video is under
    way (20–60 s), `status` is cheap and polled, `content` is the clip. */
 
+import type { TryOnCredits } from '../types';
 import { ApiError } from './apiError';
 import { api, requestBlob } from './apiClient';
+import { toCredits, type ApiCredits } from './creditsService';
 
 export type TryOnVideoStatus = 'processing' | 'completed' | 'failed';
 
@@ -26,6 +28,8 @@ interface ApiTryOnVideo {
   completed_at: string | null;
   /** Only on the answer to `start`: the edited still the video begins on. */
   poster?: string;
+  /** Only on the answer to `start`: the balance once this video's credit is taken. */
+  credits?: ApiCredits;
 }
 
 export interface TryOnVideoJob {
@@ -63,12 +67,19 @@ const dataUrlToBlob = (url: string): Blob | null => {
 export const tryOnVideoService = {
   /** `POST /api/tryon/videos/` — the photo and the chosen style. Slow: the
       haircut is rendered onto the photo before this answers. */
-  async start(photo: Blob, hairstyleId: string): Promise<{ job: TryOnVideoJob; poster: Blob | null }> {
+  async start(
+    photo: Blob,
+    hairstyleId: string,
+  ): Promise<{ job: TryOnVideoJob; poster: Blob | null; credits: TryOnCredits | null }> {
     const form = new FormData();
     form.append('image', photo, 'photo.jpg');
     form.append('hairstyle_id', hairstyleId);
     const row = await api.post<ApiTryOnVideo>('/tryon/videos/', form);
-    return { job: toJob(row), poster: row.poster ? dataUrlToBlob(row.poster) : null };
+    return {
+      job: toJob(row),
+      poster: row.poster ? dataUrlToBlob(row.poster) : null,
+      credits: row.credits ? toCredits(row.credits) : null,
+    };
   },
 
   /** `GET /api/tryon/videos/<id>/` — processing, completed or failed. */

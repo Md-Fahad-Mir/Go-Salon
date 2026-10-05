@@ -31,7 +31,6 @@ const someone = (role: User['role'] = 'customer'): User => ({
   role,
   phone: '+8801955000009',
   createdAt: '2026-01-01T00:00:00.000Z',
-  credits: 3,
 });
 
 const PRISTINE = useAppStore.getState();

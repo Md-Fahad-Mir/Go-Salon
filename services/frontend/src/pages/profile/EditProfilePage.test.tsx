@@ -19,7 +19,7 @@ import EditProfilePage from './EditProfilePage';
 /** A customer exactly as the trimmed sign-up leaves them. */
 const fresh = (over: Partial<User> = {}): User => ({
   id: '42', name: 'Test Person', role: 'customer',
-  phone: '+8801712345678', createdAt: '2026-09-24T04:30:00Z', credits: 3,
+  phone: '+8801712345678', createdAt: '2026-09-24T04:30:00Z',
   ...over,
 });
 
@@ -28,7 +28,7 @@ const savedAs = (name: string) => ({
   role: 'customer',
   account: {
     id: 42, phone: '+8801712345678', name, email: '', role: 'customer',
-    is_phone_verified: true, try_on_credits: 3, date_joined: '2026-09-24T04:30:00Z',
+    is_phone_verified: true, date_joined: '2026-09-24T04:30:00Z',
   },
   customer: {
     avatar: '', gender: '', hair_type: '', hair_length: '',

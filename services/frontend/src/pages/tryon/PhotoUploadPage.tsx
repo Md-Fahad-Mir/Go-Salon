@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../constants';
-import { BuyCreditsSheet } from '../../components/ai-tryon/BuyCreditsSheet';
+import { PlansSheet } from '../../components/ai-tryon/PlansSheet';
 import { CameraCapture } from '../../components/ai-tryon/CameraCapture';
 import { PhotoTipsSheet } from '../../components/ai-tryon/PhotoTipsSheet';
 import { newPhotoKey } from '../../components/ai-tryon/tryonActions';
@@ -14,8 +14,10 @@ import { Spinner } from '../../components/common/Spinner';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
 import { useT } from '../../hooks/useLanguage';
+import { useTryOnCredits } from '../../hooks/useTryOnCredits';
 import { useAppStore } from '../../store/useAppStore';
 import { useTryOnStore } from '../../store/useTryOnStore';
+import { canSpend } from '../../utils/creditsService';
 import { compressImage, looksLikeAPortrait } from '../../utils/image';
 import { photoStore } from '../../utils/storage';
 import { MAX_PHOTO_BYTES, photoError } from '../../utils/validators';
@@ -39,7 +41,7 @@ export default function PhotoUploadPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const state = (location.state ?? {}) as UploadState;
-  const credits = useAppStore((s) => s.user?.credits ?? 0);
+  const { credits } = useTryOnCredits();
   const toast = useAppStore((s) => s.toast);
   const setPhotoKey = useTryOnStore((s) => s.setPhotoKey);
   const setSelectedHairstyle = useTryOnStore((s) => s.setSelectedHairstyle);
@@ -50,7 +52,7 @@ export default function PhotoUploadPage() {
   const [fileError, setFileError] = useState('');
   const [busy, setBusy] = useState(false);
   const [tipsOpen, setTipsOpen] = useState(false);
-  const [buyOpen, setBuyOpen] = useState(false);
+  const [plansOpen, setPlansOpen] = useState(false);
 
   // The preview URL is revoked whenever the shot changes or the screen unmounts.
   useEffect(
@@ -110,8 +112,8 @@ export default function PhotoUploadPage() {
   };
 
   const continueWithPhoto = () => {
-    if (credits <= 0) {
-      setBuyOpen(true);
+    if (!canSpend(credits)) {
+      setPlansOpen(true);
       return;
     }
     void proceed();
@@ -187,7 +189,7 @@ export default function PhotoUploadPage() {
       </ScreenBody>
 
       <PhotoTipsSheet open={tipsOpen} onClose={() => setTipsOpen(false)} />
-      <BuyCreditsSheet open={buyOpen} onClose={() => setBuyOpen(false)} onPurchased={() => void proceed()} />
+      <PlansSheet open={plansOpen} onClose={() => setPlansOpen(false)} credits={credits} />
     </Screen>
   );
 }

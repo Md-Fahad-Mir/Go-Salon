@@ -122,11 +122,6 @@ export const AI_HOME_PHOTO = '/ai-home.jpg';
 
 /** Platform fee added to every booking, in BDT. */
 export const PLATFORM_FEE = 50;
-/** Credits a brand-new account starts with, and the size of a top-up. */
-export const STARTING_CREDITS = 3;
-export const CREDIT_PACK_SIZE = 10;
-export const CREDIT_PACK_PRICE = 199;
-
 export const SLOT_INTERVAL_MINUTES = 30;
 export const BOOKING_HORIZON_DAYS = 30;
 

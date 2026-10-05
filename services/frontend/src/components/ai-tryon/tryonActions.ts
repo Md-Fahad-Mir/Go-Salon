@@ -89,6 +89,7 @@ const ERROR_KEYS: Record<string, TKey> = {
   ai_service_unreachable: 'tryon.errorBusy',
   ai_service_unconfigured: 'tryon.errorUnconfigured',
   hairstyle_unavailable: 'tryon.errorStyleGone',
+  no_credits: 'tryon.errorNoCredits',
 };
 
 /** Which sentence to show for a failed try-on. */

@@ -48,9 +48,9 @@ export const auth = {
   'auth.registerFailedTitle': "We couldn't create your account",
   'auth.welcomeToast': 'Welcome, {name}',
   /* The bare key types the call site; the _one/_other pair is what renders. */
-  'auth.freeTryOns': 'You have {count} free try-ons.',
-  'auth.freeTryOns_one': 'You have {count} free try-on.',
-  'auth.freeTryOns_other': 'You have {count} free try-ons.',
+  'auth.freeTryOns': 'You have {value} try-ons this month.',
+  'auth.freeTryOns_one': 'You have {value} try-on this month.',
+  'auth.freeTryOns_other': 'You have {value} try-ons this month.',
 
   /* --- Step 1: about you --------------------------------------------------- */
   'auth.nameTitle': 'What should we call you?',

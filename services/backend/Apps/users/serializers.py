@@ -24,6 +24,8 @@ from Apps.tenants.context import (
     tenant_of_request,
 )
 from Apps.tenants.provisioning import provision_for_barber, provision_for_salon
+from Apps.tryon import credits as tryon_credits
+from Apps.tryon.models import VideoStatus
 
 from .exceptions import Conflict, PhoneNotVerified
 from .models import (
@@ -37,7 +39,6 @@ from .models import (
     Salon,
     SalonEmployee,
     User,
-    starting_credits,
 )
 from .phone import normalize_phone
 from .services import otp as otp_service
@@ -80,6 +81,8 @@ class UserSerializer(serializers.ModelSerializer):
     """The account as the frontend sees it. No password, no hashes, no codes."""
 
     profile = serializers.SerializerMethodField()
+    #: The plan and this month's try-on credits — see Apps.tryon.credits.
+    credits = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -90,11 +93,14 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'role',
             'is_phone_verified',
-            'try_on_credits',
+            'credits',
             'date_joined',
             'profile',
         )
         read_only_fields = fields
+
+    def get_credits(self, user: User) -> dict:
+        return tryon_credits.summary(user)
 
     def get_profile(self, user: User) -> dict:
         """Only what the signed-in app needs to render itself: which customers
@@ -228,8 +234,6 @@ class BaseRegistrationSerializer(serializers.Serializer):
         user.is_phone_verified = False
         user.is_active = True
         user.terms_accepted_at = timezone.now()
-        if user.role == Role.CUSTOMER and not user.pk:
-            user.try_on_credits = starting_credits()
         user.set_password(validated_data['password'])
         user.save()
 
@@ -668,11 +672,16 @@ class ImageRefSerializerField(serializers.CharField):
 class AccountSerializer(serializers.ModelSerializer):
     """The account half of a profile — the same for every role."""
 
+    credits = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = ('id', 'phone', 'name', 'email', 'role', 'is_phone_verified',
-                  'try_on_credits', 'date_joined')
+                  'credits', 'date_joined')
         read_only_fields = fields
+
+    def get_credits(self, user: User) -> dict:
+        return tryon_credits.summary(user)
 
 
 class BaseProfileWriteSerializer(serializers.Serializer):
@@ -1183,6 +1192,8 @@ class AdminUserSerializer(serializers.ModelSerializer):
     `AdminUserListView` — since `account_type` reads both for every row."""
 
     account_type = serializers.SerializerMethodField()
+    #: The tier's slug, straight off the column — no query per row.
+    subscription_tier = serializers.CharField(source='subscription_tier_id', read_only=True)
     salons = serializers.SerializerMethodField()
     employment = serializers.SerializerMethodField()
     total_bookings = serializers.SerializerMethodField()
@@ -1220,12 +1231,12 @@ class AdminUserSerializer(serializers.ModelSerializer):
         return _bookings_count(user)
 
     def get_generations_used(self, user: User) -> int:
-        # No per-generation log exists yet (see Apps/hairstyles), so this is
-        # the only honest approximation available: what of the starting
-        # allowance is gone. Non-customers never had an allowance to spend.
-        if user.role != Role.CUSTOMER:
-            return 0
-        return max(0, starting_credits() - user.try_on_credits)
+        # Every 360° try-on video that finished, read off the try-on log —
+        # annotated by `_admin_users()` so a list costs no query per row.
+        completed = getattr(user, 'completed_videos', None)
+        if completed is None:
+            completed = user.try_on_videos.filter(status=VideoStatus.COMPLETED).count()
+        return completed
 
     def _customer_profile(self, user: User) -> CustomerProfile | None:
         if user.role != Role.CUSTOMER:
@@ -1258,6 +1269,7 @@ class AdminUserUpdateSerializer(serializers.ModelSerializer):
             field: {'required': False, 'validators': []} if field == 'phone' else {'required': False}
             for field in fields
         }
+        extra_kwargs['subscription_tier']['error_messages'] = {'does_not_exist': 'There is no such plan.'}
 
     def validate_phone(self, value: str) -> str:
         # The model field's own UniqueValidator would reach this phone before

@@ -1,11 +1,11 @@
 import { ChevronDown, Mail, MessageCircle, Phone } from 'lucide-react';
-import { DEFAULT_CANCELLATION_HOURS, CREDIT_PACK_PRICE, CREDIT_PACK_SIZE, ROUTES, STARTING_CREDITS } from '../../constants';
+import { DEFAULT_CANCELLATION_HOURS, ROUTES } from '../../constants';
 import { ListCard, ListRow } from '../../components/common/ListRow';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
 import { useT } from '../../hooks/useLanguage';
 import type { TKey } from '../../i18n';
-import { formatBdt, formatNumber } from '../../utils/format';
+import { formatNumber } from '../../utils/format';
 
 const FAQ_KEYS: Array<{ q: TKey; a: TKey[] }> = [
   { q: 'profile.faqCancelQ', a: ['profile.policy1', 'profile.policy2', 'profile.policy3'] },
@@ -17,12 +17,7 @@ const FAQ_KEYS: Array<{ q: TKey; a: TKey[] }> = [
 
 export default function HelpPage() {
   const t = useT();
-  const vars = {
-    hours: formatNumber(DEFAULT_CANCELLATION_HOURS),
-    credits: formatNumber(STARTING_CREDITS),
-    pack: formatNumber(CREDIT_PACK_SIZE),
-    price: formatBdt(CREDIT_PACK_PRICE),
-  };
+  const vars = { hours: formatNumber(DEFAULT_CANCELLATION_HOURS) };
 
   return (
     <Screen nav>

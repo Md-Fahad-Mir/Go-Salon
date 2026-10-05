@@ -5,14 +5,13 @@ import {
   ACCOUNT_TYPE_FILTERS,
   ACCOUNT_TYPE_LABELS,
   AUDIENCE_LABELS,
-  TIER_LABELS,
   USER_TYPE_LABELS,
 } from '../constants';
 import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useTableState } from '../hooks/useTableState';
 import { useAsyncList } from '../hooks/useAsyncList';
-import { userService } from '../utils/adminService';
+import { subscriptionTierService, userService } from '../utils/adminService';
 import { ApiError } from '../utils/apiError';
 import type { Column } from '../components/ui/DataTable';
 import { DataTable } from '../components/ui/DataTable';
@@ -28,7 +27,7 @@ import { Toggle } from '../components/ui/Toggle';
 import { Avatar } from '../components/ui/Avatar';
 import { AccountStatusBadge, TierBadge } from '../components/ui/StatusBadge';
 import { RowMenu } from '../components/ui/RowMenu';
-import { formatDate, formatNumber, formatRating } from '../utils/format';
+import { formatDate, formatNumber, formatRating, titleCase } from '../utils/format';
 
 interface EditState {
   name: string;
@@ -89,6 +88,9 @@ export default function UsersPage() {
   const pushToast = useStore((state) => state.pushToast);
   const currentUserId = useAuthStore((state) => state.user?.id);
   const { data: users, loading, error, refetch } = useAsyncList(() => userService.list());
+  // The plans curated in Settings — what the Plan filter, badges and the
+  // edit form's Subscription choices are named from.
+  const { data: plans } = useAsyncList(() => subscriptionTierService.list());
 
   const [viewing, setViewing] = useState<User | null>(null);
   const [editing, setEditing] = useState<User | null>(null);
@@ -112,10 +114,7 @@ export default function UsersPage() {
       {
         key: 'tier',
         label: 'Plan',
-        options: (Object.keys(TIER_LABELS) as SubscriptionTier[]).map((value) => ({
-          value,
-          label: TIER_LABELS[value],
-        })),
+        options: plans.map((plan) => ({ value: plan.slug, label: plan.name })),
         match: (row: User, value: string) => row.subscriptionTier === value,
       },
       {
@@ -129,7 +128,7 @@ export default function UsersPage() {
         match: (row: User, value: string) => row.status === value,
       },
     ],
-    [],
+    [plans],
   );
 
   const table = useTableState<User>({
@@ -260,7 +259,7 @@ export default function UsersPage() {
       sortable: true,
       render: (row) => formatDate(row.registrationDate),
     },
-    { key: 'tier', header: 'Plan', render: (row) => <TierBadge tier={row.subscriptionTier} /> },
+    { key: 'tier', header: 'Plan', render: (row) => <TierBadge tier={row.subscriptionTier} plans={plans} /> },
     {
       key: 'totalBookings',
       header: 'Bookings',
@@ -435,7 +434,7 @@ export default function UsersPage() {
                 </p>
                 <div className="row" style={{ marginTop: '0.25rem' }}>
                   <AccountStatusBadge status={viewing.status} />
-                  <TierBadge tier={viewing.subscriptionTier} />
+                  <TierBadge tier={viewing.subscriptionTier} plans={plans} />
                 </div>
               </div>
             </div>
@@ -598,9 +597,12 @@ export default function UsersPage() {
                   setDraft({ ...draft, subscriptionTier: event.target.value as SubscriptionTier })
                 }
               >
-                {(Object.keys(TIER_LABELS) as SubscriptionTier[]).map((tier) => (
-                  <option key={tier} value={tier}>
-                    {TIER_LABELS[tier]}
+                {plans.some((plan) => plan.slug === draft.subscriptionTier) ? null : (
+                  <option value={draft.subscriptionTier}>{titleCase(draft.subscriptionTier)}</option>
+                )}
+                {plans.map((plan) => (
+                  <option key={plan.slug} value={plan.slug}>
+                    {plan.name}
                   </option>
                 ))}
               </select>
