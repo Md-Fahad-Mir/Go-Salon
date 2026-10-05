@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   WandSparkles,
 } from "lucide-react";
-import PhoneFrame from "./ui/PhoneFrame";
+import TryOnTurnaround from "./TryOnTurnaround";
 import Reveal from "./ui/Reveal";
 import SectionIntro from "./ui/SectionIntro";
 import { screen } from "../assets/screens";
@@ -70,13 +70,6 @@ const STEPS = [
   },
 ];
 
-const ANGLES = [
-  { label: "Front", className: "left-[9%] top-[9%]" },
-  { label: "Side", className: "right-[9%] top-[9%]" },
-  { label: "Back", className: "bottom-[9%] right-[9%]" },
-  { label: "Side", className: "bottom-[9%] left-[9%]" },
-];
-
 const FeatureCard = ({ icon: Icon, title, body, delay }) => (
   <Reveal delay={delay}>
     <div className="group flex gap-4 rounded-3xl border border-gold/10 bg-umber/60 p-5 transition-colors duration-500 hover:border-gold/30 hover:bg-umber sm:block sm:p-6">
@@ -120,32 +113,8 @@ const TryOnSpotlight = () => {
             ))}
           </div>
 
-          {/* The turnaround: the app at the centre of an orbit marking each angle */}
           <Reveal className="order-1 lg:order-2">
-            <div className="relative mx-auto aspect-square w-full max-w-[34rem]">
-              <div className="absolute inset-[4%] rounded-full border border-dashed border-gold/25" />
-              <div className="absolute inset-[14%] rounded-full border border-gold/10" />
-              <div className="animate-orbit absolute inset-[4%]">
-                <span className="absolute left-1/2 top-0 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold shadow-[0_0_24px_6px_rgba(224,176,120,0.55)]" />
-              </div>
-              {ANGLES.map((a, i) => (
-                <span
-                  key={i}
-                  className={`absolute z-20 rounded-full border border-gold/25 bg-obsidian/80 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-gold backdrop-blur ${a.className}`}
-                >
-                  {a.label}
-                </span>
-              ))}
-              <div className="absolute left-1/2 top-1/2 z-10 w-[46%] -translate-x-1/2 -translate-y-1/2">
-                {stage ? (
-                  <PhoneFrame src={stage.src} theme={stage.theme} alt="Go Salon making a 360° try-on video" />
-                ) : (
-                  <div className="grid aspect-[390/891] place-items-center rounded-[2.6rem] border border-gold/20 bg-umber">
-                    <RotateCw className="text-gold" size={40} />
-                  </div>
-                )}
-              </div>
-            </div>
+            <TryOnTurnaround processing={stage} />
           </Reveal>
 
           <div className="order-3 grid gap-5 sm:grid-cols-2 lg:grid-cols-1">

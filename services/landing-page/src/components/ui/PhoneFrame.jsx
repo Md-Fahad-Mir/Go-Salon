@@ -4,8 +4,10 @@ import { BatteryFull, Signal, Wifi } from "lucide-react";
 /** A dark, satin-edged handset for showing real PWA screens. The screenshots
     are captured at 390×844 without a status bar, so the frame adds one above
     them (47px tall at that scale) rather than letting the island cover the
-    app's own header. `theme` matches the bar to the screenshot's ground. */
-const PhoneFrame = ({ src, alt, theme = "dark", className = "", eager = false }) => (
+    app's own header. `theme` matches the bar to the screenshot's ground.
+    `children`, when given, is a live screen drawn in place of a screenshot;
+    it sits in the same @container, so `cqw` sizes it to the glass. */
+const PhoneFrame = ({ src, alt, theme = "dark", className = "", eager = false, children }) => (
   <div
     className={`relative rounded-[2.6rem] bg-gradient-to-b from-[#3a332b] via-[#1b1814] to-[#2b261f] p-[7px] shadow-[0_40px_90px_-30px_rgba(0,0,0,0.8),0_0_0_1px_rgba(224,176,120,0.2)] ${className}`}
   >
@@ -22,7 +24,9 @@ const PhoneFrame = ({ src, alt, theme = "dark", className = "", eager = false })
           <BatteryFull className="h-[4.4cqw] w-[4.4cqw]" strokeWidth={2} />
         </span>
       </div>
-      {src && (
+      {children ? (
+        <div className="relative min-h-0 flex-1">{children}</div>
+      ) : src && (
         <img
           src={src}
           alt={alt}
