@@ -15,11 +15,14 @@ from django.db import models
 
 
 class TryOnSettings(models.Model):
-    """Platform-wide, one row, edited from the admin dashboard's
-    Settings → AI generation. A blank `video_model` means "whatever the AI
-    service is configured with" (`OPENROUTER_VIDEO_MODEL`)."""
+    """Platform-wide, one row, edited from the admin dashboard's Settings. A
+    blank `video_model` means "whatever the AI service is configured with"
+    (`OPENROUTER_VIDEO_MODEL`)."""
 
     video_model = models.CharField(max_length=120, blank=True)
+    #: What a customer pays for one 360° try-on video, in whole taka — the
+    #: revenue side of the Overview's "AI spend vs revenue".
+    video_price_bdt = models.PositiveIntegerField(default=15)
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name='+',

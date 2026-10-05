@@ -242,6 +242,23 @@ class AdminSettingsTests(TryOnTestCase):
         self.assertEqual(self.client.get(SETTINGS).status_code, 403)
         self.assertEqual(self.client.patch(SETTINGS, {'video_model': 'x'}, format='json').status_code, 403)
 
+    def test_the_price_sticks_without_touching_the_model(self):
+        self.as_user(self.admin_session())
+        self.assertEqual(self.client.get(SETTINGS).data['video_price_bdt'], 15)
+        response = self.client.patch(SETTINGS, {'video_price_bdt': 40}, format='json')
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertEqual(response.data['video_price_bdt'], 40)
+        row = TryOnSettings.load()
+        self.assertEqual((row.video_price_bdt, row.video_model), (40, ''))
+
+    def test_the_price_must_be_whole_taka(self):
+        self.as_user(self.admin_session())
+        for bad in (-5, 12.5, 'abc', True, 10_000_000):
+            response = self.client.patch(SETTINGS, {'video_price_bdt': bad}, format='json')
+            self.assertEqual(response.status_code, 400, bad)
+            self.assertIn('video_price_bdt', response.data['errors'])
+        self.assertEqual(TryOnSettings.load().video_price_bdt, 15)
+
     def test_an_unreachable_ai_service_still_shows_the_page(self):
         self.models.side_effect = AIServiceError('ai_service_unreachable', 'Could not reach it.', 502)
         self.as_user(self.admin_session())

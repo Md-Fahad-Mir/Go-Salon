@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import datetime, time, timedelta
+from unittest import mock
+
+from django.utils import timezone
+
+from Apps.bookings.models import business_tz
+from Apps.tryon import ai_service
+from Apps.tryon.models import TryOnVideo, VideoStatus
 from Apps.users.models import User
 from Apps.users.tests.base import AuthTestCase
 
@@ -156,6 +164,68 @@ class AdminOverviewStatsTests(AuthTestCase):
         self.assertIn('awaiting_approval', response.data['new_salons'])
         # the admin itself plus the one customer just made
         self.assertEqual(response.data['active_users']['value'], 2)
+        self.assertEqual(response.data['tryon_videos']['value'], 0)
+
+    def test_counts_every_completed_try_on_video(self):
+        self.as_user(self.admin_session())
+        customer = User.objects.get(pk=self.make_customer()['user']['id'])
+        now = timezone.now()
+
+        def video(job_id: str, status: str, completed_at=None) -> None:
+            TryOnVideo.objects.create(
+                user=customer, hairstyle_name='Textured crop', job_id=job_id,
+                status=status, completed_at=completed_at,
+            )
+
+        video('recent', VideoStatus.COMPLETED, now - timedelta(days=2))
+        video('older', VideoStatus.COMPLETED, now - timedelta(days=45))
+        video('rendering', VideoStatus.PROCESSING)
+        video('broken', VideoStatus.FAILED)
+
+        catalogue = {'default_model': 'm', 'models': [{'id': 'm', 'price_per_video_usd': 0.25}]}
+        with mock.patch.object(ai_service, 'video_models', return_value=catalogue):
+            response = self.client.get('/api/admin/overview/', {'range': '30d'})
+        self.assertEqual(response.status_code, 200, response.data)
+        # spend and revenue cover the same two videos
+        self.assertEqual(response.data['ai_spend']['videos'], 2)
+        self.assertEqual(response.data['ai_spend']['revenue_bdt'], 2 * 15)
+        # both finished videos, whenever they finished; nothing still in flight or failed
+        self.assertEqual(response.data['tryon_videos']['value'], 2)
+        # one this period against one the period before
+        self.assertEqual(response.data['tryon_videos']['change_pct'], 0.0)
+        self.assertEqual(response.data['tryon_videos']['tone'], 'neutral')
+
+    def test_videos_per_day_covers_every_day_of_the_range(self):
+        self.as_user(self.admin_session())
+        customer = User.objects.get(pk=self.make_customer()['user']['id'])
+        tz = business_tz()
+        today = timezone.now().astimezone(tz).date()
+
+        def video(job_id: str, day, status=VideoStatus.COMPLETED) -> None:
+            # Midday on the salon's clock, so the day is the same in UTC.
+            completed_at = datetime.combine(day, time(12), tzinfo=tz)
+            TryOnVideo.objects.create(
+                user=customer, hairstyle_name='Textured crop', job_id=job_id,
+                status=status, completed_at=completed_at,
+            )
+
+        video('today-1', today)
+        video('today-2', today)
+        video('week-ago', today - timedelta(days=7))
+        video('too-old', today - timedelta(days=30))
+        video('broken', today, status=VideoStatus.FAILED)
+
+        with mock.patch.object(ai_service, 'video_models', return_value={'models': []}):
+            response = self.client.get('/api/admin/overview/', {'range': '30d'})
+        self.assertEqual(response.status_code, 200, response.data)
+        daily = response.data['tryon_videos_daily']
+        # thirty days ending today, oldest first, empty days kept at zero
+        self.assertEqual(len(daily), 30)
+        self.assertEqual(daily[0]['date'], (today - timedelta(days=29)).isoformat())
+        self.assertEqual(daily[-1], {'date': today.isoformat(), 'count': 2})
+        self.assertEqual(daily[-8], {'date': (today - timedelta(days=7)).isoformat(), 'count': 1})
+        # the 31-day-old video and the failed one are left out
+        self.assertEqual(sum(entry['count'] for entry in daily), 3)
 
 
 class AdminCreateSalonTests(AuthTestCase):

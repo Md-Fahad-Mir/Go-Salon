@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
-import { ROUTES } from '../../constants';
+import { PAGE_ENABLED, ROUTES } from '../../constants';
 import { formatDateTime } from '../../utils/format';
 import { useIsDesktop } from '../../hooks/useMediaQuery';
 import { useStore } from '../../store/useStore';
@@ -15,13 +15,14 @@ interface HeaderProps {
 }
 
 /** Global search routes to the page that owns the match — a phone number goes
-    to Users, a TRX id to Payments, and so on. */
+    to Users, a TRX id to Payments, and so on. A hidden page's prefix falls
+    through to Users. */
 const routeForQuery = (query: string): string => {
   const value = query.trim().toUpperCase();
-  if (value.startsWith('TRX')) return ROUTES.payments;
+  if (PAGE_ENABLED.payments && value.startsWith('TRX')) return ROUTES.payments;
   if (value.startsWith('BIZ')) return ROUTES.salons;
   if (value.startsWith('HS')) return ROUTES.hairstyles;
-  if (value.startsWith('NTF')) return ROUTES.notifications;
+  if (PAGE_ENABLED.notifications && value.startsWith('NTF')) return ROUTES.notifications;
   return ROUTES.users;
 };
 
@@ -85,7 +86,7 @@ export function Header({ onMenuClick, sidebarOpen }: HeaderProps) {
         <SearchBar
           value={query}
           onChange={setQuery}
-          placeholder="Search users, salons, transactions…"
+          placeholder={PAGE_ENABLED.payments ? 'Search users, salons, transactions…' : 'Search users, salons…'}
           label="Search the console"
         />
       </form>

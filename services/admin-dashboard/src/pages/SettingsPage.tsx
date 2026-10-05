@@ -13,16 +13,18 @@ import { formatBdt } from '../utils/format';
 interface NumberRowProps {
   label: string;
   hint: string;
-  value: number;
+  /** Null while the value is still loading. */
+  value: number | null;
   suffix?: string;
   min?: number;
   step?: number;
+  disabled?: boolean;
   onCommit: (value: number) => void;
 }
 
 /** Numeric settings commit on blur rather than on every keystroke, so the
     audit log gets one entry per real change. */
-function NumberRow({ label, hint, value, suffix, min = 0, step = 1, onCommit }: NumberRowProps) {
+function NumberRow({ label, hint, value, suffix, min = 0, step = 1, disabled, onCommit }: NumberRowProps) {
   return (
     <div className="setting-row">
       <div className="info">
@@ -35,8 +37,9 @@ function NumberRow({ label, hint, value, suffix, min = 0, step = 1, onCommit }: 
           type="number"
           min={min}
           step={step}
-          defaultValue={value}
-          key={value}
+          defaultValue={value ?? ''}
+          key={String(value)}
+          disabled={disabled || value === null}
           aria-label={label}
           onBlur={(event) => {
             const next = Number(event.target.value);
@@ -59,15 +62,13 @@ const describeModel = (model: VideoModelOption, defaultModel: string): string =>
     .filter(Boolean)
     .join(' · ') + (model.id === defaultModel ? ' — default' : '');
 
-/** The OpenRouter video model behind every 360° try-on — real, unlike the
-    rows around it: read from and saved to the backend, which hands it to the
-    AI service with each video. */
-function VideoModelRow() {
-  const pushToast = useStore((state) => state.pushToast);
+/** The 360° video model and the try-on price live on one backend row
+    (/api/admin/settings/ai-generation/), so the page loads it once and both
+    rows share it. */
+function useAIGeneration() {
   const [settings, setSettings] = useState<AIGenerationSettings | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -89,6 +90,18 @@ function VideoModelRow() {
     setSettings(null);
     setAttempt((n) => n + 1);
   };
+
+  return { settings, setSettings, loadError, retry };
+}
+
+type AIGeneration = ReturnType<typeof useAIGeneration>;
+
+/** The OpenRouter video model behind every 360° try-on — read from and saved
+    to the backend, which hands it to the AI service with each video. */
+function VideoModelRow({ ai }: { ai: AIGeneration }) {
+  const pushToast = useStore((state) => state.pushToast);
+  const { settings, setSettings, loadError, retry } = ai;
+  const [saving, setSaving] = useState(false);
 
   const choose = async (id: string) => {
     if (!settings || id === settings.videoModel) return;
@@ -149,6 +162,37 @@ function VideoModelRow() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+/** What a customer pays per 360° try-on video — saved to the backend, where
+    the Overview's AI spend vs revenue reads it. */
+function TryOnPriceRow({ ai }: { ai: AIGeneration }) {
+  const pushToast = useStore((state) => state.pushToast);
+
+  const save = async (price: number) => {
+    try {
+      const next = await aiGenerationService.setVideoPrice(price);
+      ai.setSettings(next);
+      pushToast('success', 'Setting saved', formatBdt(next.videoPriceBdt));
+    } catch (error) {
+      pushToast('error', 'Could not save', error instanceof ApiError ? error.message : 'Try again.');
+    }
+  };
+
+  return (
+    <NumberRow
+      label="360° try-on video price"
+      hint={
+        ai.loadError
+          ? 'Couldn’t load the price — retry under AI generation'
+          : 'Charged per generated 360° try-on video'
+      }
+      value={ai.settings?.videoPriceBdt ?? null}
+      suffix="৳"
+      disabled={Boolean(ai.loadError)}
+      onCommit={(value) => void save(value)}
+    />
   );
 }
 
@@ -218,6 +262,7 @@ export default function SettingsPage() {
   const subscriptionTiers = useStore((state) => state.subscriptionTiers);
   const updateSettings = useStore((state) => state.updateSettings);
   const pushToast = useStore((state) => state.pushToast);
+  const ai = useAIGeneration();
 
   const set = <K extends keyof PlatformSettings>(key: K, value: PlatformSettings[K]) => {
     updateSettings({ [key]: value } as Partial<PlatformSettings>);
@@ -244,13 +289,7 @@ export default function SettingsPage() {
               suffix="৳"
               onCommit={(value) => set('platformFee', value)}
             />
-            <NumberRow
-              label="AI image price"
-              hint="Charged per generated image on Advanced"
-              value={settings.aiImagePrice}
-              suffix="৳"
-              onCommit={(value) => set('aiImagePrice', value)}
-            />
+            <TryOnPriceRow ai={ai} />
           </div>
         </section>
 
@@ -319,31 +358,7 @@ export default function SettingsPage() {
             <h2>AI generation</h2>
           </div>
           <div className="card-body">
-            <VideoModelRow />
-            <NumberRow
-              label="Max concurrent requests"
-              hint="Queue anything above this limit"
-              value={settings.aiMaxConcurrent}
-              min={1}
-              onCommit={(value) => set('aiMaxConcurrent', value)}
-            />
-            <NumberRow
-              label="Processing timeout"
-              hint="Fail the request after this long"
-              value={settings.aiTimeoutSeconds}
-              suffix="s"
-              min={5}
-              step={5}
-              onCommit={(value) => set('aiTimeoutSeconds', value)}
-            />
-            <NumberRow
-              label="Rate limit"
-              hint="Requests per user per hour"
-              value={settings.aiRateLimitPerHour}
-              suffix="/hr"
-              min={1}
-              onCommit={(value) => set('aiRateLimitPerHour', value)}
-            />
+            <VideoModelRow ai={ai} />
           </div>
         </section>
 

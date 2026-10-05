@@ -5,7 +5,7 @@ import { AuthGate } from './components/AuthGate';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ThemeProvider } from './components/ThemeProvider';
 import { Skeleton } from './components/ui/Skeleton';
-import { ROUTES } from './constants';
+import { PAGE_ENABLED, ROUTES } from './constants';
 
 /* One bundle per page keeps the first paint small. */
 const LoginPage = lazy(() => import('./pages/LoginPage'));
@@ -82,22 +82,27 @@ export default function App() {
                   </Suspense>
                 }
               />
-              <Route
-                path="payments"
-                element={
-                  <Suspense fallback={<RouteFallback />}>
-                    <PaymentsPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="notifications"
-                element={
-                  <Suspense fallback={<RouteFallback />}>
-                    <NotificationsPage />
-                  </Suspense>
-                }
-              />
+              {/* Hidden pages fall through to the catch-all, back to the overview. */}
+              {PAGE_ENABLED.payments ? (
+                <Route
+                  path="payments"
+                  element={
+                    <Suspense fallback={<RouteFallback />}>
+                      <PaymentsPage />
+                    </Suspense>
+                  }
+                />
+              ) : null}
+              {PAGE_ENABLED.notifications ? (
+                <Route
+                  path="notifications"
+                  element={
+                    <Suspense fallback={<RouteFallback />}>
+                      <NotificationsPage />
+                    </Suspense>
+                  }
+                />
+              ) : null}
               <Route
                 path="settings"
                 element={

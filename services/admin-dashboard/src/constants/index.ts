@@ -20,6 +20,13 @@ export const ROUTES = {
   settings: '/admin/settings',
 } as const;
 
+/** Pages that are built but hidden for now — left out of the sidebar, the
+    router and the header search until they are switched back to `true`. */
+export const PAGE_ENABLED = {
+  payments: false,
+  notifications: false,
+} as const;
+
 export const ADMIN_USER = {
   name: 'Farhana Ahmed',
   initials: 'FA',

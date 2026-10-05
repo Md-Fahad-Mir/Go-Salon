@@ -128,9 +128,9 @@ def _job_path(job_id: str) -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-def video_models() -> dict:
+def video_models(*, timeout: int | None = None) -> dict:
     """`{"default_model", "models": [...]}` — every model the try-on can use."""
-    return _json('GET', '/videos/models', timeout=settings.AI_SERVICE_TIMEOUT_SECONDS)
+    return _json('GET', '/videos/models', timeout=timeout or settings.AI_SERVICE_TIMEOUT_SECONDS)
 
 
 def start_video(*, photo: bytes, content_type: str, hairstyle_name: str, prompt: str,

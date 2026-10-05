@@ -3,7 +3,7 @@
     POST /api/tryon/videos/                  photo + hairstyle id → a video job
     GET  /api/tryon/videos/<pk>/             where it is
     GET  /api/tryon/videos/<pk>/content/     the finished clip
-    GET|PATCH /api/admin/settings/ai-generation/   the video model, admin only
+    GET|PATCH /api/admin/settings/ai-generation/   the video model and price, admin only
 
 The app sends a hairstyle *id*, never a prompt. The prompt is read here from
 the admin's active catalogue entry and the model from the admin's setting, so
@@ -39,6 +39,9 @@ logger = logging.getLogger(__name__)
 #: The AI service's own upload ceiling (MAX_UPLOAD_MB). Refused here first so
 #: an oversized photo never makes the trip.
 MAX_PHOTO_BYTES = 10 * 1024 * 1024
+
+#: A sanity ceiling on the try-on price, in taka — catches a slipped key.
+MAX_VIDEO_PRICE_BDT = 100_000
 
 #: Failures worth riding out: the next poll may well succeed.
 _TRANSIENT = {'provider_timeout', 'provider_unreachable', 'ai_service_unreachable', 'rate_limited'}
@@ -193,8 +196,9 @@ class TryOnVideoContentView(GenericAPIView):
 
 
 class AdminAIGenerationSettingsView(GenericAPIView):
-    """Settings → AI generation in the admin dashboard: which OpenRouter video
-    model renders every 360° try-on, picked from the ones that can."""
+    """Settings in the admin dashboard: which OpenRouter video model renders
+    every 360° try-on, picked from the ones that can, and what a customer
+    pays for one. A PATCH may change either or both."""
 
     permission_classes = (IsAuthenticated, IsAdmin)
 
@@ -220,6 +224,7 @@ class AdminAIGenerationSettingsView(GenericAPIView):
             # stopped fitting a 2–3 s turn: every try-on would then fail.
             'video_model_available': any(m.get('id') == effective for m in models) if models else None,
             'models_error': error,
+            'video_price_bdt': row.video_price_bdt,
             'updated_at': row.updated_at,
         }
 
@@ -227,12 +232,22 @@ class AdminAIGenerationSettingsView(GenericAPIView):
         return Response(self._payload())
 
     def patch(self, request):
-        wanted = str(request.data.get('video_model') or '').strip()
-        catalogue = ai_service.video_models()
-        if wanted not in {m.get('id') for m in catalogue.get('models') or []}:
-            raise ValidationError({'video_model': ['Choose one of the listed video models.']})
         row = TryOnSettings.load()
-        row.video_model = wanted
+        changed = []
+        catalogue = None
+        if 'video_price_bdt' in request.data:
+            price = str(request.data.get('video_price_bdt')).strip()
+            if not price.isdigit() or int(price) > MAX_VIDEO_PRICE_BDT:
+                raise ValidationError({'video_price_bdt': ['Enter the price in whole taka.']})
+            row.video_price_bdt = int(price)
+            changed.append('video_price_bdt')
+        if 'video_model' in request.data or not changed:
+            wanted = str(request.data.get('video_model') or '').strip()
+            catalogue = ai_service.video_models()
+            if wanted not in {m.get('id') for m in catalogue.get('models') or []}:
+                raise ValidationError({'video_model': ['Choose one of the listed video models.']})
+            row.video_model = wanted
+            changed.append('video_model')
         row.updated_by = request.user
-        row.save(update_fields=('video_model', 'updated_by', 'updated_at'))
+        row.save(update_fields=(*changed, 'updated_by', 'updated_at'))
         return Response(self._payload(catalogue))

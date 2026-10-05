@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Bell, LayoutGrid, Scissors, Settings, Store, Users, Wallet, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { ROUTES } from '../../constants';
+import { PAGE_ENABLED, ROUTES } from '../../constants';
 import { GoSalonMark } from '../ui/GoSalonMark';
 
 interface NavItem {
@@ -9,6 +9,8 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   end?: boolean;
+  /** False keeps the item out of the menu — see `PAGE_ENABLED`. */
+  enabled?: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -16,10 +18,10 @@ const NAV_ITEMS: NavItem[] = [
   { to: ROUTES.hairstyles, label: 'AI Hairstyles', icon: Scissors },
   { to: ROUTES.users, label: 'Users', icon: Users },
   { to: ROUTES.salons, label: 'Salons & Parlour', icon: Store },
-  { to: ROUTES.payments, label: 'Payments', icon: Wallet },
-  { to: ROUTES.notifications, label: 'Notifications', icon: Bell },
+  { to: ROUTES.payments, label: 'Payments', icon: Wallet, enabled: PAGE_ENABLED.payments },
+  { to: ROUTES.notifications, label: 'Notifications', icon: Bell, enabled: PAGE_ENABLED.notifications },
   { to: ROUTES.settings, label: 'Settings', icon: Settings },
-];
+].filter((item) => item.enabled !== false);
 
 interface SidebarProps {
   open: boolean;

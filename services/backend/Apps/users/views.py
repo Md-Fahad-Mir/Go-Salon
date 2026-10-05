@@ -7,11 +7,12 @@ activates the account and issues the first pair of tokens.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 from django.conf import settings
 from django.core.signing import BadSignature, SignatureExpired, TimestampSigner
-from django.db.models import Q
+from django.db.models import Count, Q
+from django.db.models.functions import TruncDate
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -22,8 +23,11 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from Apps.bookings.models import business_tz
 from Apps.tenants.context import business_of_tenant, tenant_of_request
 from Apps.tenants.permissions import OptionalTenantContext, TenantContext
+from Apps.tryon.models import TryOnVideo, VideoStatus
+from Apps.tryon.stats import spend_and_revenue
 
 from .exceptions import Conflict, NotAdmin
 from .models import AccountStatus, OTPPurpose, Role, Salon, SalonEmployee, User, VerificationStage
@@ -588,13 +592,34 @@ def _tone(change_pct: float) -> str:
     return 'neutral'
 
 
-class AdminOverviewStatsView(APIView):
-    """Platform-wide counts for the Overview page's two real KPIs.
+def _videos_per_day(completed_videos, days: int) -> list[dict]:
+    """Completed 360° try-on videos per business day, oldest first and ending
+    today, zeros included — a chart that skipped the empty days would have a
+    different x-axis every time it was looked at."""
+    tz = business_tz()
+    today = timezone.now().astimezone(tz).date()
+    first = today - timedelta(days=days - 1)
+    # `.order_by()` clears the log's default ordering, which would otherwise
+    # split the grouping by timestamp.
+    counts = dict(
+        completed_videos.filter(completed_at__gte=datetime.combine(first, time.min, tzinfo=tz))
+        .order_by()
+        .annotate(day=TruncDate('completed_at', tzinfo=tz))
+        .values_list('day')
+        .annotate(n=Count('id'))
+    )
+    days_in_range = (first + timedelta(days=offset) for offset in range(days))
+    return [{'date': day.isoformat(), 'count': counts.get(day, 0)} for day in days_in_range]
 
-    Everything AI-generation-related (image count, spend, per-style
-    generation totals) has no source anywhere in this system yet — nothing
-    records a try-on call — so the admin dashboard keeps those on
-    illustrative data rather than this endpoint inventing numbers for them.
+
+class AdminOverviewStatsView(APIView):
+    """Platform-wide counts for the Overview page's real KPIs.
+
+    `tryon_videos` is every 360° try-on video that finished rendering, all
+    time; its change compares the videos completed this period with the one
+    before. `tryon_videos_daily` splits the period's videos by the business
+    day they finished on. `ai_spend` is what those same videos cost and
+    brought in — see `Apps.tryon.stats`.
     """
 
     permission_classes = (IsAuthenticated, IsAdmin)
@@ -618,6 +643,13 @@ class AdminOverviewStatsView(APIView):
         salons_change = _pct_change(new_salons_previous, new_salons)
         awaiting_approval = Salon.objects.filter(verification=VerificationStage.PENDING).count()
 
+        completed_videos = TryOnVideo.objects.filter(status=VideoStatus.COMPLETED)
+        total_videos = completed_videos.count()
+        new_videos = completed_videos.filter(completed_at__gte=start).count()
+        new_videos_previous = completed_videos.filter(
+            completed_at__gte=previous_start, completed_at__lt=start).count()
+        videos_change = _pct_change(new_videos_previous, new_videos)
+
         return Response({
             'active_users': {
                 'value': active_users,
@@ -630,6 +662,13 @@ class AdminOverviewStatsView(APIView):
                 'tone': _tone(salons_change),
                 'awaiting_approval': awaiting_approval,
             },
+            'tryon_videos': {
+                'value': total_videos,
+                'change_pct': videos_change,
+                'tone': _tone(videos_change),
+            },
+            'tryon_videos_daily': _videos_per_day(completed_videos, days),
+            'ai_spend': spend_and_revenue(completed_videos),
         })
 
 

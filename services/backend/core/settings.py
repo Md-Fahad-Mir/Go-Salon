@@ -282,6 +282,9 @@ AI_SERVICE_TIMEOUT_SECONDS = env_int('AI_SERVICE_TIMEOUT_SECONDS', 60)
 # At most one status check upstream per job in this window, however often the
 # app polls. OpenRouter asks for no more than one poll every ~30 s per job.
 TRYON_VIDEO_POLL_SECONDS = env_int('TRYON_VIDEO_POLL_SECONDS', 10)
+# Taka per US dollar, for the admin Overview's AI spend: OpenRouter bills in
+# dollars, the dashboard reports in taka. Keep it near the going rate.
+USD_TO_BDT_RATE = float(env('USD_TO_BDT_RATE', '122'))
 
 
 # CORS

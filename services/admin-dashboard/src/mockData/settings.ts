@@ -2,14 +2,10 @@ import type { PlatformSettings, SubscriptionTierPlan } from '../types';
 
 export const defaultSettings: PlatformSettings = {
   platformFee: 5,
-  aiImagePrice: 15,
   otpExpiryMinutes: 15,
   otpResendCooldownMinutes: 2,
   smsEnabled: true,
   emailEnabled: false,
-  aiMaxConcurrent: 24,
-  aiTimeoutSeconds: 45,
-  aiRateLimitPerHour: 60,
 };
 
 export const SUBSCRIPTION_TIERS: SubscriptionTierPlan[] = [

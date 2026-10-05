@@ -253,14 +253,10 @@ export interface AuditLogEntry {
 
 export interface PlatformSettings {
   platformFee: number;
-  aiImagePrice: number;
   otpExpiryMinutes: number;
   otpResendCooldownMinutes: number;
   smsEnabled: boolean;
   emailEnabled: boolean;
-  aiMaxConcurrent: number;
-  aiTimeoutSeconds: number;
-  aiRateLimitPerHour: number;
 }
 
 export interface SubscriptionTierPlan {
@@ -290,6 +286,8 @@ export interface DailyPoint {
 }
 
 export interface RankedDatum {
+  /** A stable key when names can repeat. */
+  id?: string;
   name: string;
   value: number;
 }

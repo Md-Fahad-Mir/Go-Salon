@@ -15,7 +15,7 @@ export function RankedList({ items, meter = true }: RankedListProps) {
   return (
     <ol className="rank-tiles">
       {items.map((item, index) => (
-        <li className="rank-tile" key={item.name} data-top={index === 0}>
+        <li className="rank-tile" key={item.id ?? item.name} data-top={index === 0}>
           <span className="rank-no" aria-hidden="true">
             {String(index + 1).padStart(2, '0')}
           </span>

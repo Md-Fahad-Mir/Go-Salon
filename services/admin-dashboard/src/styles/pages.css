@@ -3,9 +3,8 @@
    ========================================================================== */
 
 /* --- Overview -------------------------------------------------------------
-   An onyx key-figures band (the sidebar's material) above a grid of cards:
-   the generations chart and revenue ring side by side, the hairstyle
-   ranking across the full width beneath them. */
+   An onyx key-figures band (the sidebar's material) above a stack of
+   full-width cards: the generations chart, then the hairstyle ranking. */
 
 .ov-hero {
   position: relative;
@@ -169,8 +168,7 @@
 }
 
 @media (min-width: 80rem) {
-  .ov-grid { grid-template-columns: minmax(0, 1.75fr) minmax(21rem, 1fr); gap: 1.25rem; }
-  .ov-top { grid-column: 1 / -1; }
+  .ov-grid { gap: 1.25rem; }
 }
 
 .ov-card { display: flex; flex-direction: column; }
@@ -200,84 +198,6 @@
 }
 
 .ov-swatch-peak { background-color: var(--chart-bar-hi); box-shadow: none; }
-
-/* The ring sits above its legend in the narrow column, beside it once the
-   card runs the full width. */
-.ov-revenue-body { display: flex; align-items: center; container-type: inline-size; }
-
-.donut-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  width: 100%;
-}
-
-@container (min-width: 30rem) {
-  .donut-wrap { flex-direction: row; gap: 2.5rem; }
-  .donut-legend { flex: 1; }
-}
-
-.donut {
-  position: relative;
-  flex-shrink: 0;
-  width: 11.25rem;
-  height: 11.25rem;
-  margin: 0;
-}
-
-.donut svg { width: 100%; height: 100%; overflow: visible; }
-
-.donut-track { fill: none; stroke: var(--border-light); }
-
-.donut-center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  text-align: center;
-}
-
-.donut-total {
-  font-size: 1.75rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.035em;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-
-.donut-caption {
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.donut-legend { display: flex; flex-direction: column; width: 100%; }
-
-.donut-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.6875rem 0;
-  font-size: 0.8125rem;
-  border-bottom: 1px solid var(--border-light);
-}
-.donut-row:first-child { padding-top: 0; }
-.donut-row:last-child { border-bottom: none; padding-bottom: 0; }
-
-.donut-row dt { display: flex; align-items: center; gap: 0.625rem; color: var(--text-secondary); }
-.donut-row .dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; flex-shrink: 0; }
-
-.donut-row dd { display: flex; align-items: baseline; gap: 0.75rem; font-variant-numeric: tabular-nums; }
-.donut-share { font-size: 0.75rem; font-weight: 500; color: var(--text-tertiary); min-width: 2.25rem; text-align: end; }
-.donut-amount { font-weight: 600; color: var(--text-primary); min-width: 3.5rem; text-align: end; }
 
 /* --- Analytics layout ---------------------------------------------------- */
 

@@ -3,8 +3,19 @@
    so the pages that consume them need no shape of their own — the same
    pattern services/frontend's authService.ts/directoryService.ts use. */
 
+import { parseISO } from 'date-fns';
 import { api } from './apiClient';
-import type { AccountStatus, Hairstyle, KpiDatum, SubscriptionTier, TimeRange, User, UserType } from '../types';
+import { formatBdtCompact } from './format';
+import type {
+  AccountStatus,
+  DailyPoint,
+  Hairstyle,
+  KpiDatum,
+  SubscriptionTier,
+  TimeRange,
+  User,
+  UserType,
+} from '../types';
 
 /* --------------------------------------------------------------------------
    Hairstyles — /api/hairstyles/
@@ -188,15 +199,62 @@ interface OverviewStatApi {
   tone: 'positive' | 'negative' | 'neutral';
 }
 
+/** Every completed 360° try-on video, priced both ways (Apps/tryon/stats.py). */
+interface AISpendApi {
+  videos: number;
+  spend_usd: number | null;
+  /** Null when the AI service's price list could not be read. */
+  spend_bdt: number | null;
+  revenue_bdt: number;
+  margin_pct: number | null;
+  /** Videos whose model has no list price, left out of the spend. */
+  unpriced_videos: number;
+  video_price_bdt: number;
+  usd_to_bdt: number;
+  error: { code: string; message: string } | null;
+}
+
 interface OverviewStatsApi {
   active_users: OverviewStatApi;
   new_salons: OverviewStatApi & { awaiting_approval: number };
+  tryon_videos: OverviewStatApi;
+  /** Completed videos per business day (Asia/Dhaka), oldest first, ending today. */
+  tryon_videos_daily: Array<{ date: string; count: number }>;
+  ai_spend: AISpendApi;
 }
 
 const signed = (pct: number): string => `${pct > 0 ? '+' : ''}${pct}%`;
 
+const taka = (value: number): string => formatBdtCompact(Math.round(value));
+
+/** Friday and Saturday — the Bangladeshi weekend, when salons are busiest. */
+const isWeekend = (isoDate: string): boolean => [5, 6].includes(parseISO(isoDate).getDay());
+
+const toAISpend = (data: AISpendApi): KpiDatum => {
+  const notes = [
+    data.margin_pct === null ? null : `margin ${data.margin_pct}%`,
+    data.error ? `spend unavailable: ${data.error.message}` : null,
+    data.unpriced_videos ? `${data.unpriced_videos} video(s) with no list price` : null,
+  ].filter(Boolean);
+  return {
+    id: 'spend',
+    label: 'AI spend vs revenue',
+    value: `${data.spend_bdt === null ? '—' : taka(data.spend_bdt)} / ${taka(data.revenue_bdt)}`,
+    footnote: notes.join(' · ') || 'no videos yet',
+    tone: data.margin_pct === null ? 'neutral' : data.margin_pct >= 0 ? 'positive' : 'negative',
+  };
+};
+
 export const overviewService = {
-  async stats(range: TimeRange): Promise<{ activeUsers: KpiDatum; newSalons: KpiDatum }> {
+  async stats(
+    range: TimeRange,
+  ): Promise<{
+    activeUsers: KpiDatum;
+    newSalons: KpiDatum;
+    tryOnVideos: KpiDatum;
+    aiSpend: KpiDatum;
+    videosPerDay: DailyPoint[];
+  }> {
     const data = await api.get<OverviewStatsApi>(`/admin/overview/?range=${range}`);
     return {
       activeUsers: {
@@ -213,6 +271,19 @@ export const overviewService = {
         footnote: `${signed(data.new_salons.change_pct)} · ${data.new_salons.awaiting_approval} awaiting approval`,
         tone: data.new_salons.tone,
       },
+      tryOnVideos: {
+        id: 'tryon-videos',
+        label: '360° try-on video',
+        value: data.tryon_videos.value.toLocaleString(),
+        footnote: `${signed(data.tryon_videos.change_pct)} vs previous period`,
+        tone: data.tryon_videos.tone,
+      },
+      aiSpend: toAISpend(data.ai_spend),
+      videosPerDay: data.tryon_videos_daily.map((day) => ({
+        date: day.date,
+        generations: day.count,
+        highlight: isWeekend(day.date),
+      })),
     };
   },
 };
@@ -253,9 +324,10 @@ export const salonService = {
 
 /* --------------------------------------------------------------------------
    AI generation — /api/admin/settings/ai-generation/
-   Which OpenRouter video model renders every 360° try-on. The list is
-   OpenRouter's own catalogue, narrowed by the AI service to the models that
-   can start from a photo and render 2–3 seconds.
+   Which OpenRouter video model renders every 360° try-on, and what a
+   customer pays for one. The model list is OpenRouter's own catalogue,
+   narrowed by the AI service to the models that can start from a photo and
+   render 2–3 seconds.
    -------------------------------------------------------------------------- */
 
 interface VideoModelApi {
@@ -274,6 +346,7 @@ interface AIGenerationApi {
   models: VideoModelApi[];
   video_model_available: boolean | null;
   models_error: { code: string; message: string } | null;
+  video_price_bdt: number;
   updated_at: string;
 }
 
@@ -297,6 +370,8 @@ export interface AIGenerationSettings {
   videoModelAvailable: boolean | null;
   /** Why the list could not be loaded, when it could not. */
   modelsError: string | null;
+  /** What a customer pays for one 360° try-on video, in taka. */
+  videoPriceBdt: number;
 }
 
 const toAIGeneration = (row: AIGenerationApi): AIGenerationSettings => ({
@@ -312,6 +387,7 @@ const toAIGeneration = (row: AIGenerationApi): AIGenerationSettings => ({
   })),
   videoModelAvailable: row.video_model_available,
   modelsError: row.models_error?.message ?? null,
+  videoPriceBdt: row.video_price_bdt,
 });
 
 export const aiGenerationService = {
@@ -322,6 +398,12 @@ export const aiGenerationService = {
   async setVideoModel(videoModel: string): Promise<AIGenerationSettings> {
     return toAIGeneration(
       await api.patch<AIGenerationApi>('/admin/settings/ai-generation/', { video_model: videoModel }),
+    );
+  },
+
+  async setVideoPrice(priceBdt: number): Promise<AIGenerationSettings> {
+    return toAIGeneration(
+      await api.patch<AIGenerationApi>('/admin/settings/ai-generation/', { video_price_bdt: priceBdt }),
     );
   },
 };

@@ -2,14 +2,13 @@ import { useId } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import type { TooltipContentProps } from 'recharts';
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
-import type { DailyPoint, TimeRange } from '../../types';
+import { format, parseISO } from 'date-fns';
+import type { DailyPoint } from '../../types';
 import { useChartTheme } from '../../hooks/useChartTheme';
-import { formatCompact, formatNumber } from '../../utils/format';
-import { seriesAxisFormat } from '../../mockData/overview';
+import { formatCompact, formatNumber, formatShortDate } from '../../utils/format';
 
 interface GenerationsChartProps {
   data: DailyPoint[];
-  range: TimeRange;
 }
 
 function ChartTooltip({ active, payload }: TooltipContentProps<ValueType, NameType>) {
@@ -17,27 +16,22 @@ function ChartTooltip({ active, payload }: TooltipContentProps<ValueType, NameTy
   const point = payload[0].payload as DailyPoint;
   return (
     <div className="chart-tooltip">
-      <strong>{formatNumber(point.generations)} generations</strong>
+      <strong>
+        {formatNumber(point.generations)} {point.generations === 1 ? 'video' : 'videos'}
+      </strong>
       <span>
-        {new Date(point.date).toLocaleString('en-GB', {
-          day: 'numeric',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
-        })}
-        {point.highlight ? ' · peak period' : ''}
+        {format(parseISO(point.date), 'EEE d MMM')}
+        {point.highlight ? ' · weekend' : ''}
       </span>
     </div>
   );
 }
 
-/** Single-series magnitude-over-time. Peak periods (Fri/Sat, or the evening
-    rush on the hourly view) are picked out in gold and named in the page's
-    legend and the tooltip, so the colour is a reinforcement rather than the
-    only cue. */
-export function GenerationsChart({ data, range }: GenerationsChartProps) {
+/** Single-series magnitude-over-time, one bar per day. Weekends (Fri/Sat)
+    are picked out in gold and named in the page's legend and the tooltip, so
+    the colour is a reinforcement rather than the only cue. */
+export function GenerationsChart({ data }: GenerationsChartProps) {
   const theme = useChartTheme();
-  const tickFormat = seriesAxisFormat[range];
   const peakFill = `generations-peak-${useId()}`;
 
   return (
@@ -53,7 +47,7 @@ export function GenerationsChart({ data, range }: GenerationsChartProps) {
           <CartesianGrid vertical={false} stroke={theme.grid} strokeDasharray="2 6" />
           <XAxis
             dataKey="date"
-            tickFormatter={tickFormat}
+            tickFormatter={(iso: string) => formatShortDate(iso)}
             tick={{ fill: theme.axis, fontSize: 11 }}
             tickLine={false}
             axisLine={false}
