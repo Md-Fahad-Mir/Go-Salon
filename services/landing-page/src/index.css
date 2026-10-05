@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/* Go Salon — "two moods around one gold". The tokens mirror the PWA's
+   theme.css (services/frontend/src/styles/theme.css): obsidian nights,
+   cashmere days, and a single champagne gold carried across both. */
+@theme {
+  --font-sans: "Jost", Futura, "Century Gothic", ui-sans-serif, system-ui, sans-serif;
+
+  /* Night */
+  --color-onyx: #0b0a08;
+  --color-obsidian: #12100e;
+  --color-umber: #1e1a16;
+  --color-umber-light: #27221c;
+  --color-ivory: #f6f1ea;
+  --color-ivory-soft: #cbc1b5;
+  --color-taupe: #968d7e;
+
+  /* Day */
+  --color-cashmere: #f4efe8;
+  --color-linen: #fcfbf8;
+  --color-sand: #eae2d6;
+  --color-ink: #1c1917;
+  --color-ink-soft: #4a443d;
+  --color-ink-dim: #665f56;
+
+  /* The one gold */
+  --color-gold: #e0b078;
+  --color-gold-light: #edcc9e;
+  --color-gold-deep: #b88646;
+  --color-bronze: #9c6e36;
+  --color-gold-ink: #7a531a;
+  --color-coral: #c9663a;
+  --color-sage: #7d9068;
+
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-orbit: orbit 14s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-onyx);
+  color: var(--color-ivory);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: rgba(224, 176, 120, 0.32);
+  color: inherit;
+}
+
+@layer components {
+  /* The satin control from the PWA's Welcome screen: one gold button, cut
+     from the same material everywhere it appears. */
+  .btn-satin {
+    background-color: #dfb27b;
+    background-image:
+      linear-gradient(105deg, rgba(255, 244, 226, 0.35) 0%, rgba(255, 244, 226, 0) 42%),
+      linear-gradient(180deg, #edcc9e 0%, #e0b47f 46%, #d5a870 100%);
+    color: #1a1509;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 250, 240, 0.65),
+      0 10px 30px -12px rgba(224, 176, 120, 0.55);
+  }
+  .btn-satin:hover {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 250, 240, 0.75),
+      0 16px 40px -14px rgba(224, 176, 120, 0.75);
+  }
+
+  .text-gilded {
+    background-image: linear-gradient(145deg, #f0cfa0 0%, #dcae76 52%, #bb8b4e 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+  .text-gilded-deep {
+    background-image: linear-gradient(145deg, #d2a468 0%, #b88646 52%, #9c6e36 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  /* Champagne hairline that fades out — the Welcome masthead rule. */
+  .hairline {
+    height: 1px;
+    background: linear-gradient(90deg, rgba(228, 192, 142, 0.62), rgba(228, 192, 142, 0.16) 55%, transparent);
+  }
+
+  /* A whisper of film grain so the dark grounds read as material, not flat. */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .mask-fade-x {
+    mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .animate-marquee,
+  .animate-orbit,
+  .animate-float {
+    animation: none !important;
+  }
+}

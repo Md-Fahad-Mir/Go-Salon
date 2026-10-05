@@ -1,0 +1,18 @@
+# Dependencies and build output
+node_modules
+dist
+dist-ssr
+
+# Local env — .env.example is the template
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs and OS / editor clutter
+*.log
+npm-debug.log*
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
