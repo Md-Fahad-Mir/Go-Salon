@@ -360,7 +360,7 @@
 .icon-btn:hover { background-color: var(--hover-bg); color: var(--text-primary); }
 .icon-btn:active { background-color: var(--active-bg); }
 
-/* Header tools sit in quiet bordered tiles that match the search field. */
+/* Header tools sit in quiet bordered tiles. */
 .header .icon-btn {
   border: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
@@ -372,24 +372,6 @@
 @media (min-width: 64rem) {
   .header .icon-btn { width: 2.5rem; height: 2.5rem; }
   .header .menu-btn { display: none; }
-}
-
-.header-search {
-  flex: 1;
-  min-width: 0;
-  max-width: 32rem;
-  margin-inline-start: 0.25rem;
-}
-
-.header-search .input {
-  min-height: 2.75rem;
-  background-color: var(--bg-secondary);
-  border-color: var(--border-color);
-  box-shadow: var(--shadow-xs);
-}
-
-@media (min-width: 64rem) {
-  .header-search .input { min-height: 2.5rem; }
 }
 
 .header-right {

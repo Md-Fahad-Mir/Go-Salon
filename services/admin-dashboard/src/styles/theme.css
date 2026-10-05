@@ -60,11 +60,24 @@
   --sidebar-active: linear-gradient(90deg, rgba(217, 188, 140, 0.16) 0%, rgba(217, 188, 140, 0.04) 100%);
   --sidebar-badge: #c8453d;
 
-  /* --- Overview key-figures band (onyx in both moods, like the sidebar) - */
-  --hero-bg-solid: #121419;
-  --hero-bg: linear-gradient(135deg, #1d2028 0%, #13151a 55%, #0e1014 100%);
-  --hero-border: transparent;
-  --hero-line: rgba(255, 255, 255, 0.08);
+  /* --- Overview key-figures band -----------------------------------------
+     Day: a white panel warmed toward champagne at the far corner, with onyx
+     figures. Night: onyx, in the sidebar's material. */
+  --hero-bg-solid: #ffffff;
+  --hero-bg: linear-gradient(135deg, #ffffff 0%, #fdfbf7 55%, #f7f2e8 100%);
+  --hero-border: var(--border-color);
+  --hero-line: #ebe7de;
+  --hero-text: var(--text-secondary);
+  --hero-text-strong: var(--text-primary);
+  --hero-text-dim: var(--text-tertiary);
+  --hero-accent: var(--accent-ink);
+  --hero-icon-bg: rgba(168, 131, 79, 0.1);
+  --hero-icon-line: rgba(168, 131, 79, 0.26);
+  --hero-glow: rgba(168, 131, 79, 0.12);
+  --hero-rings: rgba(168, 131, 79, 0.13);
+  --hero-bevel: rgba(168, 131, 79, 0.45);
+  --hero-skeleton: var(--skeleton);
+  --hero-skeleton-hi: var(--skeleton-hi);
 
   /* --- Type ------------------------------------------------------------- */
   /* Three levels, each >= 4.5:1 on every surface it lands on, hover tints
@@ -201,6 +214,17 @@
   --hero-bg: linear-gradient(135deg, #20232a 0%, #17191e 55%, #121418 100%);
   --hero-border: #2a2d34;
   --hero-line: rgba(255, 255, 255, 0.07);
+  --hero-text: #9a9ea7;
+  --hero-text-strong: #f4f2ed;
+  --hero-text-dim: #7a7f89;
+  --hero-accent: #d9bc8c;
+  --hero-icon-bg: rgba(217, 188, 140, 0.1);
+  --hero-icon-line: rgba(217, 188, 140, 0.24);
+  --hero-glow: rgba(217, 188, 140, 0.16);
+  --hero-rings: rgba(217, 188, 140, 0.09);
+  --hero-bevel: rgba(217, 188, 140, 0.55);
+  --hero-skeleton: rgba(255, 255, 255, 0.06);
+  --hero-skeleton-hi: rgba(255, 255, 255, 0.08);
 
   --text-primary: #eeece6;
   --text-secondary: #b3b1aa;

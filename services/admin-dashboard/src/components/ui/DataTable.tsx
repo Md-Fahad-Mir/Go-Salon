@@ -129,7 +129,12 @@ export function DataTable<T>({
 
       <ul className="table-cards">
         {rows.map((row) => (
-          <li className="tc" key={rowKey(row)}>
+          <li
+            className="tc"
+            key={rowKey(row)}
+            onClick={onRowClick ? () => onRowClick(row) : undefined}
+            style={onRowClick ? { cursor: 'pointer' } : undefined}
+          >
             {cardTitle ? <div className="strong">{cardTitle(row)}</div> : null}
             <dl style={{ display: 'contents' }}>
               {columns
@@ -142,7 +147,13 @@ export function DataTable<T>({
                 ))}
             </dl>
             {cardActions ?? actions ? (
-              <div className="tc-actions">{(cardActions ?? actions)?.(row)}</div>
+              <div
+                className="tc-actions"
+                onClick={(event) => event.stopPropagation()}
+                role="presentation"
+              >
+                {(cardActions ?? actions)?.(row)}
+              </div>
             ) : null}
           </li>
         ))}

@@ -1,4 +1,4 @@
-import type { SubscriptionTier, User, UserType } from '../types';
+import type { AccountType, SubscriptionTier, User, UserType } from '../types';
 import {
   chance,
   emailFor,
@@ -23,6 +23,15 @@ const TYPE_MIX: UserType[] = [
   'admin',
 ];
 
+/* Alternates rather than drawing from the generator, so the rest of the
+   seeded records come out the same as before parlours were split out. */
+const accountTypeFor = (type: UserType, index: number): AccountType => {
+  const parlour = index % 2 === 0;
+  if (type === 'salon') return parlour ? 'parlour_owner' : 'salon_owner';
+  if (type === 'employee') return parlour ? 'parlour_employee' : 'salon_employee';
+  return type;
+};
+
 const tierFor = (type: UserType): SubscriptionTier => {
   if (type === 'admin') return 'advanced';
   if (type === 'customer') return pick<SubscriptionTier>(['free', 'free', 'basic', 'advanced']);
@@ -39,6 +48,7 @@ export const mockUsers: User[] = TYPE_MIX.map((userType, index) => {
     phone: phoneNumber(),
     email: chance(0.65) ? emailFor(name) : undefined,
     userType,
+    accountType: accountTypeFor(userType, index),
     subscriptionTier: tier,
     registrationDate: isoDaysAgo(randomInt(1, 420), randomInt(8, 21)),
     status: chance(0.86) ? 'active' : pick(['inactive', 'suspended']),
@@ -60,6 +70,7 @@ mockUsers[0] = {
   phone: '+8801711002233',
   email: 'tanvir.ahmed@gmail.com',
   userType: 'customer',
+  accountType: 'customer',
   subscriptionTier: 'advanced',
   status: 'active',
   totalBookings: 18,
@@ -73,6 +84,7 @@ mockUsers[1] = {
   phone: '+8801819445566',
   email: 'nusrat.jahan@gmail.com',
   userType: 'customer',
+  accountType: 'customer',
   subscriptionTier: 'basic',
   status: 'suspended',
   totalBookings: 4,

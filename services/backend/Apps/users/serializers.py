@@ -1137,9 +1137,54 @@ def _bookings_count(user: User) -> int:
     return 0
 
 
-class AdminUserSerializer(serializers.ModelSerializer):
-    """The admin dashboard's row/detail shape for a user of any role."""
+def _admin_active_employment(user: User) -> SalonEmployee | None:
+    # Iterated rather than filtered so the list view's prefetched
+    # `employments__salon` is used as-is instead of a query per row.
+    return next((job for job in user.employments.all() if job.is_active), None)
 
+
+def _admin_salon_summary(salon: Salon) -> dict:
+    return {
+        'id': salon.id,
+        'name': salon.name,
+        'business_type': salon.business_type,
+        'audience': salon.audience,
+        'location': _location_of(salon),
+    }
+
+
+def _admin_account_type(user: User) -> str:
+    """The admin dashboard's grouping of an account: its role, with salon
+    owners and employees split into salon and parlour.
+
+    A parlour is not a role (see `Role`) but a salon whose audience is women,
+    so this is read off the business rather than stored. An owner is a
+    parlour owner only when every salon they own is one — a mixed portfolio,
+    or no salon yet, stays under the broader "salon". An employee follows the
+    salon they currently work at.
+    """
+    if user.role == Role.SALON_OWNER:
+        salons = list(user.salons.all())
+        if salons and all(salon.audience == Audience.WOMEN for salon in salons):
+            return 'parlour_owner'
+        return 'salon_owner'
+    if user.role == Role.SALON_EMPLOYEE:
+        job = _admin_active_employment(user)
+        if job is not None and job.salon.audience == Audience.WOMEN:
+            return 'parlour_employee'
+        return 'salon_employee'
+    return user.role
+
+
+class AdminUserSerializer(serializers.ModelSerializer):
+    """The admin dashboard's row/detail shape for a user of any role.
+
+    Expects `salons` and `employments__salon` prefetched — see
+    `AdminUserListView` — since `account_type` reads both for every row."""
+
+    account_type = serializers.SerializerMethodField()
+    salons = serializers.SerializerMethodField()
+    employment = serializers.SerializerMethodField()
     total_bookings = serializers.SerializerMethodField()
     generations_used = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
@@ -1149,11 +1194,27 @@ class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
-            'id', 'phone', 'name', 'email', 'role', 'subscription_tier',
-            'account_status', 'is_phone_verified', 'date_joined',
+            'id', 'phone', 'name', 'email', 'role', 'account_type', 'subscription_tier',
+            'account_status', 'is_phone_verified', 'date_joined', 'salons', 'employment',
             'total_bookings', 'generations_used', 'location', 'hair_type', 'hair_length',
         )
         read_only_fields = fields
+
+    def get_account_type(self, user: User) -> str:
+        return _admin_account_type(user)
+
+    def get_salons(self, user: User) -> list[dict]:
+        if user.role != Role.SALON_OWNER:
+            return []
+        return [_admin_salon_summary(salon) for salon in user.salons.all()]
+
+    def get_employment(self, user: User) -> dict | None:
+        if user.role != Role.SALON_EMPLOYEE:
+            return None
+        job = _admin_active_employment(user)
+        if job is None:
+            return None
+        return {'title': job.title, 'salon': _admin_salon_summary(job.salon)}
 
     def get_total_bookings(self, user: User) -> int:
         return _bookings_count(user)

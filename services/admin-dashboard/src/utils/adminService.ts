@@ -8,12 +8,15 @@ import { api } from './apiClient';
 import { formatBdtCompact } from './format';
 import type {
   AccountStatus,
+  AccountType,
+  Audience,
   DailyPoint,
   Hairstyle,
   KpiDatum,
   SubscriptionTier,
   TimeRange,
   User,
+  UserBusiness,
   UserType,
 } from '../types';
 
@@ -87,22 +90,57 @@ export const hairstyleService = {
    Users — /api/admin/users/
    -------------------------------------------------------------------------- */
 
+interface LocationApi {
+  area: string;
+  city: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+interface UserBusinessApi {
+  id: number;
+  name: string;
+  business_type: 'salon' | 'barber';
+  audience: Audience;
+  location: LocationApi;
+}
+
 interface UserApi {
   id: number;
   phone: string;
   name: string;
   email: string;
   role: 'customer' | 'barber' | 'salon_owner' | 'salon_employee' | 'admin';
+  account_type: AccountType;
   subscription_tier: SubscriptionTier;
   account_status: AccountStatus;
   is_phone_verified: boolean;
   date_joined: string;
+  salons: UserBusinessApi[];
+  employment: { title: string; salon: UserBusinessApi } | null;
   total_bookings: number;
   generations_used: number;
-  location: { area: string; city: string; address: string; latitude: number | null; longitude: number | null } | null;
+  location: LocationApi | null;
   hair_type: string | null;
   hair_length: string | null;
 }
+
+const toLocation = (row: LocationApi) => ({
+  city: row.city,
+  area: row.area,
+  address: row.address,
+  lat: row.latitude ?? 0,
+  lng: row.longitude ?? 0,
+});
+
+const toUserBusiness = (row: UserBusinessApi): UserBusiness => ({
+  id: String(row.id),
+  name: row.name,
+  businessType: row.business_type,
+  audience: row.audience,
+  location: toLocation(row.location),
+});
 
 const ROLE_TO_USER_TYPE: Record<UserApi['role'], UserType> = {
   customer: 'customer',
@@ -126,20 +164,17 @@ const toUser = (row: UserApi): User => ({
   phone: row.phone,
   email: row.email || undefined,
   userType: ROLE_TO_USER_TYPE[row.role],
+  accountType: row.account_type,
+  salons: row.salons.map(toUserBusiness),
+  employment: row.employment
+    ? { title: row.employment.title, salon: toUserBusiness(row.employment.salon) }
+    : undefined,
   subscriptionTier: row.subscription_tier,
   registrationDate: row.date_joined,
   status: row.account_status,
   totalBookings: row.total_bookings,
   averageRating: undefined,
-  location: row.location
-    ? {
-        city: row.location.city,
-        area: row.location.area,
-        address: row.location.address,
-        lat: row.location.latitude ?? 0,
-        lng: row.location.longitude ?? 0,
-      }
-    : undefined,
+  location: row.location ? toLocation(row.location) : undefined,
   hairType: row.hair_type ?? undefined,
   preferredLength: row.hair_length ?? undefined,
   phoneVerified: row.is_phone_verified,

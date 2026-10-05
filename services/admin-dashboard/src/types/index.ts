@@ -1,9 +1,22 @@
 /* Domain model for the Go Salon admin console. Frontend-only: every record here
    is seeded from src/mockData and mutated in the Zustand store. */
 
+/** The role an account holds — what an admin can change it to. */
 export type UserType = 'customer' | 'barber' | 'salon' | 'employee' | 'admin';
+/** How the Users page files an account: its role, with salon owners and
+    employees split into salon and parlour by whether the place serves women.
+    Derived by the backend, never edited directly. */
+export type AccountType =
+  | 'customer'
+  | 'barber'
+  | 'salon_owner'
+  | 'salon_employee'
+  | 'parlour_owner'
+  | 'parlour_employee'
+  | 'admin';
 export type SubscriptionTier = 'free' | 'basic' | 'advanced';
 export type AccountStatus = 'active' | 'inactive' | 'suspended';
+export type Audience = 'men' | 'women' | 'unisex';
 export type EntityStatus = 'active' | 'inactive';
 export type VerificationStatus = 'verified' | 'pending' | 'rejected';
 export type BookingStatus =
@@ -46,12 +59,25 @@ export interface GeoLocation {
   lng: number;
 }
 
+export interface UserBusiness {
+  id: string;
+  name: string;
+  businessType: 'salon' | 'barber';
+  audience: Audience;
+  location: GeoLocation;
+}
+
 export interface User {
   id: string;
   name: string;
   phone: string;
   email?: string;
   userType: UserType;
+  accountType: AccountType;
+  /** Owners only: every salon or parlour they run. */
+  salons?: UserBusiness[];
+  /** Employees only: where they currently work, if anywhere. */
+  employment?: { title: string; salon: UserBusiness };
   subscriptionTier: SubscriptionTier;
   registrationDate: string;
   avatar?: string;

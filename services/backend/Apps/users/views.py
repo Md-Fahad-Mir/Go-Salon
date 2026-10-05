@@ -672,6 +672,13 @@ class AdminOverviewStatsView(APIView):
         })
 
 
+def _admin_users():
+    """Accounts with everything `AdminUserSerializer` reads per row already
+    loaded, so listing them costs a fixed number of queries."""
+    return User.objects.select_related('customer_profile').prefetch_related(
+        'salons', 'employments__salon')
+
+
 class AdminUserListView(GenericAPIView):
     """Every account on the platform, whatever its role."""
 
@@ -679,7 +686,7 @@ class AdminUserListView(GenericAPIView):
     serializer_class = AdminUserSerializer
 
     def get(self, request):
-        users = User.objects.all().select_related('customer_profile')
+        users = _admin_users()
 
         query = request.query_params.get('q', '').strip()
         if query:
@@ -704,7 +711,7 @@ class AdminUserDetailView(GenericAPIView):
     serializer_class = AdminUserSerializer
 
     def _get(self, pk: int) -> User | None:
-        return User.objects.filter(pk=pk).select_related('customer_profile').first()
+        return _admin_users().filter(pk=pk).first()
 
     def get(self, request, pk: int):
         user = self._get(pk)

@@ -1,7 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Ban, CircleCheck, Eye, KeyRound, Pencil, RefreshCw, Trash2 } from 'lucide-react';
-import type { AccountStatus, SubscriptionTier, User, UserType } from '../types';
-import { TIER_LABELS, USER_TYPE_LABELS } from '../constants';
+import type { AccountStatus, SubscriptionTier, User, UserBusiness, UserType } from '../types';
+import {
+  ACCOUNT_TYPE_FILTERS,
+  ACCOUNT_TYPE_LABELS,
+  AUDIENCE_LABELS,
+  TIER_LABELS,
+  USER_TYPE_LABELS,
+} from '../constants';
 import { useStore } from '../store/useStore';
 import { useAuthStore } from '../store/useAuthStore';
 import { useTableState } from '../hooks/useTableState';
@@ -36,6 +42,49 @@ interface EditState {
 
 const PHONE_PATTERN = /^\+8801[3-9]\d{8}$/;
 
+/** What kind of place this is, in the words an admin would use. */
+const businessKind = (business: UserBusiness): string => {
+  if (business.audience === 'women') return 'Parlour';
+  return business.businessType === 'barber' ? 'Barbershop' : 'Salon';
+};
+
+/** Street address plus area and city — each only when the owner didn't
+    already type it into the street line, which most do. */
+const businessAddress = ({ location }: UserBusiness): string => {
+  const street = location.address.trim();
+  const extra = [location.area, location.city].filter(
+    (part) => part && !street.toLowerCase().includes(part.toLowerCase()),
+  );
+  return [street, ...extra].filter(Boolean).join(', ') || '—';
+};
+
+function BusinessDetails({ business, title }: { business: UserBusiness; title?: string }) {
+  return (
+    <dl className="dl dl-2">
+      <div>
+        <dt>Name</dt>
+        <dd>{business.name}</dd>
+      </div>
+      <div>
+        <dt>Kind</dt>
+        <dd>
+          {businessKind(business)} · serves {AUDIENCE_LABELS[business.audience].toLowerCase()}
+        </dd>
+      </div>
+      {title !== undefined ? (
+        <div>
+          <dt>Job title</dt>
+          <dd>{title || '—'}</dd>
+        </div>
+      ) : null}
+      <div>
+        <dt>Address</dt>
+        <dd>{businessAddress(business)}</dd>
+      </div>
+    </dl>
+  );
+}
+
 export default function UsersPage() {
   const pushToast = useStore((state) => state.pushToast);
   const currentUserId = useAuthStore((state) => state.user?.id);
@@ -52,13 +101,13 @@ export default function UsersPage() {
   const filters = useMemo(
     () => [
       {
-        key: 'userType',
+        key: 'accountType',
         label: 'Type',
-        options: (Object.keys(USER_TYPE_LABELS) as UserType[]).map((value) => ({
+        options: ACCOUNT_TYPE_FILTERS.map((value) => ({
           value,
-          label: USER_TYPE_LABELS[value],
+          label: ACCOUNT_TYPE_LABELS[value],
         })),
-        match: (row: User, value: string) => row.userType === value,
+        match: (row: User, value: string) => row.accountType === value,
       },
       {
         key: 'tier',
@@ -85,7 +134,15 @@ export default function UsersPage() {
 
   const table = useTableState<User>({
     rows: users,
-    searchOn: (row) => [row.id, row.name, row.phone, row.email, row.location?.area],
+    searchOn: (row) => [
+      row.id,
+      row.name,
+      row.phone,
+      row.email,
+      row.location?.area,
+      ...(row.salons ?? []).map((salon) => salon.name),
+      row.employment?.salon.name,
+    ],
     filters,
     sortAccessors: {
       name: (row) => row.name,
@@ -196,7 +253,7 @@ export default function UsersPage() {
       ),
     },
     { key: 'phone', header: 'Phone', render: (row) => <span className="mono">{row.phone}</span> },
-    { key: 'userType', header: 'Type', render: (row) => USER_TYPE_LABELS[row.userType] },
+    { key: 'accountType', header: 'Type', render: (row) => ACCOUNT_TYPE_LABELS[row.accountType] },
     {
       key: 'registrationDate',
       header: 'Registered',
@@ -304,6 +361,7 @@ export default function UsersPage() {
               sort={table.sort}
               onSort={table.toggleSort}
               actions={actions}
+              onRowClick={setViewing}
               loading={loading}
               cardTitle={(row) => `${row.name} · ${row.id}`}
               cardActions={(row) => (
@@ -337,7 +395,7 @@ export default function UsersPage() {
         open={viewing !== null}
         onClose={() => setViewing(null)}
         title={viewing?.name ?? ''}
-        subtitle={viewing ? `${USER_TYPE_LABELS[viewing.userType]} · ${viewing.id}` : undefined}
+        subtitle={viewing ? `${ACCOUNT_TYPE_LABELS[viewing.accountType]} · ${viewing.id}` : undefined}
         footer={
           viewing ? (
             <>
@@ -410,6 +468,34 @@ export default function UsersPage() {
                 <dd>{viewing.averageRating ? `${formatRating(viewing.averageRating)} / 5` : 'n/a'}</dd>
               </div>
             </dl>
+
+            {viewing.userType === 'salon' ? (
+              <div>
+                <h3 className="section-label">
+                  {(viewing.salons ?? []).length > 1 ? 'Businesses' : 'Business'}
+                </h3>
+                {viewing.salons?.length ? (
+                  <div className="stack-sm">
+                    {viewing.salons.map((salon) => (
+                      <BusinessDetails key={salon.id} business={salon} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="muted">No salon or parlour registered yet.</p>
+                )}
+              </div>
+            ) : null}
+
+            {viewing.userType === 'employee' ? (
+              <div>
+                <h3 className="section-label">Workplace</h3>
+                {viewing.employment ? (
+                  <BusinessDetails business={viewing.employment.salon} title={viewing.employment.title} />
+                ) : (
+                  <p className="muted">Not currently working at a salon or parlour.</p>
+                )}
+              </div>
+            ) : null}
 
             {viewing.location ? (
               <div>

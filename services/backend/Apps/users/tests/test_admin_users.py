@@ -10,7 +10,7 @@ from django.utils import timezone
 from Apps.bookings.models import business_tz
 from Apps.tryon import ai_service
 from Apps.tryon.models import TryOnVideo, VideoStatus
-from Apps.users.models import User
+from Apps.users.models import Role, Salon, SalonEmployee, User
 from Apps.users.tests.base import AuthTestCase
 
 LIST = '/api/admin/users/'
@@ -69,6 +69,79 @@ class AdminUserListTests(AuthTestCase):
         row = response.data[0]
         self.assertIsNone(row['hair_type'])
         self.assertIsNone(row['location'])
+
+
+class AdminUserAccountTypeTests(AuthTestCase):
+    """`account_type` splits salon owners and employees into salon and
+    parlour by the place's audience; every other role passes through."""
+
+    def setUp(self):
+        super().setUp()
+        self.as_user(self.admin_session())
+
+    def row(self, session_or_user) -> dict:
+        user = session_or_user if isinstance(session_or_user, User) else self.user_for(session_or_user)
+        response = self.client.get(detail(user.pk))
+        self.assertEqual(response.status_code, 200, response.data)
+        return response.data
+
+    def hire(self, salon: Salon, phone: str = '01755000004', *, active: bool = True) -> User:
+        staff = User.objects.create_user(phone=phone, name='Hasan Mahmud',
+                                         role=Role.SALON_EMPLOYEE, is_phone_verified=True)
+        SalonEmployee.objects.create(salon=salon, user=staff, title='Stylist', is_active=active)
+        return staff
+
+    def test_roles_without_a_parlour_variant_pass_through(self):
+        self.assertEqual(self.row(self.make_customer())['account_type'], 'customer')
+        self.assertEqual(self.row(self.make_barber())['account_type'], 'barber')
+        admin = User.objects.get(role=Role.ADMIN)
+        self.assertEqual(self.row(admin)['account_type'], 'admin')
+
+    def test_owner_of_a_womens_salon_is_a_parlour_owner(self):
+        row = self.row(self.make_owner(audience='women'))
+        self.assertEqual(row['role'], 'salon_owner')
+        self.assertEqual(row['account_type'], 'parlour_owner')
+        self.assertEqual([salon['name'] for salon in row['salons']], ['Glow Beauty Parlour'])
+        self.assertEqual(row['salons'][0]['audience'], 'women')
+
+    def test_owner_of_a_unisex_salon_is_a_salon_owner(self):
+        row = self.row(self.make_owner(audience='unisex'))
+        self.assertEqual(row['account_type'], 'salon_owner')
+
+    def test_owner_of_a_parlour_and_a_gents_salon_is_a_salon_owner(self):
+        owner = self.user_for(self.make_owner(audience='women'))
+        Salon.objects.create(owner=owner, name='Gents Corner', audience='men')
+        row = self.row(owner)
+        self.assertEqual(row['account_type'], 'salon_owner')
+        self.assertEqual(len(row['salons']), 2)
+
+    def test_employee_follows_the_salon_they_work_at(self):
+        parlour = self.user_for(self.make_owner(audience='women')).salons.get()
+        staff = self.hire(parlour)
+        row = self.row(staff)
+        self.assertEqual(row['account_type'], 'parlour_employee')
+        self.assertEqual(row['employment']['title'], 'Stylist')
+        self.assertEqual(row['employment']['salon']['name'], 'Glow Beauty Parlour')
+
+        parlour.audience = 'unisex'
+        parlour.save(update_fields=['audience'])
+        self.assertEqual(self.row(staff)['account_type'], 'salon_employee')
+
+    def test_employee_whose_job_ended_is_a_salon_employee_with_no_employment(self):
+        parlour = self.user_for(self.make_owner(audience='women')).salons.get()
+        row = self.row(self.hire(parlour, active=False))
+        self.assertEqual(row['account_type'], 'salon_employee')
+        self.assertIsNone(row['employment'])
+
+    def test_non_providers_carry_no_business(self):
+        row = self.row(self.make_customer())
+        self.assertEqual(row['salons'], [])
+        self.assertIsNone(row['employment'])
+
+    def test_list_rows_carry_account_type(self):
+        self.make_owner(audience='women')
+        response = self.client.get(LIST, {'role': 'salon_owner'})
+        self.assertEqual([row['account_type'] for row in response.data], ['parlour_owner'])
 
 
 class AdminUserDetailTests(AuthTestCase):

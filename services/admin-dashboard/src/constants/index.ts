@@ -1,5 +1,7 @@
 import type {
   AccountStatus,
+  AccountType,
+  Audience,
   NotificationStatus,
   PaymentMethod,
   SubscriptionTier,
@@ -72,12 +74,40 @@ export const DHAKA_AREAS = [
 
 export type Tone = 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'accent';
 
+/** Role labels, for the edit form. A salon owner's role covers parlours too —
+    which one they are follows from their business, not from this. */
 export const USER_TYPE_LABELS: Record<UserType, string> = {
   customer: 'Customer',
   barber: 'Barber',
-  salon: 'Salon owner',
-  employee: 'Salon employee',
+  salon: 'Salon / parlour owner',
+  employee: 'Salon / parlour employee',
   admin: 'Admin',
+};
+
+export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
+  customer: 'Customer',
+  barber: 'Barber',
+  salon_owner: 'Salon owner',
+  salon_employee: 'Salon employee',
+  parlour_owner: 'Parlour owner',
+  parlour_employee: 'Parlour employee',
+  admin: 'Admin',
+};
+
+/** What the Users page's Type filter offers, in the order it lists them. */
+export const ACCOUNT_TYPE_FILTERS: AccountType[] = [
+  'customer',
+  'salon_owner',
+  'salon_employee',
+  'parlour_owner',
+  'parlour_employee',
+  'admin',
+];
+
+export const AUDIENCE_LABELS: Record<Audience, string> = {
+  men: 'Men',
+  women: 'Women',
+  unisex: 'Everyone',
 };
 
 export const TIER_LABELS: Record<SubscriptionTier, string> = {
