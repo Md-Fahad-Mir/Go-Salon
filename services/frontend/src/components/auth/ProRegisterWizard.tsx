@@ -74,7 +74,7 @@ export function ProRegisterWizard({
 
   const back = () => {
     if (step > 1) return goTo(step - 1);
-    return navigate(ROUTES.register, { replace: true });
+    return navigate(ROUTES.welcome, { replace: true });
   };
 
   const next = () => {

@@ -72,7 +72,7 @@ export default function WelcomePage() {
           </div>
 
           <div className="stack-sm auth-welcome-actions">
-            <LinkButton to={ROUTES.register} block size="lg">
+            <LinkButton to={ROUTES.registerCustomer} block size="lg">
               {t('auth.getStarted')}
             </LinkButton>
             <LinkButton to={ROUTES.login} variant="ghost" block>

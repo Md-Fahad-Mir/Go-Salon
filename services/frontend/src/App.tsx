@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LanguageProvider } from './components/LanguageProvider';
 import { ThemeProvider } from './components/ThemeProvider';
@@ -27,11 +27,11 @@ const OTPPage = lazy(() => import('./pages/auth/OTPPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 
-/* Sign-up: the account-type chooser, then one screen per account someone can
-   create. A salon employee has none — the owner creates that account. */
-const AccountTypePage = lazy(() => import('./pages/auth/AccountTypePage'));
 const ChangePasswordPage = lazy(() => import('./pages/profile/ChangePasswordPage'));
 const AdminHomePage = lazy(() => import('./pages/AdminHomePage'));
+/* Sign-up: one screen per account someone can create. The app only links to
+   the customer's; the barber and salon-owner screens are reached from the
+   landing page. A salon employee has none — the owner creates that account. */
 const CustomerRegisterPage = lazy(() => import('./pages/auth/register/CustomerRegisterPage'));
 const BarberRegisterPage = lazy(() => import('./pages/auth/register/BarberRegisterPage'));
 const SalonOwnerRegisterPage = lazy(() => import('./pages/auth/register/SalonOwnerRegisterPage'));
@@ -138,7 +138,9 @@ export default function App() {
                     <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
 
-                    <Route path="/auth/register" element={<AccountTypePage />} />
+                    {/* Only customers sign up in the app, so there is no
+                        account-type chooser; old links land on theirs. */}
+                    <Route path="/auth/register" element={<Navigate to="/auth/register/customer" replace />} />
                     <Route path="/auth/register/customer" element={<CustomerRegisterPage />} />
                     <Route path="/auth/register/barber" element={<BarberRegisterPage />} />
                     <Route path="/auth/register/salon-owner" element={<SalonOwnerRegisterPage />} />

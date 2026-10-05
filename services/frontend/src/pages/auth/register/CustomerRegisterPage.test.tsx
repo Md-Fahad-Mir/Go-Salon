@@ -45,7 +45,6 @@ const open = () =>
     routes: {
       '/auth/register/customer': <CustomerRegisterPage />,
       '/auth/otp': <p>the code screen</p>,
-      '/auth/register': <p>the account chooser</p>,
     },
     elsewhere: <p>somewhere else</p>,
   });

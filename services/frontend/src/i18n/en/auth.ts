@@ -106,24 +106,14 @@ export const auth = {
   'auth.genderShort': 'Gender',
   'auth.hairTypeHeading': 'Your hair type',
 
-  /* --- Account types (the four the sign-up offers) -------------------------- */
-  'auth.chooseTypeTitle': 'Create account',
-  'auth.chooseTypeSub': 'Choose your account type',
+  /* --- Account types ------------------------------------------------------- */
   'auth.typeCustomer': 'Customer',
-  'auth.typeCustomerBlurb': 'Book hair & beauty services',
   'auth.typeBarber': 'Barber / Hairstylist',
-  'auth.typeBarberBlurb': 'Provide professional hair services',
   'auth.typeOwner': 'Salon / Parlour Owner',
-  'auth.typeOwnerBlurb': 'Manage your salon or parlour',
   'auth.typeEmployee': 'Salon / Parlour Employee',
-  'auth.employeeNoteBody': 'Employee accounts are created by the salon or parlour owner. Ask them to add your chair, then sign in with the details they send you.',
-  'auth.employeeNoteAction': 'Sign in with the details you were given',
-  'auth.alreadyHaveAccount': 'Already have an account?',
   'auth.signIn': 'Sign in',
   'auth.noAccount': 'New to Go Salon?',
   'auth.createAccount': 'Create an account',
-  'auth.creatingAs': 'Creating a {type} account',
-  'auth.changeType': 'Change',
 
   /* Where each account lands once it is live. Reads inside a sentence. */
 

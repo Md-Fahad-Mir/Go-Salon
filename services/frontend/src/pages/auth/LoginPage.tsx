@@ -2,7 +2,6 @@ import { AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ACCOUNT_TYPE_KEYS } from '../../components/auth/accountTypes';
 import { BrandMark } from '../../components/auth/BrandMark';
 import { PasswordInput } from '../../components/auth/PasswordInput';
 import { RichText } from '../../components/auth/RichText';
@@ -31,7 +30,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const t = useT();
-  const { login, startVerification, landingRouteForUser, accountType, chooseAccountType } = useAuth();
+  const { login, startVerification, landingRouteForUser } = useAuth();
   const toast = useAppStore((s) => s.toast);
 
   const [phone, setPhone] = useState('');
@@ -93,17 +92,6 @@ export default function LoginPage() {
             <p>{t('auth.signInSub')}</p>
           </div>
 
-          {accountType ? (
-            <div className="auth-chosen">
-              <span className="auth-chosen-text">
-                {t('auth.creatingAs', { type: t(ACCOUNT_TYPE_KEYS[accountType]) })}
-              </span>
-              <button type="button" className="link-btn" onClick={() => chooseAccountType(null)}>
-                {t('auth.changeType')}
-              </button>
-            </div>
-          ) : null}
-
           {failure ? (
             <Callout tone="danger" icon={<AlertCircle size={18} aria-hidden="true" />}>
               {authErrorMessage(t, failure)}
@@ -150,7 +138,7 @@ export default function LoginPage() {
 
         <p className="auth-foot-link small dim center">
           {t('auth.noAccount')}{' '}
-          <Link to={ROUTES.register} className="link-btn">{t('auth.createAccount')}</Link>
+          <Link to={ROUTES.registerCustomer} className="link-btn">{t('auth.createAccount')}</Link>
         </p>
 
         <p className="auth-terms small dim center mt-auto">

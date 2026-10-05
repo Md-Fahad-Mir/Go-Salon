@@ -488,9 +488,9 @@ html[data-lang='en'] .auth-intro h2 { font-weight: 400; letter-spacing: -0.025em
 
 /* The secondary way out of a screen — sign in instead, back to sign in — said
    quietly, an underline rather than a filled shape, matching the Welcome
-   ghost button. Scoped to the foot link only: the resend-code and
-   change-account-type buttons stay the plain inline `.link-btn` they already
-   are, since they are in-place actions rather than a way off the screen. */
+   ghost button. Scoped to the foot link only: the resend-code button stays
+   the plain inline `.link-btn` it already is, since it is an in-place action
+   rather than a way off the screen. */
 .auth-foot-link .link-btn {
   color: var(--accent-ink);
   text-decoration: underline;
@@ -638,63 +638,6 @@ html[data-lang='en'] .auth-intro h2 { font-weight: 400; letter-spacing: -0.025em
   color: var(--accent-on);
 }
 
-/* --- Account type chooser --------------------------------------------------- */
-
-.auth-types {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.auth-type {
-  display: flex;
-  align-items: center;
-  gap: 0.875rem;
-  min-height: 4.5rem;
-  padding: 0.875rem;
-  text-align: start;
-  background-color: var(--bg-secondary);
-  border: 1.5px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  transition:
-    border-color var(--speed) var(--ease),
-    background-color var(--speed) var(--ease),
-    transform var(--speed) var(--ease-out);
-}
-
-.auth-type:hover { border-color: var(--accent); background-color: var(--hover-bg); }
-.auth-type:active { transform: scale(0.99); }
-
-.auth-type-icon {
-  display: grid;
-  place-items: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  flex-shrink: 0;
-  border-radius: var(--radius);
-  background-color: var(--accent-bg);
-  color: var(--accent-ink);
-}
-
-.auth-type:hover .auth-type-icon { background-color: var(--accent); color: var(--accent-on); }
-
-.auth-type-body { display: flex; flex-direction: column; gap: 0.125rem; flex: 1; min-width: 0; }
-.auth-type-body strong { font-size: 1rem; font-weight: 700; color: var(--text-primary); }
-.auth-type-body small { font-size: 0.8125rem; line-height: 1.35; color: var(--text-tertiary); }
-.auth-type-end { flex-shrink: 0; color: var(--text-tertiary); }
-
-/* The banner reminding someone which account they are part-way through. */
-.auth-chosen {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.625rem 0.875rem;
-  background-color: var(--accent-bg);
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-}
-.auth-chosen-text { flex: 1; min-width: 0; color: var(--accent-ink); font-weight: 600; }
-
 .auth-foot-link { min-height: 1.5rem; }
 
 /* --- Password field --------------------------------------------------------- */
@@ -758,12 +701,6 @@ html[data-lang='en'] .auth-intro h2 { font-weight: 400; letter-spacing: -0.025em
   color: var(--text-secondary);
 }
 .auth-next-list li::marker { color: var(--text-tertiary); font-variant-numeric: tabular-nums; }
-
-/* The employee pointer on the chooser. Deliberately not a tappable row: an
-   employee has no sign-up to be sent to, only a sign-in. */
-.auth-employee-note { flex-direction: row; }
-.auth-employee-note p { margin-bottom: 0.375rem; }
-.auth-employee-note .link-btn { font-size: 0.875rem; }
 
 /* --- Sign-up errors --------------------------------------------------------
    The three sign-up wizards only (`.auth-signup` is the wizard's body), so the

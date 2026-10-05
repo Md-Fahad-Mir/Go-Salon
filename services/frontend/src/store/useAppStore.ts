@@ -6,7 +6,6 @@ import type {
   Booking,
   Feedback,
   PaymentAccount,
-  RegistrableAccountType,
   Tenant,
   Toast,
   ToastTone,
@@ -125,11 +124,6 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   authStatus: AuthStatus;
   /** The sign-up whose code has not been entered yet. */
   pendingVerification: PendingVerification | null;
-  /** Which account the person is part-way through creating. Chosen on
-      `/auth/register`, spent by the registration screen, cleared the moment
-      an account exists. Never an employee: that account is the owner's to
-      create, so there is nothing here for one to be part-way through. */
-  pendingAccountType: RegistrableAccountType | null;
   archive: Record<string, AccountData>;
   toasts: Toast[];
   hasSeenWelcome: boolean;
@@ -157,7 +151,6 @@ export interface AppStore extends Omit<AccountData, 'user'> {
   /** Drops the session locally. The backend is told separately, by logout. */
   clearSession: () => void;
   setPendingVerification: (pending: PendingVerification | null) => void;
-  setAccountType: (type: RegistrableAccountType | null) => void;
   updateUser: (patch: Partial<User>) => void;
   logout: () => void;
   setHasSeenWelcome: (seen: boolean) => void;
@@ -261,7 +254,6 @@ export const useAppStore = create<AppStore>()(
       isAuthenticated: false,
       authStatus: 'restoring',
       pendingVerification: null,
-      pendingAccountType: null,
       archive: {},
       toasts: [],
       hasSeenWelcome: false,
@@ -283,7 +275,6 @@ export const useAppStore = create<AppStore>()(
           isAuthenticated: true,
           authStatus: 'ready',
           pendingVerification: null,
-          pendingAccountType: null,
           hasSeenWelcome: true,
           // Not archived with the rest: which salons an account belongs to is
           // the server's answer, not this device's memory of one, and the
@@ -344,7 +335,6 @@ export const useAppStore = create<AppStore>()(
           isAuthenticated: false,
           authStatus: 'ready',
           pendingVerification: null,
-          pendingAccountType: null,
           // Goes with the session, and for the same reason: leaving it behind
           // would put the last account's salon on the next account's requests.
           tenants: [],
@@ -359,8 +349,6 @@ export const useAppStore = create<AppStore>()(
       },
 
       setPendingVerification: (pending) => set({ pendingVerification: pending }),
-
-      setAccountType: (type) => set({ pendingAccountType: type }),
 
       updateUser: (patch) => {
         const user = get().user;
@@ -577,7 +565,6 @@ export const useAppStore = create<AppStore>()(
         refreshToken: state.refreshToken,
         isAuthenticated: state.isAuthenticated,
         pendingVerification: state.pendingVerification,
-        pendingAccountType: state.pendingAccountType,
         archive: state.archive,
         hasSeenWelcome: state.hasSeenWelcome,
         // Both, deliberately. The id on its own could not be checked against

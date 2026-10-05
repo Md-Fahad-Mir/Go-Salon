@@ -8,7 +8,7 @@ Built with React 19, Vite, Tailwind CSS v4 and Framer Motion.
 
 ```bash
 npm install
-npm run dev       # http://localhost:5173
+npm run dev       # http://localhost:5176
 npm run build     # static site in dist/
 npm run lint
 ```

@@ -10,7 +10,6 @@ import type {
   AuthSession,
   CustomerRegistration,
   ProfessionalRegistration,
-  RegistrableAccountType,
   User,
   VerificationRequired,
 } from '../types';
@@ -24,10 +23,8 @@ export function useAuth() {
   const isAuthenticated = useAppStore((s) => s.isAuthenticated);
   const authStatus = useAppStore((s) => s.authStatus);
   const pendingVerification = useAppStore((s) => s.pendingVerification);
-  const accountType = useAppStore((s) => s.pendingAccountType);
   const setSession = useAppStore((s) => s.setSession);
   const setPendingVerification = useAppStore((s) => s.setPendingVerification);
-  const setAccountType = useAppStore((s) => s.setAccountType);
   const clearSession = useAppStore((s) => s.clearSession);
 
   /** Takes a session and loads whatever else belongs to that account. */
@@ -127,11 +124,6 @@ export function useAuth() {
     [],
   );
 
-  const chooseAccountType = useCallback(
-    (type: RegistrableAccountType | null) => setAccountType(type),
-    [setAccountType],
-  );
-
   /** The first screen for whoever is signed in. */
   const landingRoute = useCallback(
     (): string => HOME_ROUTE_FOR[user?.role ?? 'customer'] ?? ROUTES.home,
@@ -171,7 +163,6 @@ export function useAuth() {
     isAuthenticated,
     authStatus,
     pendingVerification,
-    accountType,
     registerCustomer,
     registerProfessional,
     startVerification,
@@ -183,7 +174,6 @@ export function useAuth() {
     verifyResetOtp,
     resetPassword,
     changePassword,
-    chooseAccountType,
     landingRoute,
     landingRouteForUser,
   };

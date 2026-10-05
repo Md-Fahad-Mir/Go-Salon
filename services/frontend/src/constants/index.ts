@@ -9,7 +9,6 @@ import type {
   PaymentMethod,
   PayoutMethod,
   ProviderRole,
-  RegistrableAccountType,
   TakingsMethod,
   UserRole,
   Weekday,
@@ -20,9 +19,8 @@ export const ROUTES = {
   welcome: '/welcome',
   login: '/auth/login',
   otp: '/auth/otp',
-  /* Sign-up. `/auth/register` is the account-type chooser; each type has its
-     own page under it, so a link can drop someone straight into one. */
-  register: '/auth/register',
+  /* Sign-up. Each type has its own page; the app itself only offers the
+     customer's, and the landing page links straight to the other two. */
   registerCustomer: '/auth/register/customer',
   registerBarber: '/auth/register/barber',
   registerSalonOwner: '/auth/register/salon-owner',
@@ -277,23 +275,10 @@ export const FIXTURE_ACCOUNTS: Array<{
    serves women, a parlour is a `salon_owner` whose place serves women.
    Neither is an account type of its own.
 
-   Three of them can be signed up for. A salon employee cannot: the owner
-   creates that account when they add the chair, so there is no employee
-   sign-up screen, no route to one, and no way to reach one from the chooser.
+   Three of them can be signed up for, and only the customer from inside the
+   app. A salon employee cannot: the owner creates that account when they add
+   the chair, so there is no employee sign-up screen and no route to one.
    --------------------------------------------------------------------------- */
-
-/** What the chooser offers, in the order it lists them. */
-export const REGISTRABLE_ACCOUNT_TYPES: RegistrableAccountType[] = [
-  'customer',
-  'barber',
-  'salon_owner',
-];
-
-export const REGISTER_ROUTE_FOR: Record<RegistrableAccountType, string> = {
-  customer: ROUTES.registerCustomer,
-  barber: ROUTES.registerBarber,
-  salon_owner: ROUTES.registerSalonOwner,
-};
 
 /** The role each account type becomes. The backend uses the same words, so
     this is a straight correspondence rather than a translation. */

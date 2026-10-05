@@ -105,24 +105,14 @@ export const auth = {
   'auth.genderShort': 'লিঙ্গ',
   'auth.hairTypeHeading': 'আপনার চুলের ধরন',
 
-  /* --- Account types (the four the sign-up offers) -------------------------- */
-  'auth.chooseTypeTitle': 'অ্যাকাউন্ট খুলুন',
-  'auth.chooseTypeSub': 'কোন ধরনের অ্যাকাউন্ট চান বেছে নিন',
+  /* --- Account types ------------------------------------------------------- */
   'auth.typeCustomer': 'গ্রাহক',
-  'auth.typeCustomerBlurb': 'চুল ও বিউটি সেবা বুক করুন',
   'auth.typeBarber': 'বারবার / হেয়ারস্টাইলিস্ট',
-  'auth.typeBarberBlurb': 'পেশাদার হেয়ার সেবা দিন',
   'auth.typeOwner': 'স্যালন / পারলার মালিক',
-  'auth.typeOwnerBlurb': 'নিজের স্যালন বা পারলার চালান',
   'auth.typeEmployee': 'স্যালন / পারলার কর্মী',
-  'auth.employeeNoteBody': 'কর্মীর অ্যাকাউন্ট স্যালন বা পারলারের মালিক খুলে দেন। তাঁকে আপনার চেয়ারটি যোগ করতে বলুন, তারপর তিনি যে তথ্য পাঠাবেন তা দিয়ে সাইন ইন করুন।',
-  'auth.employeeNoteAction': 'পাওয়া তথ্য দিয়ে সাইন ইন করুন',
-  'auth.alreadyHaveAccount': 'আগে থেকেই অ্যাকাউন্ট আছে?',
   'auth.signIn': 'সাইন ইন',
   'auth.noAccount': 'গো স্যালনে নতুন?',
   'auth.createAccount': 'অ্যাকাউন্ট খুলুন',
-  'auth.creatingAs': '{type} অ্যাকাউন্ট খোলা হচ্ছে',
-  'auth.changeType': 'বদলান',
 
   /* Where each account lands once it is live. Reads inside a sentence. */
 
