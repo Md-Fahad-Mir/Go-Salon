@@ -45,9 +45,6 @@ const Navbar = () => {
         </ul>
 
         <div className="hidden items-center gap-5 lg:flex">
-          <a href={LINKS.signIn} className="text-[0.95rem] text-ivory-soft transition-colors hover:text-ivory">
-            Sign in
-          </a>
           <a
             href={LINKS.app}
             className="btn-satin inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[0.95rem] font-medium transition-transform hover:-translate-y-0.5"
@@ -89,12 +86,6 @@ const Navbar = () => {
                 </li>
               ))}
               <li className="mt-4 flex gap-3">
-                <a
-                  href={LINKS.signIn}
-                  className="flex-1 rounded-full border border-gold/30 py-3 text-center text-ivory"
-                >
-                  Sign in
-                </a>
                 <a href={LINKS.app} className="btn-satin flex-1 rounded-full py-3 text-center font-medium">
                   Open the app
                 </a>

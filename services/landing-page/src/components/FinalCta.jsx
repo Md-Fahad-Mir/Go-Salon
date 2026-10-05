@@ -19,9 +19,6 @@ const FinalCta = () => (
         <br />
         <span className="text-gilded font-normal italic">before</span> the cut.
       </h2>
-      <p lang="bn" className="mt-5 text-xl text-gold/80">
-        কাটার আগেই দেখে নিন।
-      </p>
       <p className="mx-auto mt-7 max-w-xl text-lg leading-relaxed text-ivory-soft">
         Three free 360° try-ons are waiting. Open Go Salon in your browser, add it to your home
         screen, and find your next look tonight.

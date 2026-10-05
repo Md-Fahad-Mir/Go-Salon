@@ -15,7 +15,6 @@ export const SUPPORT_EMAIL = "support@gosalon.app";
 
 export const LINKS = {
   app: APP_URL,
-  signIn: `${APP_URL}/auth/login`,
   customerSignUp: `${APP_URL}/auth/register/customer`,
   salonSignUp: `${APP_URL}/auth/register/salon-owner`,
   barberSignUp: `${APP_URL}/auth/register/barber`,

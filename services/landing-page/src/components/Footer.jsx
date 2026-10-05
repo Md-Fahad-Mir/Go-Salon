@@ -4,7 +4,6 @@ import { LINKS, NAV_LINKS, SUPPORT_EMAIL } from "../constants";
 
 const APP_LINKS = [
   { label: "Open the app", href: LINKS.app },
-  { label: "Sign in", href: LINKS.signIn },
   { label: "Create an account", href: LINKS.customerSignUp },
   { label: "Register your salon", href: LINKS.salonSignUp },
 ];

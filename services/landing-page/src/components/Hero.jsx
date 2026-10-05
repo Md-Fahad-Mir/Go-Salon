@@ -1,8 +1,6 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, CalendarCheck, Languages, PlayCircle, RotateCw, Sparkles, Wallet } from "lucide-react";
-import PhoneFrame from "./ui/PhoneFrame";
-import { screen } from "../assets/screens";
 import { LINKS } from "../constants";
 
 const ease = [0.22, 1, 0.36, 1];
@@ -45,7 +43,6 @@ const GlassChip = ({ icon: Icon, title, sub, className, delay }) => (
 
 const Hero = () => {
   const reduceMotion = useReducedMotion();
-  const tryOnHome = screen("tryon-home", "dark");
 
   return (
     <section id="top" className="grain relative isolate overflow-hidden bg-onyx pt-[4.5rem]">
@@ -140,19 +137,6 @@ const Hero = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-onyx/70 via-transparent to-transparent" />
             </div>
           </motion.div>
-
-          {tryOnHome && (
-            <motion.div
-              initial={{ opacity: 0, y: 60 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.1, ease, delay: 0.55 }}
-              className="absolute -bottom-6 left-0 z-20 w-[42%] sm:w-[38%]"
-            >
-              <div className="animate-float">
-                <PhoneFrame src={tryOnHome.src} theme={tryOnHome.theme} alt="Go Salon AI try-on screen" eager />
-              </div>
-            </motion.div>
-          )}
 
           <GlassChip
             icon={RotateCw}
