@@ -1,3 +1,4 @@
+import { addDays } from 'date-fns';
 import { CalendarX2, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { AppointmentRow } from '../../components/provider/queue/AppointmentRow';
@@ -13,6 +14,7 @@ import {
   todayKey,
 } from '../../components/provider/queue/queueUtils';
 import { useTicker } from '../../components/provider/queue/useTicker';
+import { DayStrip } from '../../components/provider/salon/DayStrip';
 import { ActionSheet } from '../../components/common/ActionSheet';
 import { Button } from '../../components/common/Button';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
@@ -27,10 +29,14 @@ import { useAppStore } from '../../store/useAppStore';
 import { useProviderStore } from '../../store/useProviderStore';
 import type { ProviderAppointment, TakingsMethod } from '../../types';
 import { messageOf } from '../../utils/errorMessage';
-import { firstNameOf, formatBdt, formatDateLong, formatDayLabel, formatNumber } from '../../utils/format';
+import { firstNameOf, formatBdt, formatDateLong, formatDayLabel, formatNumber, toDateKey } from '../../utils/format';
 
 /* Three roles share this screen — a barber with his own chair, an employee
    renting one in someone else's salon, and a women's stylist. */
+
+/** The owner's day strip, on one chair: yesterday's no-show, tomorrow's first
+    client, without leaving the queue for the diary. */
+const OFFSETS = [-3, -2, -1, 0, 1, 2, 3];
 
 const greetingKey = (hour: number): TranslationKey =>
   hour < 12 ? 'proQueue.greetMorning' : hour < 17 ? 'proQueue.greetAfternoon' : 'proQueue.greetEvening';
@@ -55,6 +61,7 @@ export default function QueuePage() {
   const now = useTicker();
   const today = todayKey();
 
+  const [offset, setOffset] = useState(0);
   const [payFor, setPayFor] = useState<ProviderAppointment | null>(null);
   const [noShowFor, setNoShowFor] = useState<ProviderAppointment | null>(null);
   const [moveFor, setMoveFor] = useState<ProviderAppointment | null>(null);
@@ -73,10 +80,21 @@ export default function QueuePage() {
   const hero = live ?? upcoming[0];
   const queued = live ? upcoming : upcoming.slice(1);
 
-  /* Came in while this screen was open, for a day other than today. */
+  /* Any other day on the strip is a page of the diary, not a queue: nothing
+     on it is started from here, so it is one list split by whether it is
+     over. Pending rows are already in `waiting` above, whatever their day. */
+  const dayKey = offset ? toDateKey(addDays(new Date(), offset)) : today;
+  const picked = useMemo(
+    () => (offset ? onDay(ownedBy(appointments, profile), dayKey) : mine),
+    [offset, appointments, profile, dayKey, mine],
+  );
+  const pickedOpen = picked.filter((a) => a.stage === 'upcoming' || a.stage === 'in_chair');
+  const pickedDone = picked.filter((a) => isSettled(a.stage));
+
+  /* Came in while this screen was open, for a day other than the one shown. */
   const justBooked = useMemo(
-    () => arrivalsOffView(ownedBy(appointments, profile), liveArrivals, today),
-    [appointments, profile, liveArrivals, today],
+    () => arrivalsOffView(ownedBy(appointments, profile), liveArrivals, dayKey),
+    [appointments, profile, liveArrivals, dayKey],
   );
 
   const activeServices = services.filter((service) => service.active);
@@ -128,6 +146,8 @@ export default function QueuePage() {
       toast('success', t('proQueue.walkInDone', { name: created.customerName }));
       setWalkInOpen(false);
       setWalkInKey((key) => key + 1);
+      // A walk-in is always today's, so bring today back into view.
+      setOffset(0);
     } catch (failure) {
       // The sheet stays open: somebody is standing at the counter and
       // retyping their order is worse than reading the reason.
@@ -146,9 +166,17 @@ export default function QueuePage() {
       />
 
       <ScreenBody className="pq-day">
-        <p className="pq-date">{formatDateLong(now)}</p>
+        <p className="pq-date">{formatDateLong(addDays(now, offset))}</p>
 
-        {hero ? (
+        <section className="section" aria-labelledby="pq-days">
+          <div className="pro-section-head">
+            <h3 id="pq-days">{t('salon.feedTitle')}</h3>
+            <span>{t('salon.bookingsCount', { count: formatNumber(picked.length) })}</span>
+          </div>
+          <DayStrip offsets={OFFSETS} value={offset} onChange={setOffset} />
+        </section>
+
+        {offset ? null : hero ? (
           <NowNextCard
             appointment={hero}
             live={Boolean(live)}
@@ -200,7 +228,46 @@ export default function QueuePage() {
           </section>
         ) : null}
 
-        {queued.length || done.length ? (
+        {offset ? (
+          pickedOpen.length || pickedDone.length ? (
+            <section className="section" aria-label={formatDayLabel(dayKey)}>
+              {pickedOpen.length ? (
+                <>
+                  <div className="pro-section-head">
+                    <h3>{t('salon.groupUpcoming')}</h3>
+                    <span>{t('pro.appointments', { count: formatNumber(pickedOpen.length) })}</span>
+                  </div>
+                  <div className="stack-sm">
+                    {pickedOpen.map((appointment) => (
+                      // A past day's leftovers are not "late" by days on end.
+                      <AppointmentRow key={appointment.id} appointment={appointment} now={now} readOnly={offset < 0} />
+                    ))}
+                  </div>
+                </>
+              ) : null}
+
+              {pickedDone.length ? (
+                <>
+                  <div className="pro-section-head">
+                    <h3>{t('salon.groupDone')}</h3>
+                    <span>{t('pro.appointments', { count: formatNumber(pickedDone.length) })}</span>
+                  </div>
+                  <div className="stack-sm">
+                    {pickedDone.map((appointment) => (
+                      <AppointmentRow key={appointment.id} appointment={appointment} now={now} readOnly />
+                    ))}
+                  </div>
+                </>
+              ) : null}
+            </section>
+          ) : (
+            <div className="pro-empty-day">
+              <CalendarX2 size={26} aria-hidden="true" />
+              <strong>{t('salon.emptyDayTitle')}</strong>
+              <p>{t('salon.emptyDayBody')}</p>
+            </div>
+          )
+        ) : queued.length || done.length ? (
           <section className="section" aria-label={t('proQueue.restOfDay')}>
             {queued.length ? (
               <>
