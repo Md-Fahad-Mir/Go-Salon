@@ -14,17 +14,19 @@ export default function StaffSelectPage() {
   const { professionalId = '' } = useParams();
   const navigate = useNavigate();
   const t = useT();
-  const { resolving, ready, exists, draft, professional, staff, staffMember, setStaff, rescheduleOf } =
+  const { resolving, ready, exists, draft, professional, staff, staffMember, setStaff, rescheduleOf, staffLocked, stepOf } =
     useWizardStep(professionalId);
 
   if (resolving) return <WizardLoading title={t('booking.preparing')} />;
   if (!exists) return <ProfessionalNotFound />;
   if (rescheduleOf) return <Navigate to={ROUTES.bookingDateTime(professionalId)} replace />;
   if (!ready || !draft || !professional) return <WizardLoading title={t('booking.stylist')} />;
+  // Booked from the stylist's own button: the choice is already made.
+  if (staffLocked) return <Navigate to={ROUTES.bookingService(professionalId)} replace />;
 
   return (
     <Screen className="bk-step bk-step-who">
-      <BookingStepHeader title={professional.name} step={1} label={t('booking.stylist')} />
+      <BookingStepHeader title={professional.name} {...stepOf('stylist')} label={t('booking.stylist')} />
       <ScreenBody>
         <div className="bk-intro">
           <h2>{t('booking.staffTitle')}</h2>

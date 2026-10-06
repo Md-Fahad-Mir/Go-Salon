@@ -1225,8 +1225,15 @@
   color: var(--text-secondary);
   overflow: hidden;
 }
-.thumb-lg { width: 100%; height: 11rem; border-radius: var(--radius-lg); }
+.thumb-lg { width: 100%; height: auto; min-height: 11rem; border-radius: var(--radius-lg); }
 .thumb > img { width: 100%; height: 100%; object-fit: cover; }
+
+/* The large frame shows the whole picture: a hairstyle reads from crown to
+   nape, and cropping it to a strip hid the cut. A tall photo is fitted
+   inside, on a quiet ground; the placeholder keeps the frame's height. */
+.thumb-lg:has(> img) { background: var(--bg-muted); }
+.thumb-lg > img { height: auto; max-height: 22rem; object-fit: contain; }
+.thumb-lg > .thumb-art { height: 11rem; }
 
 /* Placeholder imagery: a fine pinstripe weave instead of a broken <img>. */
 .thumb-art {

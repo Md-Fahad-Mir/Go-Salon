@@ -46,7 +46,7 @@ export default function DateTimePage() {
   const { professionalId = '' } = useParams();
   const navigate = useNavigate();
   const t = useT();
-  const { resolving, ready, exists, draft, professional, services, staff, staffMember, duration, setDateTime, setNotes, rescheduleOf } =
+  const { resolving, ready, exists, draft, professional, services, staff, staffMember, duration, setDateTime, setNotes, rescheduleOf, stepOf } =
     useWizardStep(professionalId);
   const bookings = useAppStore((s) => s.bookings);
 
@@ -123,7 +123,7 @@ export default function DateTimePage() {
       {rescheduleOf ? (
         <BookingStepHeader title={t('booking.pickNewTime')} />
       ) : (
-        <BookingStepHeader title={professional.name} step={3} label={t('booking.when')} />
+        <BookingStepHeader title={professional.name} {...stepOf('when')} label={t('booking.when')} />
       )}
       <ScreenBody>
         {rescheduleOf ? (

@@ -20,7 +20,7 @@ export default function ServiceSelectPage() {
   const t = useT();
   const { resolving,
     ready, exists, draft, professional, allServices, services, subtotal, duration,
-    staffMember, toggleService, setServices, rescheduleOf, hairstyleId,
+    staffMember, toggleService, setServices, rescheduleOf, hairstyleId, stepOf,
   } = useWizardStep(professionalId);
   const [expanded, setExpanded] = useState<string | null>(null);
   const preselected = useRef(false);
@@ -66,7 +66,7 @@ export default function ServiceSelectPage() {
 
   return (
     <Screen className="bk-step bk-step-menu">
-      <BookingStepHeader title={professional.name} step={2} label={t('booking.services')} />
+      <BookingStepHeader title={professional.name} {...stepOf('services')} label={t('booking.services')} />
       <ScreenBody>
         <div className="bk-intro">
           <h2>{t('booking.serviceTitle')}</h2>

@@ -417,6 +417,9 @@ export interface BookingDraft {
   /** Set when the wizard is re-entered to move an existing booking. */
   rescheduleOf?: string;
   hairstyleId?: string;
+  /** Started from one stylist's own "Book with" button: the stylist is
+      already chosen, so the wizard skips the step that asks. */
+  staffLocked?: boolean;
 }
 
 /* The provider domain lives in its own file but is part of the same model, so

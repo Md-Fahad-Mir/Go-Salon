@@ -4,6 +4,11 @@ import { useBooking } from '../../hooks/useBooking';
 import { useDirectoryStore } from '../../store/useDirectoryStore';
 import { ApiError, api } from '../../utils/api';
 
+/** The wizard in order. A booking that came with its stylist starts at the
+    second entry, so the progress bar counts three steps, not four. */
+const STEPS = ['stylist', 'services', 'when', 'confirm'] as const;
+export type WizardStepName = (typeof STEPS)[number];
+
 interface WizardStepOptions {
   /** Pause draft management while a submission is in flight, so the reset
       that follows a successful confirm() does not bounce the user around. */
@@ -69,6 +74,7 @@ export function useWizardStep(professionalId: string | undefined, options: Wizar
   const resolving = Boolean(professionalId) && !detailed && missing !== professionalId;
   const ready = exists && draft?.professionalId === professionalId;
   const rescheduleOf = ready ? draft?.rescheduleOf : undefined;
+  const staffLocked = ready ? Boolean(draft?.staffLocked) : false;
   const hold = options.hold ?? false;
 
   useEffect(() => {
@@ -85,5 +91,12 @@ export function useWizardStep(professionalId: string | undefined, options: Wizar
     resolving,
     rescheduleOf,
     hairstyleId: ready ? draft?.hairstyleId : undefined,
+    /** The stylist came with the booking; there is no step to choose one. */
+    staffLocked,
+    /** Where a step sits in this booking's wizard, for the progress bar. */
+    stepOf: (name: WizardStepName) => {
+      const steps = staffLocked ? STEPS.slice(1) : STEPS;
+      return { step: steps.indexOf(name) + 1, total: steps.length };
+    },
   };
 }

@@ -173,12 +173,14 @@ export function SalonProfile({ listingId, home = false }: SalonProfileProps) {
     : [{ id: 0, image: pro.coverImage || pro.avatar, caption: '' }];
 
   const book = () => {
-    start(pro.id, { hairstyleId });
+    start(pro.id, { hairstyleId, staffLocked: false });
     navigate(ROUTES.bookingStaff(pro.id));
   };
+  /* The stylist was chosen by pressing their own button, so asking again
+     would be a step that can only be answered one way: straight to the menu. */
   const bookWith = (staffId: string) => {
-    start(pro.id, { staffId, serviceIds: [], hairstyleId });
-    navigate(ROUTES.bookingStaff(pro.id));
+    start(pro.id, { staffId, serviceIds: [], hairstyleId, staffLocked: true });
+    navigate(ROUTES.bookingService(pro.id));
   };
   const onShare = async () => {
     const result = await shareOrCopy({

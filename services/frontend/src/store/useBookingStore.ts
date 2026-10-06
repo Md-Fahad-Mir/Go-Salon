@@ -9,7 +9,17 @@ interface BookingStore {
       same professional and no reschedule, so Back/Forward does not wipe it. */
   start: (
     professionalId: string,
-    options?: { hairstyleId?: string; rescheduleOf?: string; serviceIds?: string[]; staffId?: string },
+    options?: {
+      hairstyleId?: string;
+      rescheduleOf?: string;
+      serviceIds?: string[];
+      staffId?: string;
+      /** `true` from a stylist's own "Book with" button, which skips choosing
+          a stylist; `false` from the salon's "Book an appointment", which
+          always offers the choice; left out when the wizard re-enters its
+          own draft, so the draft keeps whichever it was. */
+      staffLocked?: boolean;
+    },
   ) => void;
   toggleService: (serviceId: string) => void;
   setServices: (serviceIds: string[]) => void;
@@ -34,9 +44,16 @@ export const useBookingStore = create<BookingStore>()(
           (current.rescheduleOf ?? null) === (options.rescheduleOf ?? null) &&
           !options.serviceIds;
         if (sameFlow) {
+          let next = current;
           if (options.hairstyleId && !current.hairstyleId) {
-            set({ draft: { ...current, hairstyleId: options.hairstyleId } });
+            next = { ...next, hairstyleId: options.hairstyleId };
           }
+          // Back out of "Book with Sara", press "Book an appointment": the
+          // stylist step has to come back, with Sara still ticked on it.
+          if (options.staffLocked === false && current.staffLocked) {
+            next = { ...next, staffLocked: undefined };
+          }
+          if (next !== current) set({ draft: next });
           return;
         }
         set({
@@ -49,6 +66,7 @@ export const useBookingStore = create<BookingStore>()(
             smsReminder: true,
             rescheduleOf: options.rescheduleOf,
             hairstyleId: options.hairstyleId,
+            staffLocked: options.staffLocked || undefined,
           },
         });
       },

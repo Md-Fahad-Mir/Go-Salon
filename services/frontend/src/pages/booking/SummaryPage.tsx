@@ -48,7 +48,7 @@ export default function SummaryPage() {
   const [moving, setMoving] = useState(false);
   const { resolving,
     ready, exists, draft, professional, services, staffMember, subtotal, duration, platformFee, total,
-    setAgreedPolicy, setSmsReminder, setDateTime, confirm, rescheduleOf,
+    setAgreedPolicy, setSmsReminder, setDateTime, confirm, rescheduleOf, staffLocked, stepOf,
   } = useWizardStep(professionalId, { hold: moving });
 
   if (resolving) return <WizardLoading title={t('booking.preparing')} />;
@@ -121,7 +121,7 @@ export default function SummaryPage() {
       {rescheduleOf ? (
         <BookingStepHeader title={t('booking.newTime')} />
       ) : (
-        <BookingStepHeader title={professional.name} step={4} label={t('booking.confirmStep')} />
+        <BookingStepHeader title={professional.name} {...stepOf('confirm')} label={t('booking.confirmStep')} />
       )}
       <ScreenBody>
         <div className="bk-intro">
@@ -178,7 +178,8 @@ export default function SummaryPage() {
           <Card>
             <div className="card-head">
               <h3 className="card-title">{t('booking.stylist')}</h3>
-              {rescheduleOf ? null : editLink(ROUTES.bookingStaff(professionalId), t('booking.editStylistAria'))}
+              {/* Booked from the stylist's own button: there is no stylist step to go back to. */}
+              {rescheduleOf || staffLocked ? null : editLink(ROUTES.bookingStaff(professionalId), t('booking.editStylistAria'))}
             </div>
             <p className="bk-sum-title">{stylistName}</p>
             {staffMember ? <p className="caption">{staffMember.title}</p> : null}
