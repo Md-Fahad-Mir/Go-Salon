@@ -212,7 +212,7 @@ export default function SalonProfilePage() {
             owner comes to look after those. It also inherits this page's
             answer to "which salon" for free — every request from here carries
             the active tenant. */}
-        <SalonQRSection />
+        <SalonQRSection name={profile.businessName} logo={profile.avatar} />
 
         {/* --- Contact ------------------------------------------------------ */}
         <section className="section" aria-labelledby="sp-contact">

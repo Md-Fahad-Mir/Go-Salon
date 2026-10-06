@@ -1,5 +1,6 @@
 import type { TimeSlot } from '../../types';
 import { useT } from '../../hooks/useLanguage';
+import { useUnavailableHint } from '../../hooks/useUnavailableHint';
 import type { TranslationKey } from '../../i18n';
 import { formatTime } from '../../utils/format';
 
@@ -17,6 +18,14 @@ const GROUPS: Array<{ id: Group; key: TranslationKey }> = [
   { id: 'evening', key: 'time.evening' },
 ];
 
+/** The server's word for why a time is not on offer (`availability.py`),
+    as something a customer can act on. */
+const REASONS: Record<string, TranslationKey> = {
+  taken: 'slots.whyTaken',
+  too_soon: 'slots.whyTooSoon',
+  outside_hours: 'slots.whyOutsideHours',
+};
+
 const groupOf = (time: string): Group => {
   const hour = Number(time.slice(0, 2));
   if (hour < 12) return 'morning';
@@ -24,12 +33,14 @@ const groupOf = (time: string): Group => {
   return 'evening';
 };
 
-/** Slot grid grouped by time of day. Booked slots stay visible but disabled
-    so the day's shape is readable. */
+/** Slot grid grouped by time of day. Booked slots stay visible but can't be
+    picked, so the day's shape is readable — and hovering or tapping one says
+    why it is gone. */
 export function TimeSlots({ slots, value, onChange }: TimeSlotsProps) {
   const t = useT();
+  const { hostRef, bind, node: hintNode } = useUnavailableHint();
   return (
-    <div className="stack bk-slots">
+    <div className="stack bk-slots unavail-host" ref={hostRef}>
       {GROUPS.map((group) => {
         const items = slots.filter((slot) => groupOf(slot.time) === group.id);
         if (!items.length) return null;
@@ -44,13 +55,14 @@ export function TimeSlots({ slots, value, onChange }: TimeSlotsProps) {
                   type="button"
                   className="slot"
                   aria-pressed={value === slot.time}
-                  disabled={!slot.available}
                   aria-label={
                     slot.available
                       ? formatTime(slot.time)
                       : t('slots.unavailable', { time: formatTime(slot.time) })
                   }
-                  onClick={() => onChange(slot.time)}
+                  {...(slot.available
+                    ? { onClick: () => onChange(slot.time) }
+                    : bind(slot.time, t(REASONS[slot.reason ?? ''] ?? 'slots.whyUnavailable')))}
                 >
                   {formatTime(slot.time)}
                 </button>
@@ -59,6 +71,7 @@ export function TimeSlots({ slots, value, onChange }: TimeSlotsProps) {
           </div>
         );
       })}
+      {hintNode}
     </div>
   );
 }

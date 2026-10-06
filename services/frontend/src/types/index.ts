@@ -253,6 +253,8 @@ export interface GalleryPhoto {
 export interface TimeSlot {
   time: string; // "HH:mm"
   available: boolean;
+  /** Why it is not on offer — `taken`, `too_soon` or `outside_hours`. */
+  reason?: string;
 }
 
 export interface BookingService {

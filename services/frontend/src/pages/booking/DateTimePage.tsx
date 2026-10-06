@@ -35,6 +35,7 @@ import {
   formatDayLabel,
   formatDuration,
   formatNumber,
+  formatPattern,
   formatTime,
   formatTimeRange,
 } from '../../utils/format';
@@ -152,6 +153,11 @@ export default function DateTimePage() {
              that day. Reading only the salon's week greyed out every day a
              stylist was free at a salon that had never saved one. */
           isDayDisabled={(key) => !isOpenOn(professional, key, staffMember, staff)}
+          disabledReason={(_key, day) =>
+            staffMember
+              ? t('booking.dayStaffOff', { name: firstNameOf(staffMember.name), day: formatPattern(day, 'EEEE') })
+              : t('booking.dayClosed', { day: formatPattern(day, 'EEEE') })
+          }
         />
 
         <div className="section" aria-live="polite">

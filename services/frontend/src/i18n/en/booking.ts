@@ -83,6 +83,8 @@ export const booking = {
   'booking.whenTitle': 'When?',
   'booking.showingStaffDays': 'Showing days {name} works.',
   'booking.closedDaysNote': 'Closed days are crossed out.',
+  'booking.dayClosed': 'Closed every {day} — pick another day.',
+  'booking.dayStaffOff': '{name} is off every {day} — pick another day.',
   'booking.availableTimes': 'Available times',
   'booking.fullyBooked': 'Fully booked that day — try another.',
   'booking.timeGone': '{time} has gone since you picked it. Choose another time.',

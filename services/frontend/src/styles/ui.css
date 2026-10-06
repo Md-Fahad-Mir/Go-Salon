@@ -1068,10 +1068,29 @@ button.list-row:hover, a.list-row:hover { background-color: var(--hover-bg); }
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
-  transition: background-color var(--speed) var(--ease);
+  transition:
+    background-color var(--speed) var(--ease),
+    color var(--speed) var(--ease),
+    text-decoration-color var(--speed) var(--ease);
 }
-.calendar-day:hover:not(:disabled) { background-color: var(--hover-bg); }
-.calendar-day:disabled { color: var(--text-dim); cursor: not-allowed; text-decoration: line-through; text-decoration-color: var(--border-strong); }
+.calendar-day:hover:not(:disabled):not([aria-disabled='true']) { background-color: var(--hover-bg); }
+/* `aria-disabled` is the one the app uses: those days stay pressable so they
+   can say why they are closed (hooks/useUnavailableHint.tsx). */
+.calendar-day:disabled,
+.calendar-day[aria-disabled='true'] { color: var(--text-dim); cursor: not-allowed; text-decoration: line-through; text-decoration-color: var(--border-strong); }
+/* Pointed at — by the cursor, or by the hint a tap opened. */
+.calendar-day[aria-disabled='true'][aria-describedby] {
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-ink);
+  text-decoration-color: currentColor;
+}
+@media (hover: hover) {
+  .calendar-day[aria-disabled='true']:hover {
+    background-color: var(--status-danger-bg);
+    color: var(--status-danger-ink);
+    text-decoration-color: currentColor;
+  }
+}
 .calendar-day[data-today='true'] { color: var(--accent-ink); font-weight: 700; }
 .calendar-day[data-today='true']::after {
   content: '';
@@ -1098,18 +1117,98 @@ button.list-row:hover, a.list-row:hover { background-color: var(--hover-bg); }
   font-variant-numeric: tabular-nums;
   transition: all var(--speed) var(--ease);
 }
-.slot:hover:not(:disabled) { border-color: var(--border-strong); }
+.slot:hover:not(:disabled):not([aria-disabled='true']) { border-color: var(--border-strong); }
 .slot[aria-pressed='true'] { background-color: var(--accent); border-color: var(--accent); color: var(--accent-on); }
 /* After the pressed rule, deliberately: a slot that was selected and has since
    been taken must read as unavailable, not as a valid choice. Equal specificity
    meant the pressed colour won and a dead time still looked picked. */
 .slot:disabled,
-.slot:disabled[aria-pressed='true'] {
+.slot:disabled[aria-pressed='true'],
+.slot[aria-disabled='true'],
+.slot[aria-disabled='true'][aria-pressed='true'] {
   color: var(--text-dim);
   background-color: transparent;
   border-color: var(--border-color);
   border-style: dashed;
   cursor: not-allowed;
+}
+.slot[aria-disabled='true'][aria-describedby] {
+  border-color: var(--status-danger);
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-ink);
+}
+@media (hover: hover) {
+  .slot[aria-disabled='true']:hover {
+    border-color: var(--status-danger);
+    background-color: var(--status-danger-bg);
+    color: var(--status-danger-ink);
+  }
+}
+
+/* --- Why a day or a time can't be picked -----------------------------------
+   The bubble from hooks/useUnavailableHint.tsx. It is placed in JS (left, top,
+   `--arrow-x`, `data-side`) and only animated here: it rises out of the
+   option it points at, and sinks back into it on the way out. */
+
+.unavail-host { position: relative; }
+.unavail-hint {
+  --hint-rise: 6px;
+  position: absolute;
+  z-index: 30;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  width: max-content;
+  max-width: min(20rem, calc(100% - 8px));
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  background-color: var(--bg-inverse);
+  color: var(--text-inverse);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  line-height: var(--leading-snug);
+  text-align: start;
+  text-wrap: balance;
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  transform-origin: var(--arrow-x, 50%) calc(100% + 6px);
+  animation: unavail-hint-in var(--speed) var(--ease-out) both;
+}
+.unavail-hint[data-side='bottom'] {
+  --hint-rise: -6px;
+  transform-origin: var(--arrow-x, 50%) -6px;
+}
+.unavail-hint::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: var(--arrow-x, 50%);
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 2px;
+  background-color: inherit;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.unavail-hint[data-side='bottom']::after { top: 0; }
+.unavail-hint[data-leaving] { animation: unavail-hint-out var(--speed-fast) var(--ease-in) both; }
+.unavail-hint-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: 0.0625rem;
+  border-radius: 50%;
+  background-color: var(--status-danger);
+  color: #fff;
+}
+@keyframes unavail-hint-in {
+  from { opacity: 0; transform: translateY(var(--hint-rise)) scale(0.92); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes unavail-hint-out {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateY(calc(var(--hint-rise) * 0.66)) scale(0.96); }
 }
 
 /* --- Carousel -------------------------------------------------------------- */

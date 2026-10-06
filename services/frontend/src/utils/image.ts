@@ -10,9 +10,12 @@ export const readAsDataUrl = (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
-export const loadImage = (src: string): Promise<HTMLImageElement> =>
+/** `crossOrigin` matters only for a picture hosted elsewhere that is going
+    onto a canvas: without it the canvas is tainted and cannot be saved. */
+export const loadImage = (src: string, crossOrigin?: 'anonymous'): Promise<HTMLImageElement> =>
   new Promise((resolve, reject) => {
     const image = new Image();
+    if (crossOrigin) image.crossOrigin = crossOrigin;
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error('Could not read that image.'));
     image.src = src;

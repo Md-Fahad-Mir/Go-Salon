@@ -7,6 +7,7 @@ import { Spinner } from '../../common/Spinner';
 import { useT } from '../../../hooks/useLanguage';
 import { useAppStore } from '../../../store/useAppStore';
 import { messageOf } from '../../../utils/errorMessage';
+import { brandQr } from '../../../utils/qrBrand';
 import { downloadBlob } from '../../../utils/share';
 import { tenantService } from '../../../utils/tenantService';
 
@@ -21,11 +22,25 @@ import { tenantService } from '../../../utils/tenantService';
    `Cache-Control: no-store` because the token behind the image can be rotated
    at any moment, and a screen holding yesterday's PNG would be showing a
    door that no longer opens. The object URL is revoked when it is replaced or
-   when the screen goes, so regenerating twice does not leak two of them. */
-export function SalonQRSection() {
+   when the screen goes, so regenerating twice does not leak two of them.
+
+   The server's PNG is only the code; the salon's logo is set into its centre
+   here (`brandQr`), and what is shown is what is saved. Kept apart from the
+   fetch so that changing the logo re-dresses the code without asking the
+   server for it again. */
+interface SalonQRSectionProps {
+  /** The business name, whose initials stand in when there is no logo. */
+  name?: string;
+  /** The salon's picture — a data URL or an https link. */
+  logo?: string | null;
+}
+
+export function SalonQRSection({ name = '', logo }: SalonQRSectionProps) {
   const t = useT();
   const toast = useAppStore((s) => s.toast);
 
+  /** The code as the server sent it, before the logo goes on. */
+  const [code, setCode] = useState<Blob | null>(null);
   const [src, setSrc] = useState<string | null>(null);
   const [blob, setBlob] = useState<Blob | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -51,7 +66,7 @@ export function SalonQRSection() {
       .qr()
       .then((image) => {
         if (!live) return;
-        show(image);
+        setCode(image);
         setFailure(null);
       })
       .catch((error: unknown) => live && setFailure(messageOf(error)));
@@ -59,6 +74,15 @@ export function SalonQRSection() {
       live = false;
     };
   }, [attempt]);
+
+  useEffect(() => {
+    if (!code) return;
+    let live = true;
+    brandQr(code, { name, src: logo }).then((image) => live && show(image));
+    return () => {
+      live = false;
+    };
+  }, [code, name, logo]);
 
   // Only on the way out: replacing one mid-session is handled by `show`.
   useEffect(
@@ -77,7 +101,7 @@ export function SalonQRSection() {
   const regenerate = async () => {
     setBusy(true);
     try {
-      show(await tenantService.regenerateQr());
+      setCode(await tenantService.regenerateQr());
       setFailure(null);
       toast('success', t('tenant.qrRegenerated'));
     } catch {

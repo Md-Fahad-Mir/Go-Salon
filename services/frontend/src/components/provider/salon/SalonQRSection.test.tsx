@@ -28,6 +28,10 @@ beforeEach(() => {
   useAppStore.setState(PRISTINE, true);
   store().setAuthStatus('ready');
   store().setSession({ user: owner(), access: 'a', refresh: 'r' });
+  // jsdom has no canvas, so the logo can never go on here. Said outright
+  // rather than left to jsdom's "not implemented" — and it is the fallback
+  // worth proving anyway: no logo, and the plain code still shows.
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
 });
 
 const open = () => mount({ at: '/pro/salon', routes: { '/pro/salon': <SalonQRSection /> } });
@@ -57,6 +61,16 @@ describe('showing the code', () => {
     // The token behind the image can rotate at any moment, which is why the
     // server sends `Cache-Control: no-store` and why this does not hold one.
     expect(sent).toHaveLength(1);
+  });
+
+  it('still shows the plain code when the logo cannot be set into it', async () => {
+    serve({ status: 200, blob: png('first') });
+    mount({
+      at: '/pro/salon',
+      routes: { '/pro/salon': <SalonQRSection name="Glow Studio" logo="data:image/png;base64,AAAA" /> },
+    });
+
+    expect(await screen.findByAltText(/QR code customers scan/)).toHaveAttribute('src', expect.stringContaining('blob:'));
   });
 
   it('holds a spinner rather than a broken image while it loads', () => {

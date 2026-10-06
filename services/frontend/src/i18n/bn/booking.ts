@@ -83,6 +83,8 @@ export const booking = {
   'booking.whenTitle': 'কখন?',
   'booking.showingStaffDays': '{name} যেদিন কাজ করেন সেই দিনগুলো দেখাচ্ছে।',
   'booking.closedDaysNote': 'বন্ধের দিনগুলো কাটা দেওয়া আছে।',
+  'booking.dayClosed': 'প্রতি {day} বন্ধ থাকে — অন্য দিন বাছুন।',
+  'booking.dayStaffOff': '{name} প্রতি {day} ছুটিতে থাকেন — অন্য দিন বাছুন।',
   'booking.availableTimes': 'খালি সময়',
   'booking.fullyBooked': 'ওই দিন সব বুক হয়ে গেছে — অন্য দিন দেখুন।',
   'booking.timeGone': 'আপনি বাছাই করার পর {time} আর খালি নেই। অন্য একটি সময় বেছে নিন।',

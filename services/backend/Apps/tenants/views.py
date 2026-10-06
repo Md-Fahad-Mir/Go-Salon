@@ -70,8 +70,16 @@ def qr_response(tenant: Tenant) -> HttpResponse:
     `PyPNGImage` rather than the default Pillow backend. This project has
     deliberately never had Pillow (see `Apps/common/images.py`), and a QR code
     is not a reason to introduce it.
+
+    Error correction is H, not the default M. The app lays the salon's logo
+    over the middle of this image (`SalonQRSection` in the frontend), and H is
+    what lets a scanner read straight through a patch that size.
     """
-    image = qrcode.make(join_url(tenant), image_factory=PyPNGImage)
+    image = qrcode.make(
+        join_url(tenant),
+        image_factory=PyPNGImage,
+        error_correction=qrcode.ERROR_CORRECT_H,
+    )
     buffer = io.BytesIO()
     image.save(buffer)
 

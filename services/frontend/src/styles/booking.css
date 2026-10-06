@@ -714,13 +714,29 @@
 /* After the pressed rule and above it, exactly as ui.css does: an hour that
    has been taken since it was picked has to look taken. */
 :root[data-app='customer'] .bk-step-when .slot:disabled,
-:root[data-app='customer'] .bk-step-when .slot:disabled[aria-pressed='true'] {
+:root[data-app='customer'] .bk-step-when .slot:disabled[aria-pressed='true'],
+:root[data-app='customer'] .bk-step-when .slot[aria-disabled='true'],
+:root[data-app='customer'] .bk-step-when .slot[aria-disabled='true'][aria-pressed='true'] {
   border-color: var(--border-color);
   border-style: dashed;
   background-color: transparent;
   background-image: none;
   color: var(--text-dim);
   box-shadow: none;
+}
+/* And when it is being asked why — the same tint ui.css gives it, restated at
+   this rule's weight so the dashed-and-dim above does not swallow it. */
+:root[data-app='customer'] .bk-step-when .slot[aria-disabled='true'][aria-describedby] {
+  border-color: var(--status-danger);
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-ink);
+}
+@media (hover: hover) {
+  :root[data-app='customer'] .bk-step-when .slot[aria-disabled='true']:hover {
+    border-color: var(--status-danger);
+    background-color: var(--status-danger-bg);
+    color: var(--status-danger-ink);
+  }
 }
 
 /* --- Step 4 · yes — the ledger --------------------------------------------
@@ -1240,7 +1256,7 @@
   }
   /* The hour follows the same three heights: flat, a gold edge under the
      cursor, and the gradient plus the glow once it is the one. */
-  :root[data-app='customer'] .bk-step-when .slot:hover:not(:disabled) {
+  :root[data-app='customer'] .bk-step-when .slot:hover:not(:disabled):not([aria-disabled='true']) {
     border-color: var(--accent);
   }
   :root[data-app='customer'] .pro-screen .pro-staff-card:hover {
@@ -1255,7 +1271,7 @@
 
 :root[data-app='customer'] .bk-step-who .option.bk-staff:active,
 :root[data-app='customer'] .bk-step-menu .option.bk-service:active,
-:root[data-app='customer'] .bk-step-when .slot:active:not(:disabled) {
+:root[data-app='customer'] .bk-step-when .slot:active:not(:disabled):not([aria-disabled='true']) {
   transform: translateY(1px);
 }
 
@@ -1264,7 +1280,7 @@
 @media (prefers-reduced-motion: reduce) {
   :root[data-app='customer'] .bk-step-who .option.bk-staff:active,
   :root[data-app='customer'] .bk-step-menu .option.bk-service:active,
-  :root[data-app='customer'] .bk-step-when .slot:active:not(:disabled),
+  :root[data-app='customer'] .bk-step-when .slot:active:not(:disabled):not([aria-disabled='true']),
   :root[data-app='customer'] .pro-screen .pro-staff-card:hover {
     transform: none;
   }
