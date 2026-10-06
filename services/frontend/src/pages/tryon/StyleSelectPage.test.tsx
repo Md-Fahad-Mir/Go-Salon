@@ -54,11 +54,12 @@ const credits = (used: number, total: number | null = 3) => ({
 });
 
 const PLANS = [
-  { slug: 'free', name: 'Free', price_bdt: 0, monthly_credits: 3, features: ['Book appointments'],
-    is_featured: false, is_default: true },
-  { slug: 'basic', name: 'Basic', price_bdt: 199, monthly_credits: 30, features: [],
-    is_featured: false, is_default: false },
-  { slug: 'advanced', name: 'Advanced', price_bdt: 499, monthly_credits: null, features: [],
+  { slug: 'free', name: 'Free', currency: 'BDT', price: '0.00', other_prices: [], monthly_credits: 3,
+    features: ['Book appointments'], is_featured: false, is_default: true },
+  { slug: 'basic', name: 'Basic', currency: 'BDT', price: '199.00', other_prices: [], monthly_credits: 30,
+    features: [], is_featured: false, is_default: false },
+  { slug: 'advanced', name: 'Advanced', currency: 'BDT', price: '499.00',
+    other_prices: [{ currency: 'USD', amount: '4.99' }], monthly_credits: null, features: [],
     is_featured: true, is_default: false },
 ];
 

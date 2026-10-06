@@ -13,6 +13,7 @@ import type {
   DailyPoint,
   Hairstyle,
   KpiDatum,
+  PlanPrice,
   SubscriptionTier,
   SubscriptionTierPlan,
   TimeRange,
@@ -95,7 +96,10 @@ interface SubscriptionTierApi {
   id: number;
   slug: string;
   name: string;
-  price_bdt: number;
+  currency: string;
+  /** Decimal strings, as DRF sends them: "500.00". */
+  price: string;
+  other_prices: { currency: string; amount: string }[];
   monthly_credits: number | null;
   features: string[];
   is_featured: boolean;
@@ -110,7 +114,9 @@ const toSubscriptionTier = (row: SubscriptionTierApi): SubscriptionTierPlan => (
   id: String(row.id),
   slug: row.slug,
   name: row.name,
-  price: row.price_bdt,
+  currency: row.currency,
+  price: Number(row.price),
+  otherPrices: row.other_prices.map((price) => ({ currency: price.currency, amount: Number(price.amount) })),
   monthlyCredits: row.monthly_credits,
   featured: row.is_featured,
   isDefault: row.is_default,
@@ -120,7 +126,9 @@ const toSubscriptionTier = (row: SubscriptionTierApi): SubscriptionTierPlan => (
 
 export interface SubscriptionTierInput {
   name: string;
+  currency: string;
   price: number;
+  otherPrices: PlanPrice[];
   /** Null for unlimited. */
   monthlyCredits: number | null;
   features: string[];
@@ -130,7 +138,9 @@ export interface SubscriptionTierInput {
 
 const subscriptionTierPayload = (input: Partial<SubscriptionTierInput>) => ({
   ...(input.name !== undefined && { name: input.name }),
-  ...(input.price !== undefined && { price_bdt: input.price }),
+  ...(input.currency !== undefined && { currency: input.currency }),
+  ...(input.price !== undefined && { price: input.price }),
+  ...(input.otherPrices !== undefined && { other_prices: input.otherPrices }),
   ...(input.monthlyCredits !== undefined && { monthly_credits: input.monthlyCredits }),
   ...(input.features !== undefined && { features: input.features }),
   ...(input.featured !== undefined && { is_featured: input.featured }),
@@ -140,7 +150,9 @@ const subscriptionTierPayload = (input: Partial<SubscriptionTierInput>) => ({
 /** The backend's field names, for mapping its per-field errors onto the form. */
 export const SUBSCRIPTION_TIER_FIELDS: Record<string, keyof SubscriptionTierInput> = {
   name: 'name',
-  price_bdt: 'price',
+  currency: 'currency',
+  price: 'price',
+  other_prices: 'otherPrices',
   monthly_credits: 'monthlyCredits',
   features: 'features',
   is_featured: 'featured',

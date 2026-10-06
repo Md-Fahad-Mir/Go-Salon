@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import type { SubscriptionPlan, TryOnCredits } from '../../types';
 import { ROUTES } from '../../constants';
 import { useT } from '../../hooks/useLanguage';
+import { useAppStore } from '../../store/useAppStore';
 import { creditsService, renewsOn } from '../../utils/creditsService';
 import { cn } from '../../utils/cn';
-import { formatBdt, formatNumber } from '../../utils/format';
+import { customerCurrency, formatMoney, localPrice } from '../../utils/currency';
+import { formatNumber } from '../../utils/format';
 import { Badge } from '../common/Badge';
 import { BottomSheet } from '../common/BottomSheet';
 import { Button } from '../common/Button';
@@ -19,7 +21,8 @@ interface PlansSheetProps {
   credits: TryOnCredits | undefined;
 }
 
-/** The plans, as the admin has them — what each costs and how many try-ons a
+/** The plans, as the admin has them — what each costs, in the customer's
+    own currency where the plan has a price in it, and how many try-ons a
     month it brings — with the account's own marked.
 
     Moving plan is the Go Salon team's to do until the app takes payments, so
@@ -28,6 +31,7 @@ interface PlansSheetProps {
 export function PlansSheet({ open, onClose, credits }: PlansSheetProps) {
   const t = useT();
   const navigate = useNavigate();
+  const currency = customerCurrency(useAppStore((s) => s.user?.phone));
   const [plans, setPlans] = useState<SubscriptionPlan[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -122,7 +126,7 @@ export function PlansSheet({ open, onClose, credits }: PlansSheetProps) {
                     ) : null}
                   </div>
                   <span className="tryon-plan-price">
-                    {formatBdt(plan.price)}
+                    {formatMoney(localPrice(plan, currency), currency)}
                     <small> {t('tryon.planPerMonth')}</small>
                   </span>
                 </div>

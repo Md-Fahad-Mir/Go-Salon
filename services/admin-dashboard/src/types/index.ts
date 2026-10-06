@@ -288,13 +288,25 @@ export interface PlatformSettings {
   emailEnabled: boolean;
 }
 
+/** A plan's monthly price in one currency. */
+export interface PlanPrice {
+  /** ISO 4217 — "BDT", "USD". */
+  currency: string;
+  amount: number;
+}
+
 export interface SubscriptionTierPlan {
   id: string;
   /** Minted from the name on creation and fixed after — accounts point at it. */
   slug: SubscriptionTier;
   name: string;
-  /** Monthly price in whole taka; 0 is a free plan. */
+  /** The main currency, ISO 4217: what `price` is in, and what a customer
+      sees when the plan has no price in theirs. */
+  currency: string;
+  /** Monthly price in `currency`; 0 is a free plan, free in every currency. */
   price: number;
+  /** The same plan in other currencies, in the order they were added. */
+  otherPrices: PlanPrice[];
   /** 360° try-on videos the plan allows each month — one credit each. Null
       is unlimited. */
   monthlyCredits: number | null;

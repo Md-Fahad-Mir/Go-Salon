@@ -1,20 +1,40 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from django.db import transaction
 from django.db.models import Max
 from django.utils.text import slugify
 from rest_framework import serializers
 
+from .currencies import CURRENCIES, DEFAULT_CURRENCY, ZERO_DECIMAL
 from .models import SubscriptionTier
 
-#: Room for any real plan's price, small enough that a slipped key on the
-#: dashboard is turned back rather than published.
-MAX_PRICE_BDT = 1_000_000
+#: A sanity ceiling on a price in any currency. It has to leave room for the
+#: weakest: a month priced in Iranian rial runs to millions.
+MAX_PRICE = Decimal('1000000000')
 #: A sanity ceiling on a plan's monthly try-ons; "unlimited" is null, not big.
 MAX_MONTHLY_CREDITS = 100_000
 #: A pricing card lists a handful of lines; past this it stops being one.
 MAX_FEATURES = 20
 MAX_FEATURE_LENGTH = 120
+
+
+def _whole_only(currency: str) -> str:
+    return f'{currency} has no smaller unit — enter a whole amount.'
+
+
+def _amount(value, currency: str) -> Decimal:
+    """`value` as a price in `currency`, or why it cannot be one — with the
+    currency named, since one message covers every row of other prices."""
+    field = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=0, max_value=MAX_PRICE)
+    try:
+        amount = field.run_validation(value)
+    except serializers.ValidationError as error:
+        raise serializers.ValidationError(f'{currency}: {error.detail[0]}') from None
+    if currency in ZERO_DECIMAL and amount != amount.to_integral_value():
+        raise serializers.ValidationError(_whole_only(currency))
+    return amount
 
 
 def _unique_slug(name: str) -> str:
@@ -37,17 +57,19 @@ class SubscriptionTierSerializer(serializers.ModelSerializer):
         required=False,
         max_length=MAX_FEATURES,
     )
+    #: `[{"currency": "USD", "amount": "5.00"}]` — see `validate_other_prices`.
+    other_prices = serializers.ListField(child=serializers.DictField(), required=False)
     subscriber_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = SubscriptionTier
         fields = (
-            'id', 'slug', 'name', 'price_bdt', 'monthly_credits', 'features', 'is_featured', 'is_default',
-            'position', 'subscriber_count', 'created_at', 'updated_at',
+            'id', 'slug', 'name', 'currency', 'price', 'other_prices', 'monthly_credits', 'features',
+            'is_featured', 'is_default', 'position', 'subscriber_count', 'created_at', 'updated_at',
         )
         read_only_fields = ('id', 'slug', 'position', 'subscriber_count', 'created_at', 'updated_at')
         extra_kwargs = {
-            'price_bdt': {'max_value': MAX_PRICE_BDT},
+            'price': {'min_value': 0, 'max_value': MAX_PRICE},
             'monthly_credits': {'max_value': MAX_MONTHLY_CREDITS},
             # DRF would check the one-default constraint before `update()`
             # gets to move the flag off the old default, and refuse.
@@ -64,6 +86,32 @@ class SubscriptionTierSerializer(serializers.ModelSerializer):
         if others.exists():
             raise serializers.ValidationError('Another plan already has that name.')
         return value
+
+    def validate_currency(self, value: str) -> str:
+        value = value.strip().upper()
+        if value not in CURRENCIES:
+            raise serializers.ValidationError('Choose a currency from the list.')
+        return value
+
+    def validate_other_prices(self, value: list[dict]) -> list[dict]:
+        """Each price as it is stored: an ISO code and a decimal string, in
+        the order given, every currency at most once and none of them free."""
+        prices = []
+        seen: set[str] = set()
+        for entry in value:
+            currency = str(entry.get('currency') or '').strip().upper()
+            if not currency:
+                raise serializers.ValidationError('Choose a currency for every price.')
+            if currency not in CURRENCIES:
+                raise serializers.ValidationError(f'{currency} is not a currency code we know.')
+            if currency in seen:
+                raise serializers.ValidationError(f'{currency} is listed twice.')
+            seen.add(currency)
+            amount = _amount(entry.get('amount'), currency)
+            if not amount:
+                raise serializers.ValidationError(f'Enter a {currency} price above 0.')
+            prices.append({'currency': currency, 'amount': str(amount)})
+        return prices
 
     def validate_features(self, value: list[str]) -> list[str]:
         # Blank lines dropped, repeats kept once, in the order typed.
@@ -83,6 +131,26 @@ class SubscriptionTierSerializer(serializers.ModelSerializer):
                 'New accounts need a plan to start on. Make another plan the default instead.'
             )
         return value
+
+    def validate(self, attrs: dict) -> dict:
+        """The prices the plan will have once this save lands, checked
+        together: a PATCH that changes only the currency still has to suit
+        the price the plan keeps."""
+        tier = self.instance
+        currency = attrs.get('currency', tier.currency if tier else DEFAULT_CURRENCY)
+        price = attrs.get('price', tier.price if tier else Decimal(0))
+        if currency in ZERO_DECIMAL and price != price.to_integral_value():
+            raise serializers.ValidationError({'price': [_whole_only(currency)]})
+        if not price:
+            # Free is free in every currency.
+            attrs['other_prices'] = []
+            return attrs
+        others = attrs.get('other_prices', tier.other_prices if tier else [])
+        if any(entry['currency'] == currency for entry in others):
+            raise serializers.ValidationError(
+                {'other_prices': [f'{currency} is this plan’s main currency already.']}
+            )
+        return attrs
 
     @transaction.atomic
     def create(self, validated_data: dict) -> SubscriptionTier:
@@ -119,5 +187,8 @@ class SubscriptionTierCatalogueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SubscriptionTier
-        fields = ('slug', 'name', 'price_bdt', 'monthly_credits', 'features', 'is_featured', 'is_default')
+        fields = (
+            'slug', 'name', 'currency', 'price', 'other_prices', 'monthly_credits', 'features', 'is_featured',
+            'is_default',
+        )
         read_only_fields = fields

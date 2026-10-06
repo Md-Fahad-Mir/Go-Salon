@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { CalendarSync, Check, Crown, RotateCw, Undo2 } from "lucide-react";
+import { CalendarSync, Check, Crown, Globe, RotateCw, Undo2 } from "lucide-react";
 import SectionIntro from "./ui/SectionIntro";
 import Reveal from "./ui/Reveal";
 import { useTiers } from "../hooks/useTiers";
@@ -18,13 +18,54 @@ const RULES = [
   { icon: Undo2, text: "A try-on that fails gives its credit back" },
 ];
 
-const formatPrice = (bdt) => `৳${Number(bdt).toLocaleString("en-IN")}`;
+/** Signs more than one currency writes itself with — "$" alone could be
+    any of a dozen dollars, so those currencies keep their code. */
+const SHARED_SIGNS = new Set(["$", "£", "¥", "₩", "€"]);
+
+const signIn = (currency, display) => {
+  try {
+    return (
+      new Intl.NumberFormat("en-US", { style: "currency", currency, currencyDisplay: display })
+        .formatToParts(1)
+        .find((part) => part.type === "currency")?.value ?? currency
+    );
+  } catch {
+    return currency;
+  }
+};
+
+/** "$", "€", "CA$" where English has a sign for the currency; its own local
+    sign where English only has the code and the sign is a real one of its
+    own ("৳", "₦"); the code otherwise ("SGD", "SAR"). Signs added to Unicode
+    since 2021 are skipped — most fonts do not have them yet. */
+const signOf = (currency) => {
+  const sign = signIn(currency, "symbol");
+  if (sign !== currency) return sign;
+  const local = signIn(currency, "narrowSymbol");
+  const usable =
+    /\p{Sc}/u.test(local) &&
+    !SHARED_SIGNS.has(local) &&
+    [...local].every((char) => char.codePointAt(0) < 0x20c0);
+  return usable ? local : currency;
+};
+
+/** "৳1,200", "$4.99", "SGD 5" — cents only when there are some, and taka
+    and rupees grouped the way South Asia writes them (1,00,000). */
+const formatPrice = (amount, currency) => {
+  const sign = signOf(currency);
+  const gap = sign.length > 1 && /[\p{L}.]$/u.test(sign) ? "\u00a0" : "";
+  const number = amount.toLocaleString(
+    currency === "BDT" || currency === "INR" ? "en-IN" : "en-US",
+    Number.isInteger(amount) ? {} : { minimumFractionDigits: 2, maximumFractionDigits: 2 },
+  );
+  return `${sign}${gap}${number}`;
+};
 
 const credits = (n) => (n == null ? "Unlimited try-ons" : `${n} try-ons / month`);
 
 const TierCard = ({ tier, index }) => {
   const featured = tier.is_featured;
-  const free = Number(tier.price_bdt) === 0;
+  const free = tier.price === 0;
 
   return (
     <motion.li
@@ -56,10 +97,17 @@ const TierCard = ({ tier, index }) => {
 
       <div className="mt-7 flex items-baseline gap-2">
         <span className={`text-6xl font-light tracking-[-0.04em] ${featured ? "text-gilded" : "text-ink"}`}>
-          {formatPrice(tier.price_bdt)}
+          {formatPrice(tier.price, tier.currency)}
         </span>
         <span className={featured ? "text-ivory-soft" : "text-ink-dim"}>/ month</span>
       </div>
+
+      {!free && tier.other_prices.length > 0 && (
+        <p className={`mt-2 flex items-start gap-2 text-sm ${featured ? "text-ivory-soft" : "text-ink-dim"}`}>
+          <Globe size={14} className="mt-0.5 shrink-0" />
+          <span>Also {tier.other_prices.map((price) => formatPrice(price.amount, price.currency)).join(" · ")}</span>
+        </p>
+      )}
 
       <p
         className={`mt-5 inline-flex w-fit items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium ${
@@ -110,12 +158,12 @@ const Pricing = () => {
           title={
             <>
               Start free. <span className="text-gilded-deep font-normal italic">Try on more</span> when
-              you’re hooked.
+              you’re curious.
             </>
           }
         >
           Every plan can browse salons and book appointments. Plans differ in how many 360° try-ons
-          you get each month — prices in taka, billed monthly.
+          you get each month — billed monthly.
         </SectionIntro>
 
         <ul className="mx-auto mt-16 grid max-w-6xl items-stretch gap-6 md:grid-cols-[repeat(auto-fit,minmax(0,1fr))] lg:mt-20 lg:gap-8">

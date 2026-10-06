@@ -58,14 +58,16 @@ export const DHAKA_AREAS = [
 ];
 
 /* The plans as seeded (Apps/subscriptions/migrations/0002_seed_tiers.py and
-   0003_tier_monthly_credits.py). Admins can edit tiers from the dashboard, so
-   when VITE_API_BASE_URL is set the live list from /subscription-tiers/
-   replaces these. */
+   0003_tier_monthly_credits.py), in the shape /subscription-tiers/ returns
+   them. Admins can edit tiers from the dashboard, so when VITE_API_BASE_URL
+   is set the live list replaces these. */
 export const FALLBACK_TIERS = [
   {
     slug: "free",
     name: "Free",
-    price_bdt: 0,
+    currency: "BDT",
+    price: 0,
+    other_prices: [],
     monthly_credits: 3,
     features: ["Browse salons and barbers", "Book appointments", "3 AI try-ons per month"],
     is_featured: false,
@@ -74,7 +76,9 @@ export const FALLBACK_TIERS = [
   {
     slug: "basic",
     name: "Basic",
-    price_bdt: 199,
+    currency: "BDT",
+    price: 199,
+    other_prices: [],
     monthly_credits: 30,
     features: [
       "Everything in Free",
@@ -88,7 +92,9 @@ export const FALLBACK_TIERS = [
   {
     slug: "advanced",
     name: "Advanced",
-    price_bdt: 499,
+    currency: "BDT",
+    price: 499,
+    other_prices: [],
     monthly_credits: null,
     features: [
       "Everything in Basic",

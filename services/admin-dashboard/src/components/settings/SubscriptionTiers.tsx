@@ -1,10 +1,11 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import {
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Check,
   Crown,
+  Globe,
   Pencil,
   Plus,
   RefreshCw,
@@ -12,8 +13,9 @@ import {
   Star,
   Trash2,
   Users,
+  X,
 } from 'lucide-react';
-import type { SubscriptionTierPlan } from '../../types';
+import type { PlanPrice, SubscriptionTierPlan } from '../../types';
 import { useStore } from '../../store/useStore';
 import {
   SUBSCRIPTION_TIER_FIELDS,
@@ -21,10 +23,20 @@ import {
   type SubscriptionTierInput,
 } from '../../utils/adminService';
 import { ApiError } from '../../utils/apiError';
+import {
+  currencyName,
+  currencySymbol,
+  DEFAULT_CURRENCY,
+  formatAmount,
+  formatMoney,
+  isWholeOnly,
+  nextCurrency,
+} from '../../utils/currency';
 import { formatNumber } from '../../utils/format';
 import { EmptyState } from '../ui/EmptyState';
 import { Field } from '../ui/Field';
 import { Modal } from '../ui/Modal';
+import { MoneyInput } from '../ui/MoneyInput';
 import { RowMenu } from '../ui/RowMenu';
 import type { RowMenuItem } from '../ui/RowMenu';
 import { Skeleton } from '../ui/Skeleton';
@@ -34,7 +46,7 @@ import { Toggle } from '../ui/Toggle';
 import { ToggleRow } from './SettingRow';
 
 /** Mirror the backend's ceilings (Apps/subscriptions/serializers.py). */
-const MAX_PRICE_BDT = 1_000_000;
+const MAX_PRICE = 1_000_000_000;
 const MAX_MONTHLY_CREDITS = 100_000;
 
 const messageFor = (error: unknown): string =>
@@ -50,6 +62,25 @@ const creditsLine = (monthlyCredits: number | null): string =>
 
 const subscribers = (count: number): string =>
   count === 0 ? 'No subscribers yet' : `${formatNumber(count)} ${count === 1 ? 'subscriber' : 'subscribers'}`;
+
+const perMonth = (plan: SubscriptionTierPlan): string =>
+  plan.price === 0 ? 'Free' : `${formatMoney(plan.price, plan.currency)} / month`;
+
+/** Why `text` is not a monthly price in `currency`, or null when it is one.
+    The backend's checks, so a mistake shows before the save does. */
+const priceProblem = (text: string, currency: string, { free }: { free: boolean }): string | null => {
+  const value = text.trim();
+  const amount = /^\d+(\.\d+)?$/.test(value) ? Number(value) : Number.NaN;
+  if (Number.isNaN(amount) || (!free && amount === 0)) {
+    return free ? 'Enter an amount — 0 for a free plan.' : 'Enter a price above 0.';
+  }
+  if (amount > MAX_PRICE) return `Keep it under ${formatMoney(MAX_PRICE, currency)}.`;
+  if (isWholeOnly(currency) && !Number.isInteger(amount)) {
+    return `${currency} has no smaller unit — enter a whole amount.`;
+  }
+  if ((value.split('.')[1] ?? '').length > 2) return 'Use at most two decimal places.';
+  return null;
+};
 
 /* --------------------------------------------------------------------------
    The card — a plan as a pricing page would show it
@@ -93,10 +124,20 @@ function TierCard({ plan, preview, menu, onEdit }: TierCardProps) {
       </h4>
 
       <p className="tier-price">
-        <span className="tier-currency">৳</span>
-        <span className="tier-amount">{formatNumber(plan.price)}</span>
+        <span className="tier-currency" aria-hidden="true" title={currencyName(plan.currency)}>
+          {currencySymbol(plan.currency)}
+        </span>
+        <span className="sr-only">{currencyName(plan.currency)}</span>
+        <span className="tier-amount">{formatAmount(plan.price)}</span>
         <span className="tier-period">/ month</span>
       </p>
+
+      {plan.price > 0 && plan.otherPrices.length ? (
+        <p className="tier-also">
+          <Globe size={13} strokeWidth={1.8} aria-hidden="true" />
+          <span>Also {plan.otherPrices.map((price) => formatMoney(price.amount, price.currency)).join(' · ')}</span>
+        </p>
+      ) : null}
 
       <p className="tier-credits">
         <Sparkles size={13} strokeWidth={1.9} aria-hidden="true" />
@@ -138,10 +179,24 @@ function TierCard({ plan, preview, menu, onEdit }: TierCardProps) {
    Add / edit — a form beside a live preview of the card
    -------------------------------------------------------------------------- */
 
+/** One of the plan's other prices, as typed. */
+interface PriceRow {
+  /** Keeps a row's boxes and its error together while rows come and go. */
+  key: number;
+  currency: string;
+  amount: string;
+}
+
+let lastRowKey = 0;
+const priceRow = (currency: string, amount = ''): PriceRow => ({ key: ++lastRowKey, currency, amount });
+
 interface TierForm {
   name: string;
-  /** Kept as typed, so the box can be empty mid-edit. */
+  /** The main currency, and the main price in it as typed — so the box can
+      be empty mid-edit. */
+  currency: string;
   price: string;
+  otherPrices: PriceRow[];
   /** Try-ons a month, as typed; ignored while `unlimited`. */
   credits: string;
   unlimited: boolean;
@@ -152,35 +207,66 @@ interface TierForm {
 
 type TierErrors = Partial<Record<keyof SubscriptionTierInput, string>>;
 
-const formFor = (tier: SubscriptionTierPlan | null): TierForm =>
+const formFor = (tier: SubscriptionTierPlan | null, startCurrency: string): TierForm =>
   tier
     ? {
         name: tier.name,
+        currency: tier.currency,
         price: String(tier.price),
+        otherPrices: tier.otherPrices.map((price) => priceRow(price.currency, String(price.amount))),
         credits: tier.monthlyCredits === null ? '' : String(tier.monthlyCredits),
         unlimited: tier.monthlyCredits === null,
         features: tier.features,
         featured: tier.featured,
         isDefault: tier.isDefault,
       }
-    : { name: '', price: '', credits: '', unlimited: false, features: [], featured: false, isDefault: false };
+    : {
+        name: '',
+        currency: startCurrency,
+        price: '',
+        otherPrices: [],
+        credits: '',
+        unlimited: false,
+        features: [],
+        featured: false,
+        isDefault: false,
+      };
 
 interface TierDialogProps {
   /** Null to add a new plan. */
   tier: SubscriptionTierPlan | null;
+  /** The main currency a new plan starts in. */
+  startCurrency: string;
   onClose: () => void;
   onSaved: (plan: SubscriptionTierPlan) => void;
 }
 
-function TierDialog({ tier, onClose, onSaved }: TierDialogProps) {
+function TierDialog({ tier, startCurrency, onClose, onSaved }: TierDialogProps) {
   const pushToast = useStore((state) => state.pushToast);
-  const [form, setForm] = useState<TierForm>(() => formFor(tier));
+  const pricesId = useId();
+  const addPriceRef = useRef<HTMLButtonElement>(null);
+  const [form, setForm] = useState<TierForm>(() => formFor(tier, startCurrency));
   const [touched, setTouched] = useState(false);
   const [serverErrors, setServerErrors] = useState<TierErrors>({});
   const [saving, setSaving] = useState(false);
+  /** The row just added, so its amount takes the focus. */
+  const [addedRow, setAddedRow] = useState<number | null>(null);
 
-  const price = form.price.trim() === '' ? Number.NaN : Number(form.price);
-  const priceValid = Number.isInteger(price) && price >= 0 && price <= MAX_PRICE_BDT;
+  const priceError = priceProblem(form.price, form.currency, { free: true });
+  const price = priceError ? Number.NaN : Number(form.price);
+  /** Free is free in every currency: other prices are put aside, not lost,
+      while the price reads 0. */
+  const free = price === 0;
+  const rowErrors = new Map(
+    form.otherPrices.map((row) => [row.key, priceProblem(row.amount, row.currency, { free: false })]),
+  );
+  const otherPricesValid = free || [...rowErrors.values()].every((error) => error === null);
+  const otherPrices: PlanPrice[] = free
+    ? []
+    : form.otherPrices
+        .filter((row) => rowErrors.get(row.key) === null)
+        .map((row) => ({ currency: row.currency, amount: Number(row.amount) }));
+  const usedCurrencies = [form.currency, ...form.otherPrices.map((row) => row.currency)];
   const nameValid = form.name.trim().length >= 2;
   const credits = form.credits.trim() === '' ? Number.NaN : Number(form.credits);
   const creditsValid =
@@ -188,12 +274,8 @@ function TierDialog({ tier, onClose, onSaved }: TierDialogProps) {
 
   const errors: TierErrors = {
     name: touched && !nameValid ? 'Give this plan a name.' : serverErrors.name,
-    price:
-      touched && !priceValid
-        ? price > MAX_PRICE_BDT
-          ? `Keep it under ৳${formatNumber(MAX_PRICE_BDT)}.`
-          : 'Enter a whole amount in taka — 0 for a free plan.'
-        : serverErrors.price,
+    price: (touched ? priceError : null) ?? serverErrors.price ?? serverErrors.currency,
+    otherPrices: free ? undefined : serverErrors.otherPrices,
     monthlyCredits:
       touched && !creditsValid
         ? credits > MAX_MONTHLY_CREDITS
@@ -210,19 +292,60 @@ function TierDialog({ tier, onClose, onSaved }: TierDialogProps) {
     setServerErrors((current) => {
       const next = { ...current };
       if ('name' in patch) delete next.name;
-      if ('price' in patch) delete next.price;
+      if ('price' in patch || 'currency' in patch) {
+        delete next.price;
+        delete next.currency;
+        // A new main currency can settle a clash with one of the others.
+        delete next.otherPrices;
+      }
+      if ('otherPrices' in patch) delete next.otherPrices;
       if ('credits' in patch || 'unlimited' in patch) delete next.monthlyCredits;
       if ('features' in patch) delete next.features;
       return next;
     });
   };
 
+  /** Picking a currency the plan already has another price in swaps the
+      two, so neither price is lost. */
+  const pickCurrency = (currency: string) => {
+    const match = form.otherPrices.find((row) => row.currency === currency);
+    update(
+      match
+        ? {
+            currency,
+            price: match.amount,
+            otherPrices: form.otherPrices.map((row) =>
+              row === match ? { ...row, currency: form.currency, amount: form.price } : row,
+            ),
+          }
+        : { currency },
+    );
+  };
+
+  const addPrice = () => {
+    const currency = nextCurrency(usedCurrencies);
+    if (!currency) return;
+    const row = priceRow(currency);
+    setAddedRow(row.key);
+    update({ otherPrices: [...form.otherPrices, row] });
+  };
+
+  const changePrice = (key: number, patch: Partial<PriceRow>) =>
+    update({ otherPrices: form.otherPrices.map((row) => (row.key === key ? { ...row, ...patch } : row)) });
+
+  const removePrice = (key: number) => {
+    update({ otherPrices: form.otherPrices.filter((row) => row.key !== key) });
+    addPriceRef.current?.focus();
+  };
+
   const save = async () => {
     setTouched(true);
-    if (!nameValid || !priceValid || !creditsValid) return;
+    if (!nameValid || priceError || !otherPricesValid || !creditsValid) return;
     const input: SubscriptionTierInput = {
       name: form.name.trim(),
+      currency: form.currency,
       price,
+      otherPrices,
       monthlyCredits: form.unlimited ? null : credits,
       features: form.features,
       featured: form.featured,
@@ -253,7 +376,9 @@ function TierDialog({ tier, onClose, onSaved }: TierDialogProps) {
     id: tier?.id ?? 'new',
     slug: tier?.slug ?? '',
     name: form.name.trim() || 'Plan name',
-    price: Number.isFinite(price) && price >= 0 ? Math.floor(price) : 0,
+    currency: form.currency,
+    price: Number.isNaN(price) ? 0 : price,
+    otherPrices,
     monthlyCredits: form.unlimited ? null : Number.isFinite(credits) && credits >= 0 ? Math.floor(credits) : 0,
     featured: form.featured,
     isDefault: form.isDefault,
@@ -302,20 +427,91 @@ function TierDialog({ tier, onClose, onSaved }: TierDialogProps) {
                 onChange={(event) => update({ name: event.target.value })}
               />
             </Field>
-            <Field label="Monthly price" required error={errors.price} hint="0 makes it a free plan.">
-              <UnitInput
-                unit="৳"
-                placement="prefix"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                max={MAX_PRICE_BDT}
-                step={1}
+            <Field
+              label="Monthly price"
+              required
+              error={errors.price}
+              hint="The main price, for anyone without one in their currency. 0 makes it free."
+            >
+              <MoneyInput
+                currency={form.currency}
+                onCurrencyChange={pickCurrency}
+                currencyLabel="Main currency"
+                amount={form.price}
+                onAmountChange={(amount) => update({ price: amount })}
+                max={MAX_PRICE}
                 placeholder="0"
-                value={form.price}
-                onChange={(event) => update({ price: event.target.value })}
               />
             </Field>
+            <fieldset className="form-span-2 tier-prices" aria-describedby={`${pricesId}-note`}>
+              <legend className="label">Prices in other currencies</legend>
+              {free ? (
+                <p className="hint tier-prices-note" id={`${pricesId}-note`}>
+                  A free plan is free in every currency.
+                </p>
+              ) : (
+                <>
+                  {form.otherPrices.length ? (
+                    <ul className="tier-prices-list">
+                      {form.otherPrices.map((row) => {
+                        const error = touched ? rowErrors.get(row.key) : null;
+                        const errorId = `${pricesId}-${row.key}-error`;
+                        return (
+                          <li key={row.key}>
+                            <div className="tier-prices-row">
+                              <MoneyInput
+                                currency={row.currency}
+                                onCurrencyChange={(currency) => changePrice(row.key, { currency })}
+                                taken={usedCurrencies}
+                                amount={row.amount}
+                                onAmountChange={(amount) => changePrice(row.key, { amount })}
+                                aria-label={`Price in ${currencyName(row.currency)}`}
+                                aria-invalid={error ? true : undefined}
+                                aria-describedby={error ? errorId : undefined}
+                                autoFocus={row.key === addedRow}
+                                max={MAX_PRICE}
+                                placeholder={isWholeOnly(row.currency) ? '0' : '0.00'}
+                              />
+                              <button
+                                type="button"
+                                className="icon-btn"
+                                aria-label={`Remove the ${row.currency} price`}
+                                onClick={() => removePrice(row.key)}
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                            {error ? (
+                              <p className="field-error" id={errorId}>
+                                {error}
+                              </p>
+                            ) : null}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+                  <button
+                    ref={addPriceRef}
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={addPrice}
+                    disabled={!nextCurrency(usedCurrencies)}
+                  >
+                    <Plus size={14} /> Add a currency
+                  </button>
+                  {errors.otherPrices ? (
+                    <p className="field-error" id={`${pricesId}-note`}>
+                      {errors.otherPrices}
+                    </p>
+                  ) : (
+                    <p className="hint" id={`${pricesId}-note`}>
+                      A customer who pays in one of these sees that price; everyone else sees the main one.
+                    </p>
+                  )}
+                </>
+              )}
+            </fieldset>
             <div className="form-span-2 tier-credits-row">
               <Field
                 label="Try-on credits a month"
@@ -486,7 +682,7 @@ function DeleteTierDialog({ tier, tiers, onClose, onDeleted }: DeleteTierDialogP
             <select className="select" value={moveTo} onChange={(event) => setMoveTo(event.target.value)}>
               {others.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name} · {item.price === 0 ? 'Free' : `৳${formatNumber(item.price)} / month`}
+                  {item.name} · {perMonth(item)}
                 </option>
               ))}
             </select>
@@ -654,7 +850,7 @@ export function SubscriptionTiers() {
           </span>
           <div className="set-card-titles">
             <h3 id="tiers-heading">Subscription tiers</h3>
-            <p>Monthly plans, priced in taka and listed in the order customers see them.</p>
+            <p>Monthly plans in any currency, listed in the order customers see them.</p>
           </div>
         </div>
         <div className="tiers-head-end">
@@ -716,7 +912,13 @@ export function SubscriptionTiers() {
       </div>
 
       {editing !== undefined ? (
-        <TierDialog key={editing?.id ?? 'new'} tier={editing} onClose={() => setEditing(undefined)} onSaved={saved} />
+        <TierDialog
+          key={editing?.id ?? 'new'}
+          tier={editing}
+          startCurrency={tiers?.at(-1)?.currency ?? DEFAULT_CURRENCY}
+          onClose={() => setEditing(undefined)}
+          onSaved={saved}
+        />
       ) : null}
 
       {pendingDelete && tiers ? (

@@ -602,10 +602,13 @@
   .form-grid .unit-input { min-height: 2.625rem; }
 }
 
-/* A phone number: the country picker and the number, as one box. The flag and
-   code are what shows; a native select, transparent and stretched over them,
-   is what opens — the platform's own list, searchable by typing. */
-.phone-input {
+/* A phone number — the country picker and the number — and a price — the
+   currency picker and the amount — each as one box. The flag and calling
+   code, or the currency code, are what shows; a native select, transparent
+   and stretched over them, is what opens — the platform's own list,
+   searchable by typing. */
+.phone-input,
+.money-input {
   display: flex;
   align-items: stretch;
   width: 100%;
@@ -619,12 +622,17 @@
     border-color var(--transition-speed) var(--ease),
     box-shadow var(--transition-speed) var(--ease);
 }
-.phone-input:hover { border-color: var(--border-strong); }
-.phone-input:focus-within { border-color: var(--input-focus); box-shadow: 0 0 0 4px var(--ring); }
-.phone-input:has(input[aria-invalid='true']) { border-color: var(--status-danger); }
-.phone-input[data-disabled='true'] { opacity: 0.55; }
+.phone-input:hover,
+.money-input:hover { border-color: var(--border-strong); }
+.phone-input:focus-within,
+.money-input:focus-within { border-color: var(--input-focus); box-shadow: 0 0 0 4px var(--ring); }
+.phone-input:has(input[aria-invalid='true']),
+.money-input:has(input[aria-invalid='true']) { border-color: var(--status-danger); }
+.phone-input[data-disabled='true'],
+.money-input[data-disabled='true'] { opacity: 0.55; }
 
-.phone-input input {
+.phone-input input,
+.money-input input {
   flex: 1;
   min-width: 0;
   padding-inline: 0.875rem;
@@ -635,10 +643,23 @@
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
 }
-.phone-input input::placeholder { color: var(--text-tertiary); }
-.phone-input input:disabled { cursor: not-allowed; }
+.phone-input input::placeholder,
+.money-input input::placeholder { color: var(--text-tertiary); }
+.phone-input input:disabled,
+.money-input input:disabled { cursor: not-allowed; }
 
-.phone-input-country {
+/* An amount reads like the unit input's: a little heavier, no spinner. */
+.money-input input {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.money-input input::-webkit-outer-spin-button,
+.money-input input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.phone-input-country,
+.money-input-currency {
   position: relative;
   flex-shrink: 0;
   display: flex;
@@ -654,8 +675,10 @@
   white-space: nowrap;
   cursor: pointer;
 }
-.phone-input-country svg { flex-shrink: 0; opacity: 0.6; }
-.phone-input-country select {
+.phone-input-country svg,
+.money-input-currency svg { flex-shrink: 0; opacity: 0.6; }
+.phone-input-country select,
+.money-input-currency select {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -664,14 +687,17 @@
   /* Under 16px and iOS zooms the page when it opens. */
   font-size: 1rem;
 }
-.phone-input-country select:disabled { cursor: not-allowed; }
-.phone-input-country:has(select:focus-visible) {
+.phone-input-country select:disabled,
+.money-input-currency select:disabled { cursor: not-allowed; }
+.phone-input-country:has(select:focus-visible),
+.money-input-currency:has(select:focus-visible) {
   color: var(--text-primary);
   box-shadow: inset 0 0 0 2px var(--input-focus);
 }
 
 @media (min-width: 64rem) {
-  .phone-input { min-height: 2.625rem; }
+  .phone-input,
+  .money-input { min-height: 2.625rem; }
 }
 
 /* The video model in use, spelled out under the picker. */
@@ -879,6 +905,21 @@
   color: var(--text-tertiary);
 }
 
+/* The plan's prices in other currencies, under the main one. */
+.tier-also {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-tertiary);
+  overflow-wrap: anywhere;
+}
+.tier-also svg { flex-shrink: 0; margin-top: 0.125rem; }
+
 .tier-credits {
   display: flex;
   align-items: center;
@@ -983,6 +1024,17 @@
 }
 /* Down by the label's height, so the switch lines up with the box. */
 .tier-credits-unlimited { padding-top: 1.875rem; }
+
+/* Other prices: a row each — currency, amount, remove — then the button
+   that adds another. */
+.tier-prices { min-width: 0; margin: 0; padding: 0; border: none; }
+.tier-prices legend { padding: 0; }
+.tier-prices-list { display: flex; flex-direction: column; gap: 0.625rem; margin-bottom: 0.75rem; }
+.tier-prices-row { display: flex; align-items: center; gap: 0.5rem; }
+.tier-prices-row .money-input { flex: 1; }
+.tier-prices-row .icon-btn { color: var(--text-tertiary); }
+.tier-prices-row .icon-btn:hover { color: var(--status-danger-ink); }
+.tier-prices-note { margin-top: 0; }
 
 /* The add / edit dialog: the form beside a live preview of the card. */
 .tier-editor {

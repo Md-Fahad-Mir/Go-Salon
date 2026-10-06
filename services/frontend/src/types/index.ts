@@ -121,11 +121,20 @@ export interface TryOnCredits {
 
 /** A subscription plan as the pricing list shows it
     (`GET /api/subscription-tiers/`), in the admin's order. */
+/** A plan's monthly price in one currency. */
+export interface PlanPrice {
+  /** ISO 4217 — "BDT", "USD". */
+  currency: string;
+  amount: number;
+}
+
 export interface SubscriptionPlan {
   slug: string;
   name: string;
-  /** Monthly price in whole taka; 0 is free. */
-  price: number;
+  /** Monthly price in the plan's main currency; an amount of 0 is free. */
+  price: PlanPrice;
+  /** The same plan in other currencies — see `localPrice`. */
+  otherPrices: PlanPrice[];
   /** Try-ons a month; null is unlimited. */
   monthlyCredits: number | null;
   features: string[];

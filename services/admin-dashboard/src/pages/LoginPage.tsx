@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Field } from '../components/ui/Field';
 import { GoSalonMark } from '../components/ui/GoSalonMark';
+import { PasswordInput } from '../components/ui/PasswordInput';
 import { PhoneInput } from '../components/ui/PhoneInput';
 import { useAuthStore, selectIsAuthenticated } from '../store/useAuthStore';
 import { authService } from '../utils/authService';
@@ -86,9 +87,7 @@ export default function LoginPage() {
             </Field>
 
             <Field label="Password" required>
-              <input
-                className="input"
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 autoComplete="current-password"

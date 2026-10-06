@@ -23,7 +23,10 @@ export interface ApiCredits {
 interface ApiPlan {
   slug: string;
   name: string;
-  price_bdt: number;
+  currency: string;
+  /** Decimal strings, as DRF sends them: "500.00". */
+  price: string;
+  other_prices: { currency: string; amount: string }[];
   monthly_credits: number | null;
   features: string[];
   is_featured: boolean;
@@ -41,7 +44,8 @@ export const toCredits = (row: ApiCredits): TryOnCredits => ({
 const toPlan = (row: ApiPlan): SubscriptionPlan => ({
   slug: row.slug,
   name: row.name,
-  price: row.price_bdt,
+  price: { currency: row.currency, amount: Number(row.price) },
+  otherPrices: row.other_prices.map((price) => ({ currency: price.currency, amount: Number(price.amount) })),
   monthlyCredits: row.monthly_credits,
   features: row.features,
   featured: row.is_featured,
