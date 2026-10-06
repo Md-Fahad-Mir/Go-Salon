@@ -34,7 +34,7 @@ import type { WeekSchedule } from '../../types';
 import { messageOf } from '../../utils/errorMessage';
 import { formatDuration, formatNumber, formatPhone } from '../../utils/format';
 import { cropSquare, readAsDataUrl } from '../../utils/image';
-import { isValidPhone, localDigits, photoError, toE164 } from '../../utils/validators';
+import { isValidPhone, photoError, toE164 } from '../../utils/validators';
 
 /** The provider's own account: who the business is, how it takes bookings,
     when it opens, and the same language and appearance controls the customer
@@ -131,7 +131,7 @@ export default function ProviderProfilePage() {
   const [businessName, setBusinessName] = useState(profile?.businessName ?? '');
   const [tagline, setTagline] = useState(profile?.tagline ?? '');
   const [bio, setBio] = useState(profile?.bio ?? '');
-  const [phone, setPhone] = useState(localDigits(profile?.phone ?? ''));
+  const [phone, setPhone] = useState(profile?.phone ?? '');
   const [avatar, setAvatar] = useState(profile?.avatar ?? '');
   const [specialties, setSpecialties] = useState((profile?.specialties ?? []).join(', '));
   const [years, setYears] = useState(String(profile?.experienceYears ?? 0));
@@ -189,7 +189,7 @@ export default function ProviderProfilePage() {
     setBusinessName(profile.businessName);
     setTagline(profile.title);
     setBio(profile.bio);
-    setPhone(localDigits(profile.phone));
+    setPhone(profile.phone);
     setAvatar(profile.avatar);
     setSpecialties(profile.specialties.join(', '));
     setYears(String(profile.experienceYears));

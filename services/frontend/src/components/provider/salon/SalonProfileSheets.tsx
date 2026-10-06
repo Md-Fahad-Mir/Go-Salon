@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useT } from '../../../hooks/useLanguage';
 import type { ProviderProfile } from '../../../types';
 import type { ProfilePatch } from '../../../utils/profileService';
-import { localDigits, toE164 } from '../../../utils/validators';
+import { toE164 } from '../../../utils/validators';
 import { BottomSheet } from '../../common/BottomSheet';
 import { Button } from '../../common/Button';
 import { Input, Textarea } from '../../common/Input';
@@ -24,7 +24,7 @@ export function SalonDetailsSheet({ open, onClose, profile, onSave }: DetailsShe
   const [name, setName] = useState(profile.businessName);
   const [tagline, setTagline] = useState(profile.tagline);
   const [bio, setBio] = useState(profile.bio);
-  const [phone, setPhone] = useState(localDigits(profile.phone));
+  const [phone, setPhone] = useState(profile.phone);
   const [touched, setTouched] = useState(false);
 
   const nameError = !name.trim() ? t('salon.errBusinessName') : undefined;

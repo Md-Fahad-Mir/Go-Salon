@@ -255,7 +255,7 @@ export const proSalon = {
   'salon.fieldNameHint': 'Only used when the number is new to Go Salon.',
   'salon.fieldStaffPassword': 'First password',
   'salon.fieldStaffPasswordHint': 'Give them this to sign in with. They prove the number with a code the first time, and can change it afterwards.',
-  'salon.errStaffPhone': 'Enter the 10 digits after +880.',
+  'salon.errStaffPhone': 'Enter a mobile number for the selected country.',
   'salon.errStaffPassword': 'At least 8 characters.',
   'salon.staffAddedExisting': '{name} joined with the account they already had',
   'salon.awaitingFirstSignIn': 'Has not signed in yet',

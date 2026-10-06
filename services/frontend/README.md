@@ -68,7 +68,9 @@ column rather than stretching into a layout it was never drawn for.
 
 ### Signing in
 
-Any Bangladeshi mobile number works and the OTP is always `123456`.
+A mobile number from any country works — pick the country beside the number
+(the field opens on `VITE_DEFAULT_PHONE_COUNTRY`, `BD` unless set) — and the OTP
+is always `123456`.
 
 | Number | What you get |
 |---|---|

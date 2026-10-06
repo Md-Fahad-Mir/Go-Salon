@@ -41,7 +41,7 @@ export const proQueue = {
   'proQueue.walkInPick': 'What are they having?',
   'proQueue.walkInPickError': 'Pick at least one service.',
   'proQueue.walkInPhoneHint': 'Only so you can reach them if something changes.',
-  'proQueue.walkInPhoneError': 'Enter the 10 digits after +880, or leave it empty.',
+  'proQueue.walkInPhoneError': 'Enter a complete mobile number, or leave it empty.',
   'proQueue.walkInChair': 'Who is taking them?',
   'proQueue.walkInChairHint': 'Leave it unpicked to decide on the floor.',
   'proQueue.walkInNote': 'Note',

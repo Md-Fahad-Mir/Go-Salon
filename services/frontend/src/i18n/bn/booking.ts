@@ -177,7 +177,7 @@ export const booking = {
   'booking.nameOnCard': 'কার্ডে লেখা নাম',
   'booking.nameError': 'নামটি লিখুন।',
   'booking.methodNumberLabel': '{label} নম্বর',
-  'booking.phoneError': '+৮৮০-এর পরের ১০টি সংখ্যা দিন।',
+  'booking.phoneError': 'নির্বাচিত দেশের একটি মোবাইল নম্বর লিখুন।',
 
   /* Confirmation */
   'booking.bookedTitle': 'বুকিং হয়ে গেছে',

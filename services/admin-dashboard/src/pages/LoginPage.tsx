@@ -3,10 +3,12 @@ import type { FormEvent } from 'react';
 import { Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Field } from '../components/ui/Field';
 import { GoSalonMark } from '../components/ui/GoSalonMark';
+import { PhoneInput } from '../components/ui/PhoneInput';
 import { useAuthStore, selectIsAuthenticated } from '../store/useAuthStore';
 import { authService } from '../utils/authService';
 import { ApiError } from '../utils/apiError';
 import { ROUTES } from '../constants';
+import { isValidPhone, PHONE_INVALID_MESSAGE } from '../utils/phone';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -21,12 +23,16 @@ export default function LoginPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!phone.trim() || !password) return;
+    if (!phone || !password) return;
+    if (!isValidPhone(phone)) {
+      setError(PHONE_INVALID_MESSAGE);
+      return;
+    }
 
     setSubmitting(true);
     setError(null);
     try {
-      const session = await authService.login(phone.trim(), password);
+      const session = await authService.login(phone, password);
       setSession(session.user, session.access, session.refresh);
       const redirectTo = (location.state as { from?: string } | null)?.from ?? ROUTES.overview;
       navigate(redirectTo, { replace: true });
@@ -76,16 +82,7 @@ export default function LoginPage() {
             ) : null}
 
             <Field label="Phone" required>
-              <input
-                className="input"
-                type="tel"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                placeholder="01XXXXXXXXX"
-                autoComplete="username"
-                autoFocus
-                required
-              />
+              <PhoneInput value={phone} onChange={setPhone} autoComplete="username" autoFocus required />
             </Field>
 
             <Field label="Password" required>

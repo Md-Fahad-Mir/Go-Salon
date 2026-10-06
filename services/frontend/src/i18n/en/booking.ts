@@ -177,7 +177,7 @@ export const booking = {
   'booking.nameOnCard': 'Name on card',
   'booking.nameError': 'Add the name.',
   'booking.methodNumberLabel': '{label} number',
-  'booking.phoneError': 'Enter the 10 digits after +880.',
+  'booking.phoneError': 'Enter a mobile number for the selected country.',
 
   /* Confirmation */
   'booking.bookedTitle': "You're booked",

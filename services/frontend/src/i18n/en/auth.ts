@@ -20,7 +20,7 @@ export const auth = {
   'auth.termsOfService': 'Terms of Service',
 
   /* --- Field errors ------------------------------------------------------- */
-  'auth.errPhoneDigits': 'Please enter the 10 digits of your mobile number after +880.',
+  'auth.errPhoneDigits': 'Enter a valid mobile number for the selected country.',
   'auth.errNameEmpty': 'Please enter your name.',
   'auth.errNameShort': 'Please use at least 2 characters for your name.',
   'auth.errNameLong': 'Please keep your name to 40 characters or fewer.',
@@ -195,11 +195,8 @@ export const auth = {
   /* --- Password reset -------------------------------------------------------- */
   'auth.forgotPassword': 'Forgot your password?',
   'auth.forgotTitle': 'Forgot your password?',
-  'auth.forgotSub': 'Tell us the number or email on the account and we will send a code to reset it.',
-  'auth.contactLabel': 'Mobile number or email',
-  'auth.contactHint': 'Whichever you signed up with.',
-  'auth.contactPlaceholder': '01712 345678 or you@example.com',
-  'auth.errContact': 'Enter a Bangladeshi mobile number or an email address.',
+  'auth.forgotSub': 'Tell us the mobile number on the account and we will text a code to reset it.',
+  'auth.contactHint': 'The number you signed up with.',
   'auth.sendResetCode': 'Send reset code',
   'auth.resetSendFailed': 'We could not send the code. Check your connection and try again.',
   'auth.forgotOtpNote': 'Most accounts sign in with a phone and a code and have no password at all. There is one only if you set one.',

@@ -14,6 +14,8 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+import phonenumbers
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -181,6 +183,17 @@ DATABASES = {
 # that verifies it is sent there too.
 
 AUTH_USER_MODEL = 'users.User'
+
+# Numbers from every country are accepted and stored as E.164 (see
+# Apps/users/phone.py). This is only how a number typed WITHOUT its country
+# code is read — "01712345678" in the Django admin. Empty means every number
+# must carry its code.
+PHONE_DEFAULT_REGION = env('PHONE_DEFAULT_REGION', 'BD').strip().upper()
+if PHONE_DEFAULT_REGION and PHONE_DEFAULT_REGION not in phonenumbers.SUPPORTED_REGIONS:
+    raise ImproperlyConfigured(
+        f'PHONE_DEFAULT_REGION={PHONE_DEFAULT_REGION!r} is not a country code '
+        'libphonenumber knows. Use an ISO 3166 code such as BD, GB or US, or leave it empty.'
+    )
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators

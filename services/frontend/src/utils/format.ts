@@ -11,6 +11,7 @@ import {
 } from 'date-fns';
 import { translator } from '../i18n';
 import { activeDateLocale, activeNumberLocale, getActiveLanguage } from './locale';
+import { formatInternational, maskNumber } from './phone';
 
 /** The dictionary for the language that is active right now. These helpers are
     plain functions, not components, so they read the language rather than
@@ -145,21 +146,11 @@ export const greetingFor = (date: Date = new Date()): string => {
   return 'Good evening';
 };
 
-/** "+8801712345678" -> "+880 1712-345678" */
-export const formatPhone = (phone: string): string => {
-  const digits = phone.replace(/\D/g, '');
-  const local = digits.startsWith('880') ? digits.slice(3) : digits.replace(/^0/, '');
-  if (local.length !== 10) return phone;
-  return localizeDigits(`+880 ${local.slice(0, 4)}-${local.slice(4)}`);
-};
+/** "+8801712345678" -> "+880 1712 345678", "+447911123456" -> "+44 7911 123456" */
+export const formatPhone = (phone: string): string => localizeDigits(formatInternational(phone));
 
 /** "+8801712345678" -> "+880 17•• •••678" for the OTP screen and receipts. */
-export const maskPhone = (phone: string): string => {
-  const digits = phone.replace(/\D/g, '');
-  const local = digits.startsWith('880') ? digits.slice(3) : digits.replace(/^0/, '');
-  if (local.length !== 10) return phone;
-  return localizeDigits(`+880 ${local.slice(0, 2)}•• •••${local.slice(7)}`);
-};
+export const maskPhone = (phone: string): string => localizeDigits(maskNumber(phone));
 
 export const initialsOf = (name: string): string =>
   name

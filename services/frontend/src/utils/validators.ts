@@ -1,40 +1,14 @@
-/* Bangladeshi mobile numbers: 11 digits with a leading 0 (01XXXXXXXXX) or 10
-   digits after +880. Operator prefixes are 013–019. */
+/* Phone numbers: any country's, as E.164. The rules live in ./phone; these
+   are the names the forms have always called. */
 
-const LOCAL_RE = /^1[3-9]\d{8}$/;
+import { isPhoneWrong } from './phone';
 
-/** Keeps only digits and drops any international-dialing/leading zeros and
-    the country code, in whatever order they were pasted in — "00880...",
-    "0088...", "+880...", and "01..." all reduce to the same 10 digits. */
-export const localDigits = (input: string): string => {
-  let digits = input.replace(/\D/g, '');
-  while (digits.startsWith('0')) digits = digits.slice(1);
-  if (digits.startsWith('880')) digits = digits.slice(3);
-  while (digits.startsWith('0')) digits = digits.slice(1);
-  return digits.slice(0, 10);
-};
+export { isValidPhone, toE164 } from './phone';
 
-export const isValidPhone = (input: string): boolean => LOCAL_RE.test(localDigits(input));
-
-/** Normalises any accepted form to E.164. */
-export const toE164 = (input: string): string => `+880${localDigits(input)}`;
-
-/** Pretty form while typing: "1712 345678". */
-export const formatLocalPhone = (digits: string): string => {
-  const d = digits.slice(0, 10);
-  return d.length > 4 ? `${d.slice(0, 4)} ${d.slice(4)}` : d;
-};
-
-export const phoneError = (input: string): string | undefined => {
-  const digits = localDigits(input);
-  if (!digits) return undefined;
-  if (digits.length < 10) return undefined; // still typing
-  /* One answer for any bad number. Which operator prefixes Bangladesh issues
-     is a rule this field enforces, not a lesson to read back to somebody who
-     mistyped a digit. */
-  if (!LOCAL_RE.test(digits)) return 'Enter the 10 digits after +880.';
-  return undefined;
-};
+/** Undefined while the number is fine or still being typed; a reason once it
+    is as long as its country allows and still is not a mobile number there. */
+export const phoneError = (input: string): string | undefined =>
+  isPhoneWrong(input) ? 'That is not a mobile number in the selected country.' : undefined;
 
 export const isValidEmail = (input: string): boolean =>
   /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(input.trim());

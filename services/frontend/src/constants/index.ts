@@ -232,6 +232,8 @@ export const STORAGE_KEYS = {
   language: 'gosalon.language',
   provider: 'gosalon.provider',
   directory: 'gosalon.directory',
+  /** The country the phone field last had picked on this device. */
+  phoneCountry: 'gosalon.phone-country',
 } as const;
 
 /** The browser chrome colour per mood, mirroring --bg-primary. */

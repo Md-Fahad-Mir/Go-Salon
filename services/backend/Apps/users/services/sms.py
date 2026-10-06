@@ -15,6 +15,10 @@ Providers:
               adapt `_payload` to the one you buy, and set SMS_BASE_URL,
               SMS_API_KEY, SMS_API_SECRET and SMS_SENDER_ID.
 
+`to` is always E.164 (+8801712345678, +447400123456), and accounts may hold a
+number from any country — so the gateway must deliver internationally, or
+sign-ups from outside its country will never receive their code.
+
 No provider is configured out of the box. Until one is, OTP delivery is not
 production-ready.
 """

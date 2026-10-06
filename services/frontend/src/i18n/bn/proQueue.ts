@@ -38,7 +38,7 @@ export const proQueue = {
   'proQueue.walkInPick': 'কী কী সার্ভিস নেবেন?',
   'proQueue.walkInPickError': 'অন্তত একটি সার্ভিস বাছুন।',
   'proQueue.walkInPhoneHint': 'কিছু বদলালে যেন জানাতে পারেন, শুধু সেজন্য।',
-  'proQueue.walkInPhoneError': '+880-এর পরের ১০টি সংখ্যা লিখুন, না হলে খালি রাখুন।',
+  'proQueue.walkInPhoneError': 'পুরো মোবাইল নম্বর লিখুন, না হলে খালি রাখুন।',
   'proQueue.walkInChair': 'কে দেখবেন?',
   'proQueue.walkInChairHint': 'না বাছলে ফ্লোরেই ঠিক করে নেওয়া যাবে।',
   'proQueue.walkInNote': 'নোট',

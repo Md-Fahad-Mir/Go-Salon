@@ -4,7 +4,7 @@ import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/common/Button';
 import { Callout } from '../../components/common/Callout';
-import { Input } from '../../components/common/Input';
+import { PhoneInput } from '../../components/common/PhoneInput';
 import { Header } from '../../components/layout/Header';
 import { Screen, ScreenBody } from '../../components/layout/Screen';
 import { ROUTES } from '../../constants';
@@ -12,7 +12,7 @@ import { authErrorMessage } from '../../components/auth/errors';
 import { useAuth } from '../../hooks/useAuth';
 import { useT } from '../../hooks/useLanguage';
 import { ApiValidationError } from '../../utils/apiClient';
-import { isValidPhone, toE164 } from '../../utils/validators';
+import { isValidPhone, phoneError, toE164 } from '../../utils/validators';
 
 /** Starting a password reset.
 
@@ -24,12 +24,10 @@ export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const { forgotPassword } = useAuth();
 
-  const [contact, setContact] = useState('');
-  const [touched, setTouched] = useState(false);
+  const [value, setValue] = useState('');
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<ApiValidationError | null>(null);
 
-  const value = contact.trim();
   const valid = isValidPhone(value);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -64,16 +62,12 @@ export default function ForgotPasswordPage() {
             </Callout>
           ) : null}
 
-          <Input
-            label={t('auth.contactLabel')}
-            value={contact}
-            onChange={(event) => setContact(event.target.value)}
-            onBlur={() => setTouched(true)}
-            error={touched && value && !valid ? t('auth.errContact') : undefined}
-            inputMode="tel"
+          <PhoneInput
+            label={t('auth.mobileNumber')}
+            value={value}
+            onChange={setValue}
+            error={phoneError(value) ? t('auth.errPhoneDigits') : undefined}
             hint={t('auth.contactHint')}
-            placeholder={t('auth.contactPlaceholder')}
-            autoComplete="username"
             autoFocus
             disabled={sending}
           />

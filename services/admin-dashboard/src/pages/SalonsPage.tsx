@@ -8,6 +8,8 @@ import { ApiError } from '../utils/apiError';
 import { PageHeader } from '../components/ui/PageHeader';
 import { Field } from '../components/ui/Field';
 import { PasswordInput } from '../components/ui/PasswordInput';
+import { PhoneInput } from '../components/ui/PhoneInput';
+import { isValidPhone, PHONE_INVALID_MESSAGE } from '../utils/phone';
 
 interface FormState {
   name: string;
@@ -84,11 +86,15 @@ export default function SalonsPage() {
     if (
       !form.name.trim() ||
       !form.ownerName.trim() ||
-      !form.phone.trim() ||
+      !form.phone ||
       !form.password ||
       !form.address.trim()
     )
       return;
+    if (!isValidPhone(form.phone)) {
+      setFieldErrors((prev) => ({ ...prev, phone: PHONE_INVALID_MESSAGE }));
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -96,7 +102,7 @@ export default function SalonsPage() {
         name: form.name.trim(),
         businessType: form.businessType,
         ownerName: form.ownerName.trim(),
-        phone: form.phone.trim(),
+        phone: form.phone,
         email: form.email.trim() || undefined,
         password: form.password,
         city: form.city.trim(),
@@ -229,15 +235,7 @@ export default function SalonsPage() {
 
         <FormSection icon={KeyRound} title="Sign-in">
           <Field label="Phone" required error={fieldErrors.phone}>
-            <input
-              className="input"
-              type="tel"
-              value={form.phone}
-              onChange={(event) => update('phone', event.target.value)}
-              placeholder="01XXXXXXXXX"
-              autoComplete="off"
-              required
-            />
+            <PhoneInput value={form.phone} onChange={(phone) => update('phone', phone)} required />
           </Field>
 
           <Field

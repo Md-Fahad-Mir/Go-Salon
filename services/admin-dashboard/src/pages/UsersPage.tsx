@@ -23,11 +23,13 @@ import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { SidePanel } from '../components/ui/SidePanel';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Field } from '../components/ui/Field';
+import { PhoneInput } from '../components/ui/PhoneInput';
 import { Toggle } from '../components/ui/Toggle';
 import { Avatar } from '../components/ui/Avatar';
 import { AccountStatusBadge, TierBadge } from '../components/ui/StatusBadge';
 import { RowMenu } from '../components/ui/RowMenu';
 import { formatDate, formatNumber, formatRating, titleCase } from '../utils/format';
+import { isPhoneWrong, isValidPhone, PHONE_INVALID_MESSAGE } from '../utils/phone';
 
 interface EditState {
   name: string;
@@ -38,8 +40,6 @@ interface EditState {
   status: AccountStatus;
   phoneVerified: boolean;
 }
-
-const PHONE_PATTERN = /^\+8801[3-9]\d{8}$/;
 
 /** What kind of place this is, in the words an admin would use. */
 const businessKind = (business: UserBusiness): string => {
@@ -189,12 +189,11 @@ export default function UsersPage() {
     }
   };
 
+  /* Wrong once the number is as long as it can be, or once a save is tried. */
   const phoneError =
-    touched && draft && !PHONE_PATTERN.test(draft.phone)
-      ? 'Use a Bangladeshi mobile number, e.g. +8801711002233'
-      : undefined;
+    draft && (touched ? !isValidPhone(draft.phone) : isPhoneWrong(draft.phone)) ? PHONE_INVALID_MESSAGE : undefined;
   const nameError = touched && draft && draft.name.trim().length < 2 ? 'A name is required' : undefined;
-  const canSave = Boolean(draft && PHONE_PATTERN.test(draft.phone) && draft.name.trim().length > 1);
+  const canSave = Boolean(draft && isValidPhone(draft.phone) && draft.name.trim().length > 1);
 
   const saveEdit = async () => {
     setTouched(true);
@@ -203,7 +202,7 @@ export default function UsersPage() {
     try {
       await userService.update(editing.id, {
         name: draft.name.trim(),
-        phone: draft.phone.trim(),
+        phone: draft.phone,
         email: draft.email.trim() || undefined,
         userType: draft.userType,
         subscriptionTier: draft.subscriptionTier,
@@ -557,13 +556,7 @@ export default function UsersPage() {
             </Field>
 
             <Field label="Phone" required error={phoneError}>
-              <input
-                className="input"
-                inputMode="tel"
-                value={draft.phone}
-                onBlur={() => setTouched(true)}
-                onChange={(event) => setDraft({ ...draft, phone: event.target.value })}
-              />
+              <PhoneInput value={draft.phone} onChange={(phone) => setDraft({ ...draft, phone })} />
             </Field>
 
             <Field label="Email" hint="Optional — used for receipts only.">

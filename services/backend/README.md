@@ -78,6 +78,29 @@ Base path `/api/`. Every response is JSON. Errors always look like:
 branch on. `429` responses from the OTP cooldown also carry `retry_after`
 (seconds).
 
+### Phone numbers
+
+An account is its phone number, and numbers from **every country** are
+accepted. Every `phone` (and `business_phone`, `contact_phone`,
+`customer_phone`, `owner_phone`) is normalised to **E.164** before it is
+stored or looked up — `+`, the country code, the national number without its
+trunk prefix: `+8801712345678`, `+447400123456`, `+12133734253`. Responses
+always carry that form. `+44 7400 123456`, `0044 7400 123456` and
+`+44 (0) 7400-123-456` are one account.
+
+What is valid is decided per country by Google's libphonenumber metadata (the
+`phonenumbers` package; `Apps/users/phone.py`): length, prefixes, and whether
+the number is a **mobile** — a landline cannot receive the sign-up code, so it
+is refused with `400 invalid_phone`, as is anything that is not a number.
+
+A number sent **without** its country code (`01712345678`) is read as a number
+in `PHONE_DEFAULT_REGION` (default `BD`). That is a convenience for typing into
+the Django admin, not a limit; the apps always send E.164. Set it empty to
+require the code everywhere.
+
+The SMS gateway receives the same E.164 number, so it must be one that
+delivers to every country you expect sign-ups from.
+
 ### Registration
 
 `POST /api/auth/register/customer/`

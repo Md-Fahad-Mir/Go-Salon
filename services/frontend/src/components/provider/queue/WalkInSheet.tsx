@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useT } from '../../../hooks/useLanguage';
 import type { ProviderService, StaffRecord } from '../../../types';
 import { formatBdt, formatDuration, formatNumber } from '../../../utils/format';
-import { localDigits, toE164 } from '../../../utils/validators';
+import { isValidPhone, toE164 } from '../../../utils/validators';
 import { Avatar } from '../../common/Avatar';
 import { BottomSheet } from '../../common/BottomSheet';
 import { Button } from '../../common/Button';
@@ -54,9 +54,7 @@ export function WalkInSheet({ open, onClose, services, onAdd, saving, chairs = [
   const pickError = touched && !picked.length ? t('proQueue.walkInPickError') : undefined;
   /* A number is optional, but half of one is not a number. Sending it anyway
      would store something nobody can ring. */
-  const digits = localDigits(phone);
-  const phoneError =
-    digits.length && digits.length < 10 ? t('proQueue.walkInPhoneError') : undefined;
+  const phoneError = phone && !isValidPhone(phone) ? t('proQueue.walkInPhoneError') : undefined;
 
   const toggle = (id: string) =>
     setPicked((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
@@ -66,7 +64,7 @@ export function WalkInSheet({ open, onClose, services, onAdd, saving, chairs = [
     if (!name.trim() || !picked.length || phoneError) return;
     onAdd({
       customerName: name.trim(),
-      customerPhone: digits.length === 10 ? toE164(phone) : undefined,
+      customerPhone: phone ? toE164(phone) : undefined,
       serviceIds: picked,
       staffId: chairId,
       notes: notes.trim() || undefined,

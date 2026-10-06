@@ -279,6 +279,31 @@
   color: var(--status-success-ink);
 }
 
+/* The country picker. The flag and code are what shows; a native select,
+   transparent and stretched over them, is what opens — the platform's own
+   list, which a phone shows full screen and a keyboard can search by typing. */
+.input-group .phone-country {
+  position: relative;
+  flex-shrink: 0;
+  gap: 0.25rem;
+  cursor: pointer;
+}
+.phone-country-chevron { flex-shrink: 0; opacity: 0.6; }
+.phone-country-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  /* Under 16px and iOS zooms the page when it opens. */
+  font-size: 1rem;
+}
+.phone-country-select:disabled { cursor: default; }
+.input-group .phone-country:has(.phone-country-select:focus-visible) {
+  color: var(--text-primary);
+  background-color: var(--ring);
+}
+
 /* Search bar */
 .search {
   position: relative;

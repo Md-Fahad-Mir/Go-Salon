@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { PaymentMethod } from '../../types';
 import { useT } from '../../hooks/useLanguage';
 import { useAppStore } from '../../store/useAppStore';
+import { maskNumber } from '../../utils/phone';
 import { isValidPhone } from '../../utils/validators';
 import { BottomSheet } from '../common/BottomSheet';
 import { Button } from '../common/Button';
@@ -65,7 +66,7 @@ export function AddPaymentSheet({ open, method, onClose }: AddPaymentSheetProps)
       addPaymentAccount({
         method: method.id,
         label: method.label,
-        masked: `0${phone.slice(0, 2)}•• •••${phone.slice(7)}`,
+        masked: maskNumber(phone),
         isDefault: true,
       });
     }

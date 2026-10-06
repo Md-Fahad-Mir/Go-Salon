@@ -133,7 +133,7 @@ export const proBusiness = {
   'pb.payoutRemoved': 'অ্যাকাউন্ট সরানো হয়েছে',
   'pb.payoutNewHint': 'নতুন অ্যাকাউন্ট গো স্যালন যাচাই না করা পর্যন্ত অযাচাইকৃত থাকে, তাই প্রথম পেমেন্টটি অপেক্ষা করে।',
   'pb.errHolder': 'অ্যাকাউন্টটি কার নামে?',
-  'pb.errWallet': '+৮৮০-এর পরের ১০ সংখ্যা লিখুন।',
+  'pb.errWallet': 'নির্বাচিত দেশের একটি মোবাইল নম্বর লিখুন।',
   'pb.errNumber': 'অ্যাকাউন্ট নম্বরটি লিখুন।',
   'pb.errBankName': 'কোন ব্যাংক?',
 
@@ -149,7 +149,7 @@ export const proBusiness = {
   'pb.bioHint': 'আপনি কীভাবে কাজ করেন, ছোট এক প্যারা।',
   'pb.detailsSaved': 'তথ্য সেভ হয়েছে',
   'pb.errBusinessName': 'ব্যবসার একটি নাম লাগবে।',
-  'pb.errPhone': '+৮৮০-এর পরের ১০ সংখ্যা লিখুন।',
+  'pb.errPhone': 'নির্বাচিত দেশের একটি মোবাইল নম্বর লিখুন।',
   'pb.bookingPrefs': 'বুকিং',
   'pb.acceptingClients': 'নতুন ক্লায়েন্ট নিচ্ছি',
   'pb.acceptingClientsHint': 'কিছু না মুছে চেয়ার বন্ধ রাখতে এটি বন্ধ করুন।',

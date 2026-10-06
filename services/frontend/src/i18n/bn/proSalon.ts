@@ -245,7 +245,7 @@ export const proSalon = {
   'salon.fieldNameHint': 'নম্বরটি গো স্যালনে নতুন হলেই কেবল লাগে।',
   'salon.fieldStaffPassword': 'প্রথম পাসওয়ার্ড',
   'salon.fieldStaffPasswordHint': 'সাইন ইন করতে এটি তাঁকে দিন। প্রথমবার কোড দিয়ে নম্বর প্রমাণ করবেন, পরে বদলে নিতে পারবেন।',
-  'salon.errStaffPhone': '+৮৮০-এর পরের ১০ সংখ্যা লিখুন।',
+  'salon.errStaffPhone': 'নির্বাচিত দেশের একটি মোবাইল নম্বর লিখুন।',
   'salon.errStaffPassword': 'অন্তত ৮টি অক্ষর।',
   'salon.staffAddedExisting': '{name} তাঁর আগের অ্যাকাউন্ট নিয়েই যোগ দিয়েছেন',
   'salon.awaitingFirstSignIn': 'এখনও সাইন ইন করেননি',

@@ -135,7 +135,7 @@ export const proBusiness = {
   'pb.payoutRemoved': 'Account removed',
   'pb.payoutNewHint': 'A new account is unverified until Go Salon checks it, so the first payout waits.',
   'pb.errHolder': 'Whose account is it?',
-  'pb.errWallet': 'Enter the 10 digits after +880.',
+  'pb.errWallet': 'Enter a mobile number for the selected country.',
   'pb.errNumber': 'Enter the account number.',
   'pb.errBankName': 'Which bank is it?',
 
@@ -151,7 +151,7 @@ export const proBusiness = {
   'pb.bioHint': 'A short paragraph on how you work.',
   'pb.detailsSaved': 'Details saved',
   'pb.errBusinessName': 'Your business needs a name.',
-  'pb.errPhone': 'Enter the 10 digits after +880.',
+  'pb.errPhone': 'Enter a mobile number for the selected country.',
   'pb.bookingPrefs': 'Bookings',
   'pb.acceptingClients': 'Taking new clients',
   'pb.acceptingClientsHint': 'Turn this off to close your chair without removing anything.',
