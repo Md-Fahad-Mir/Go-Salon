@@ -131,6 +131,7 @@ INSTALLED_APPS = [
     'Apps.hairstyles',
     'Apps.tryon',
     'Apps.subscriptions',
+    'Apps.platform_settings',
 ]
 
 MIDDLEWARE = [
@@ -199,13 +200,19 @@ if PHONE_DEFAULT_REGION and PHONE_DEFAULT_REGION not in phonenumbers.SUPPORTED_R
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
 # One policy for every role. Registration, reset and change all run these.
 
+# Several of the values below can be overridden from the admin dashboard's
+# Settings page without a restart (see Apps/platform_settings). What is set
+# here is the default they fall back to.
+PASSWORD_MIN_LENGTH = env_int('PASSWORD_MIN_LENGTH', 8)
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-        'OPTIONS': {'min_length': env_int('PASSWORD_MIN_LENGTH', 8)},
+        # Django's, reading PASSWORD_MIN_LENGTH — or the dashboard's value —
+        # on every check.
+        'NAME': 'Apps.platform_settings.validators.MinimumLengthValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -220,6 +227,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Locked down by default: a view opts out with permission_classes, so a new
 # endpoint cannot be left open by forgetting to add one.
 
+THROTTLE_ANON = env('THROTTLE_ANON', '60/min')
+THROTTLE_USER = env('THROTTLE_USER', '240/min')
+THROTTLE_LOGIN = env('THROTTLE_LOGIN', '100/min')
+THROTTLE_REGISTER = env('THROTTLE_REGISTER', '100/hour')
+THROTTLE_OTP = env('THROTTLE_OTP', '100/hour')
+THROTTLE_PASSWORD_RESET = env('THROTTLE_PASSWORD_RESET', '10/hour')
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -227,27 +241,35 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    # DRF's own three, reading a rate changed on the dashboard per request.
     'DEFAULT_THROTTLE_CLASSES': (
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
-        'rest_framework.throttling.ScopedRateThrottle',
+        'Apps.platform_settings.throttles.AnonRateThrottle',
+        'Apps.platform_settings.throttles.UserRateThrottle',
+        'Apps.platform_settings.throttles.ScopedRateThrottle',
     ),
     'DEFAULT_THROTTLE_RATES': {
-        'anon': env('THROTTLE_ANON', '60/min'),
-        'user': env('THROTTLE_USER', '240/min'),
+        'anon': THROTTLE_ANON,
+        'user': THROTTLE_USER,
         # Guessing a password, an OTP or someone else's phone number all cost
         # a request, so the expensive paths get their own budget.
-        'login': env('THROTTLE_LOGIN', '100/min'),
-        'register': env('THROTTLE_REGISTER', '100/hour'),
-        'otp': env('THROTTLE_OTP', '100/hour'),
-        'password_reset': env('THROTTLE_PASSWORD_RESET', '10/hour'),
+        'login': THROTTLE_LOGIN,
+        'register': THROTTLE_REGISTER,
+        'otp': THROTTLE_OTP,
+        'password_reset': THROTTLE_PASSWORD_RESET,
     },
     'EXCEPTION_HANDLER': 'Apps.users.exceptions.api_exception_handler',
 }
 
+JWT_ACCESS_TOKEN_LIFETIME_MINUTES = env_int('JWT_ACCESS_TOKEN_LIFETIME_MINUTES', 15)
+JWT_REFRESH_TOKEN_LIFETIME_DAYS = env_int('JWT_REFRESH_TOKEN_LIFETIME_DAYS', 30)
+
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=env_int('JWT_ACCESS_TOKEN_LIFETIME_MINUTES', 15)),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=env_int('JWT_REFRESH_TOKEN_LIFETIME_DAYS', 30)),
+    # Tokens are minted from Apps.platform_settings.tokens, which read the
+    # lifetime as each token is issued; these are for anything that still
+    # uses simplejwt's own classes.
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=JWT_ACCESS_TOKEN_LIFETIME_MINUTES),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=JWT_REFRESH_TOKEN_LIFETIME_DAYS),
+    'TOKEN_REFRESH_SERIALIZER': 'Apps.platform_settings.tokens.TokenRefreshSerializer',
     # A refresh spends the old token and mints a new one; the spent one is
     # blacklisted, so a stolen refresh token has one use at most.
     'ROTATE_REFRESH_TOKENS': True,

@@ -21,9 +21,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from Apps.bookings.models import business_tz
+from Apps.platform_settings.runtime import config
+from Apps.platform_settings.tokens import RefreshToken
 from Apps.tenants.context import business_of_tenant, tenant_of_request
 from Apps.tenants.permissions import OptionalTenantContext, TenantContext
 from Apps.tryon.models import TryOnVideo, VideoStatus
@@ -105,7 +106,7 @@ def verification_response(user: User) -> Response:
             'phone': user.phone,
             'purpose': OTPPurpose.REGISTRATION,
             'resend_in': otp_service.seconds_until_resend(user, OTPPurpose.REGISTRATION),
-            'expires_in_minutes': settings.OTP_EXPIRATION_MINUTES,
+            'expires_in_minutes': config.OTP_EXPIRATION_MINUTES,
             'user': UserSerializer(user).data,
         },
         status=status.HTTP_201_CREATED,
@@ -189,8 +190,8 @@ class OTPRequestView(PublicAPIView):
             else f'We sent a {settings.OTP_LENGTH}-digit code to {user.phone}.',
             'purpose': purpose,
             'resend_in': otp_service.seconds_until_resend(user, purpose) if user else
-            settings.OTP_RESEND_COOLDOWN_SECONDS,
-            'expires_in_minutes': settings.OTP_EXPIRATION_MINUTES,
+            config.OTP_RESEND_COOLDOWN_SECONDS,
+            'expires_in_minutes': config.OTP_EXPIRATION_MINUTES,
         }
 
 
@@ -321,8 +322,8 @@ class ForgotPasswordView(PublicAPIView):
         # holds an account.
         return Response({
             'detail': f'If that number has an account, a {settings.OTP_LENGTH}-digit code is on its way.',
-            'resend_in': settings.OTP_RESEND_COOLDOWN_SECONDS,
-            'expires_in_minutes': settings.OTP_EXPIRATION_MINUTES,
+            'resend_in': config.OTP_RESEND_COOLDOWN_SECONDS,
+            'expires_in_minutes': config.OTP_EXPIRATION_MINUTES,
         })
 
 
@@ -351,7 +352,7 @@ class VerifyResetOTPView(PublicAPIView):
         return Response({
             'detail': 'Code accepted. Set a new password.',
             'reset_token': token,
-            'expires_in_seconds': settings.PASSWORD_RESET_TOKEN_MAX_AGE_SECONDS,
+            'expires_in_seconds': config.PASSWORD_RESET_TOKEN_MAX_AGE_SECONDS,
         })
 
 
@@ -366,7 +367,7 @@ class ResetPasswordView(PublicAPIView):
         try:
             payload = TimestampSigner(salt=RESET_SIGNER_SALT).unsign_object(
                 serializer.validated_data['reset_token'],
-                max_age=settings.PASSWORD_RESET_TOKEN_MAX_AGE_SECONDS,
+                max_age=config.PASSWORD_RESET_TOKEN_MAX_AGE_SECONDS,
             )
         except SignatureExpired:
             return Response(

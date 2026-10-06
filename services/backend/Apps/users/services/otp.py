@@ -17,6 +17,8 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.utils import timezone
 from rest_framework import serializers
 
+from Apps.platform_settings.runtime import config
+
 from ..exceptions import OTPCooldown, OTPSendLimit, SMSUnavailable
 from ..models import OTPCode, User
 from .sms import SMSDeliveryError, get_sms_provider
@@ -39,7 +41,7 @@ def seconds_until_resend(user: User, purpose: str) -> int:
     if latest is None:
         return 0
     elapsed = (timezone.now() - latest.created_at).total_seconds()
-    remaining = settings.OTP_RESEND_COOLDOWN_SECONDS - elapsed
+    remaining = config.OTP_RESEND_COOLDOWN_SECONDS - elapsed
     return max(0, int(remaining + 0.999))
 
 
@@ -52,7 +54,7 @@ def _guard_send_rate(user: User, purpose: str) -> None:
     recent = OTPCode.objects.filter(
         user=user, purpose=purpose, created_at__gte=window_start
     ).count()
-    if recent >= settings.OTP_MAX_SENDS_PER_HOUR:
+    if recent >= config.OTP_MAX_SENDS_PER_HOUR:
         raise OTPSendLimit()
 
 
@@ -75,12 +77,12 @@ def issue_otp(user: User, purpose: str, *, enforce_rate: bool = True) -> OTPCode
         purpose=purpose,
         code_hash=make_password(code),
         debug_code=code if settings.DEBUG else '',
-        expires_at=timezone.now() + timedelta(minutes=settings.OTP_EXPIRATION_MINUTES),
+        expires_at=timezone.now() + timedelta(minutes=config.OTP_EXPIRATION_MINUTES),
     )
 
     message = (
         f'Your Go Salon verification code is {code}. '
-        f'It expires in {settings.OTP_EXPIRATION_MINUTES} minutes.'
+        f'It expires in {config.OTP_EXPIRATION_MINUTES} minutes.'
     )
     try:
         get_sms_provider().send(to=user.phone, message=message)
@@ -110,7 +112,7 @@ def verify_otp(user: User, purpose: str, code: str) -> OTPCode:
         raise serializers.ValidationError(
             {'code': [serializers.ErrorDetail('Ask for a code first.', code='otp_missing')]}
         )
-    if otp.attempts >= settings.OTP_MAX_VERIFY_ATTEMPTS:
+    if otp.attempts >= config.OTP_MAX_VERIFY_ATTEMPTS:
         if otp.invalidated_at is None:
             otp.invalidated_at = timezone.now()
             otp.save(update_fields=['invalidated_at'])
@@ -131,7 +133,7 @@ def verify_otp(user: User, purpose: str, code: str) -> OTPCode:
     if not check_password(code, otp.code_hash):
         otp.attempts += 1
         # One more wrong guess than we allow retires the code entirely.
-        if otp.attempts >= settings.OTP_MAX_VERIFY_ATTEMPTS:
+        if otp.attempts >= config.OTP_MAX_VERIFY_ATTEMPTS:
             otp.invalidated_at = timezone.now()
         otp.save(update_fields=['attempts', 'invalidated_at'])
         raise serializers.ValidationError(

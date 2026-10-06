@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import logging
 
-from django.conf import settings
 from django.utils import timezone
 
+from Apps.platform_settings.runtime import config
 from Apps.users.services.sms import SMSDeliveryError, get_sms_provider
 
 from .models import AppointmentNotification, NotificationKind, NotificationStatus
@@ -89,7 +89,7 @@ def notify(appointment, kind: str) -> AppointmentNotification:
         kind=kind,
         to_phone=phone,
         message=message,
-        provider=settings.SMS_PROVIDER,
+        provider=config.SMS_PROVIDER,
         status=NotificationStatus.PENDING,
     )
 

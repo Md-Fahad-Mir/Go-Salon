@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, BellRing, ReceiptText, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
+import { AlertTriangle, BellRing, ReceiptText, RefreshCw, Sparkles } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { PlatformSettings } from '../types';
 import { useStore } from '../store/useStore';
@@ -8,6 +8,7 @@ import { ApiError } from '../utils/apiError';
 import { PageHeader } from '../components/ui/PageHeader';
 import { UnitInput } from '../components/ui/UnitInput';
 import { SettingRow, SettingsCard, ToggleRow } from '../components/settings/SettingRow';
+import { ServerSettings } from '../components/settings/ServerSettings';
 import { SubscriptionTiers } from '../components/settings/SubscriptionTiers';
 import { formatBdt } from '../utils/format';
 
@@ -265,29 +266,6 @@ export default function SettingsPage() {
             <TryOnPriceRow ai={ai} />
           </SettingsCard>
 
-          <SettingsCard
-            icon={ShieldCheck}
-            title="Verification & security"
-            description="The one-time codes that prove a phone number."
-          >
-            <NumberRow
-              label="OTP expiry"
-              hint="How long a verification code stays valid"
-              value={settings.otpExpiryMinutes}
-              unit="min"
-              min={1}
-              onCommit={(value) => set('otpExpiryMinutes', value)}
-            />
-            <NumberRow
-              label="OTP resend cooldown"
-              hint="Wait before a new code can be requested"
-              value={settings.otpResendCooldownMinutes}
-              unit="min"
-              min={1}
-              onCommit={(value) => set('otpResendCooldownMinutes', value)}
-            />
-          </SettingsCard>
-
           <SettingsCard icon={BellRing} title="Notifications" description="The channels the platform writes to people on.">
             <ToggleRow
               label="SMS notifications"
@@ -314,6 +292,13 @@ export default function SettingsPage() {
           Membership
         </h2>
         <SubscriptionTiers />
+      </section>
+
+      <section className="settings-group" aria-labelledby="settings-server">
+        <h2 className="settings-eyebrow" id="settings-server">
+          Server configuration
+        </h2>
+        <ServerSettings />
       </section>
     </>
   );

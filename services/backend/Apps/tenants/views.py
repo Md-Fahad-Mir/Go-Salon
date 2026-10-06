@@ -18,7 +18,6 @@ from __future__ import annotations
 import io
 
 import qrcode
-from django.conf import settings
 from django.http import HttpResponse
 from qrcode.image.pure import PyPNGImage
 from rest_framework import status
@@ -27,6 +26,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from Apps.platform_settings.runtime import config
 from Apps.users.models import Role
 from Apps.users.permissions import IsSalonOrParlorOwner
 
@@ -55,7 +55,8 @@ def join_url(tenant: Tenant) -> str:
     # Read from the setting and only from there. `core/settings.py` always
     # defines it, with the production default; a second default here was a
     # second copy of the domain, which is one more place to forget to change.
-    base = settings.JOIN_URL_BASE.rstrip('/')
+    # An admin may override it on the dashboard's Settings page.
+    base = config.JOIN_URL_BASE.rstrip('/')
     return f'{base}/join/{tenant.join_token}'
 
 

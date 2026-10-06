@@ -282,8 +282,6 @@ export interface AuditLogEntry {
 
 export interface PlatformSettings {
   platformFee: number;
-  otpExpiryMinutes: number;
-  otpResendCooldownMinutes: number;
   smsEnabled: boolean;
   emailEnabled: boolean;
 }

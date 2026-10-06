@@ -552,3 +552,117 @@ export const aiGenerationService = {
     );
   },
 };
+
+/* --------------------------------------------------------------------------
+   Platform configuration — /api/admin/settings/platform/
+   The server's .env settings an administrator may override: sign-in codes,
+   password policy, sessions, rate limits, SMS delivery and the QR join link.
+   Each comes back as the value in force, the .env value, and whether it has
+   been overridden; saving null hands a setting back to .env. Secrets never
+   come back — only whether the server has them.
+   -------------------------------------------------------------------------- */
+
+export interface PlatformConfigValues {
+  otpExpirationMinutes: number;
+  otpResendCooldownSeconds: number;
+  otpMaxVerifyAttempts: number;
+  otpMaxSendsPerHour: number;
+  passwordMinLength: number;
+  passwordResetWindowSeconds: number;
+  jwtAccessLifetimeMinutes: number;
+  jwtRefreshLifetimeDays: number;
+  /** DRF rates: "<count>/<sec|min|hour|day>". */
+  throttleAnon: string;
+  throttleUser: string;
+  throttleLogin: string;
+  throttleRegister: string;
+  throttleOtp: string;
+  throttlePasswordReset: string;
+  smsProvider: string;
+  smsBaseUrl: string;
+  smsSenderId: string;
+  smsTimeoutSeconds: number;
+  joinUrlBase: string;
+}
+
+export type PlatformConfigKey = keyof PlatformConfigValues;
+
+const PLATFORM_CONFIG_FIELDS: Record<PlatformConfigKey, string> = {
+  otpExpirationMinutes: 'otp_expiration_minutes',
+  otpResendCooldownSeconds: 'otp_resend_cooldown_seconds',
+  otpMaxVerifyAttempts: 'otp_max_verify_attempts',
+  otpMaxSendsPerHour: 'otp_max_sends_per_hour',
+  passwordMinLength: 'password_min_length',
+  passwordResetWindowSeconds: 'password_reset_token_max_age_seconds',
+  jwtAccessLifetimeMinutes: 'jwt_access_token_lifetime_minutes',
+  jwtRefreshLifetimeDays: 'jwt_refresh_token_lifetime_days',
+  throttleAnon: 'throttle_anon',
+  throttleUser: 'throttle_user',
+  throttleLogin: 'throttle_login',
+  throttleRegister: 'throttle_register',
+  throttleOtp: 'throttle_otp',
+  throttlePasswordReset: 'throttle_password_reset',
+  smsProvider: 'sms_provider',
+  smsBaseUrl: 'sms_base_url',
+  smsSenderId: 'sms_sender_id',
+  smsTimeoutSeconds: 'sms_timeout_seconds',
+  joinUrlBase: 'join_url_base',
+};
+
+interface ConfigEntryApi {
+  value: string | number;
+  default: string | number;
+  overridden: boolean;
+}
+
+interface PlatformConfigApi {
+  settings: Record<string, ConfigEntryApi>;
+  sms: { api_key_configured: boolean; api_secret_configured: boolean; console_allowed: boolean };
+  updated_at: string;
+}
+
+export interface ConfigEntry<T> {
+  /** What the server is using now. */
+  value: T;
+  /** What the server's .env says. */
+  defaultValue: T;
+  /** True once changed here, until reset. */
+  overridden: boolean;
+}
+
+export interface PlatformConfig {
+  settings: { [K in PlatformConfigKey]: ConfigEntry<PlatformConfigValues[K]> };
+  sms: {
+    apiKeyConfigured: boolean;
+    apiSecretConfigured: boolean;
+    /** The console provider only works while the server runs with DEBUG on. */
+    consoleAllowed: boolean;
+  };
+}
+
+const toPlatformConfig = (row: PlatformConfigApi): PlatformConfig => ({
+  settings: Object.fromEntries(
+    Object.entries(PLATFORM_CONFIG_FIELDS).map(([key, field]) => {
+      const entry = row.settings[field];
+      return [key, { value: entry.value, defaultValue: entry.default, overridden: entry.overridden }];
+    }),
+  ) as PlatformConfig['settings'],
+  sms: {
+    apiKeyConfigured: row.sms.api_key_configured,
+    apiSecretConfigured: row.sms.api_secret_configured,
+    consoleAllowed: row.sms.console_allowed,
+  },
+});
+
+export const platformConfigService = {
+  async get(): Promise<PlatformConfig> {
+    return toPlatformConfig(await api.get<PlatformConfigApi>('/admin/settings/platform/'));
+  },
+
+  /** Saves one setting; null resets it to the server's .env value. */
+  async set<K extends PlatformConfigKey>(key: K, value: PlatformConfigValues[K] | null): Promise<PlatformConfig> {
+    return toPlatformConfig(
+      await api.patch<PlatformConfigApi>('/admin/settings/platform/', { [PLATFORM_CONFIG_FIELDS[key]]: value }),
+    );
+  },
+};
